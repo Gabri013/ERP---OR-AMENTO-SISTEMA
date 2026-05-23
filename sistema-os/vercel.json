@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "framework": null,
+  "buildCommand": "npm ci && npm run build",
+  "outputDirectory": "dist/public",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "regions": ["iad1"],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

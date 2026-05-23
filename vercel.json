@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "framework": null,
+  "buildCommand": "cd sistema-os && npm ci && npm run build",
+  "outputDirectory": "sistema-os/dist/public",
+  "installCommand": "npm install",
+  "devCommand": "cd sistema-os && npm run dev",
+  "regions": ["iad1"],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

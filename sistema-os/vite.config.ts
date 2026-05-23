@@ -2,9 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-// Make PORT and BASE_PATH optional for local development (Windows, macOS, Linux, Vercel, etc.)
+// PORT and BASE_PATH are optional (useful for local dev and some platforms)
 const rawPort = process.env.PORT || "5173";
 const port = Number(rawPort);
 
@@ -19,20 +18,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer({
-              root: path.resolve(import.meta.dirname, ".."),
-            }),
-          ),
-          await import("@replit/vite-plugin-dev-banner").then((m) =>
-            m.devBanner(),
-          ),
-        ]
-      : []),
+    // Note: Replit-specific dev plugins (cartographer, dev-banner, runtime-error-modal) removed for Vercel compatibility
   ],
   resolve: {
     alias: {
@@ -48,9 +34,8 @@ export default defineConfig({
   },
   server: {
     port,
-    strictPort: false, // allow fallback if port is busy
-    host: process.env.HOST || "localhost", // "0.0.0.0" only needed for Replit / Docker
-    allowedHosts: process.env.REPL_ID ? true : undefined,
+    strictPort: false,
+    host: process.env.HOST || "localhost",
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
@@ -64,6 +49,5 @@ export default defineConfig({
   preview: {
     port,
     host: process.env.HOST || "localhost",
-    allowedHosts: process.env.REPL_ID ? true : undefined,
   },
 });

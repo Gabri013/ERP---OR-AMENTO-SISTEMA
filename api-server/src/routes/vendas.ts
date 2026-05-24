@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { db } from "@workspace/db";
+﻿import { Router, type IRouter } from "express";
+import { db } from "../lib/prisma";
 import {
   CreateVendaBody,
   UpdateVendaBody,
@@ -7,7 +7,7 @@ import {
   GetVendaParams,
   ListVendasQueryParams,
   GerarOsParaVendaParams,
-} from "@workspace/api-zod";
+} from "../schemas";
 import { requireAuth, requireRoles, SALES_ROLES } from "../middleware/auth";
 
 const router: IRouter = Router();
@@ -159,11 +159,11 @@ router.get("/vendas/:id", requireAuth, requireRoles(SALES_ROLES), async (req, re
     include: { cliente: true },
   });
 
-  if (!venda) { res.status(404).json({ error: "Venda não encontrada" }); return; }
+  if (!venda) { res.status(404).json({ error: "Venda nÃ£o encontrada" }); return; }
 
   const currentUser = (req as any).currentUser;
   if (currentUser.tipo === "vendedor" && venda.usuarioId !== currentUser.id) {
-    res.status(403).json({ error: "Sem permissão para esta venda" }); return;
+    res.status(403).json({ error: "Sem permissÃ£o para esta venda" }); return;
   }
 
   const itens = await db.vendaItem.findMany({ where: { vendaId: p.data.id } });
@@ -219,7 +219,7 @@ router.patch("/vendas/:id", requireAuth, requireRoles(SALES_ROLES), async (req, 
       } : undefined,
     });
   } catch {
-    res.status(404).json({ error: "Venda não encontrada" });
+    res.status(404).json({ error: "Venda nÃ£o encontrada" });
   }
 });
 
@@ -228,10 +228,10 @@ router.post("/vendas/:id/gerar-os", requireAuth, requireRoles(SALES_ROLES), asyn
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
   const venda = await db.venda.findUnique({ where: { id: p.data.id } });
-  if (!venda) { res.status(404).json({ error: "Venda não encontrada" }); return; }
+  if (!venda) { res.status(404).json({ error: "Venda nÃ£o encontrada" }); return; }
 
   const existing = await db.ordemServico.findMany({ where: { vendaId: p.data.id } });
-  if (existing.length > 0) { res.status(400).json({ error: "OS já gerada para esta venda" }); return; }
+  if (existing.length > 0) { res.status(400).json({ error: "OS jÃ¡ gerada para esta venda" }); return; }
 
   const numero = await getNextOSNum();
   const today = new Date().toISOString().split("T")[0];
@@ -267,3 +267,5 @@ router.post("/vendas/:id/gerar-os", requireAuth, requireRoles(SALES_ROLES), asyn
 });
 
 export default router;
+
+

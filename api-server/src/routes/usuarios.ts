@@ -1,12 +1,12 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
-import { db } from "@workspace/db";
+import { db } from "../lib/prisma";
 import {
   CreateUsuarioBody,
   UpdateUsuarioBody,
   UpdateUsuarioParams,
   DeleteUsuarioParams,
-} from "@workspace/api-zod";
+} from "../schemas";
 import { requireAuth, requireRoles } from "../middleware/auth";
 
 const router: IRouter = Router();
@@ -62,7 +62,7 @@ router.patch("/usuarios/:id", requireAuth, requireRoles(["master"]), async (req,
     });
     res.json(serializeUser(row));
   } catch {
-    res.status(404).json({ error: "Usuário não encontrado" });
+    res.status(404).json({ error: "UsuÃ¡rio nÃ£o encontrado" });
   }
 });
 
@@ -74,8 +74,10 @@ router.delete("/usuarios/:id", requireAuth, requireRoles(["master"]), async (req
     await db.usuario.delete({ where: { id: p.data.id } });
     res.sendStatus(204);
   } catch {
-    res.status(404).json({ error: "Usuário não encontrado" });
+    res.status(404).json({ error: "UsuÃ¡rio nÃ£o encontrado" });
   }
 });
 
 export default router;
+
+

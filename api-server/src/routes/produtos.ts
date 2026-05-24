@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { db } from "@workspace/db";
+﻿import { Router, type IRouter } from "express";
+import { db } from "../lib/prisma";
 import {
   CreateProdutoBody,
   UpdateProdutoBody,
@@ -7,7 +7,7 @@ import {
   GetProdutoParams,
   DeleteProdutoParams,
   ListProdutosQueryParams,
-} from "@workspace/api-zod";
+} from "../schemas";
 
 const router: IRouter = Router();
 
@@ -57,7 +57,7 @@ router.get("/produtos/:id", async (req, res): Promise<void> => {
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
   const row = await db.produto.findUnique({ where: { id: p.data.id } });
-  if (!row) { res.status(404).json({ error: "Produto não encontrado" }); return; }
+  if (!row) { res.status(404).json({ error: "Produto nÃ£o encontrado" }); return; }
 
   res.json(serializeProduto(row));
 });
@@ -76,7 +76,7 @@ router.patch("/produtos/:id", async (req, res): Promise<void> => {
     const row = await db.produto.update({ where: { id: p.data.id }, data });
     res.json(serializeProduto(row));
   } catch {
-    res.status(404).json({ error: "Produto não encontrado" });
+    res.status(404).json({ error: "Produto nÃ£o encontrado" });
   }
 });
 
@@ -88,8 +88,10 @@ router.delete("/produtos/:id", async (req, res): Promise<void> => {
     await db.produto.delete({ where: { id: p.data.id } });
     res.sendStatus(204);
   } catch {
-    res.status(404).json({ error: "Produto não encontrado" });
+    res.status(404).json({ error: "Produto nÃ£o encontrado" });
   }
 });
 
 export default router;
+
+

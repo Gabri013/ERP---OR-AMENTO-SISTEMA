@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { db } from "@workspace/db";
+﻿import { Router, type IRouter } from "express";
+import { db } from "../lib/prisma";
 import {
   ListContasReceberQueryParams,
   ListContasPagarQueryParams,
@@ -7,7 +7,7 @@ import {
   PagarContaReceberBody,
   PagarContaPagarParams,
   CreateContaPagarBody,
-} from "@workspace/api-zod";
+} from "../schemas";
 import { requireAuth, requireRoles } from "../middleware/auth";
 
 const router: IRouter = Router();
@@ -137,3 +137,5 @@ router.post("/financeiro/contas-pagar/:id/pagar", requireAuth, requireRoles(MAST
 });
 
 export default router;
+
+

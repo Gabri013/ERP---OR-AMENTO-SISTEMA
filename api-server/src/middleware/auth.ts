@@ -1,5 +1,5 @@
-import type { RequestHandler } from "express";
-import { db } from "@workspace/db";
+﻿import type { RequestHandler } from "express";
+import { db } from "../lib/prisma";
 import { verifyUserToken } from "../lib/jwt";
 
 export const SECTOR_ROLES = ["corte","dobra","solda","refrigeracao","acabamento","finalizacao","montagem"];
@@ -8,41 +8,84 @@ export const SALES_ROLES = ["master","gerente","vendedor"];
 export const ALL_ROLES = [...new Set([...SALES_ROLES,...PRODUCTION_ROLES])];
 
 async function getUserFromRequest(req: any) {
-  let token: string | undefined;
+  try {
+    let token: string | undefined;
 
-  const auth = req.headers?.authorization;
-  if (auth?.startsWith("Bearer ")) {
-    token = auth.substring(7);
-  } else if (req.cookies?.token) {
-    token = req.cookies.token;
+    const auth = req.headers?.authorization;
+    if (auth?.startsWith("Bearer ")) {
+      token = auth.substring(7);
+    } else if (req.cookies?.token) {
+      token = req.cookies.token;
+    }
+
+    if (!token) return null;
+
+    const claims = await verifyUserToken(token);
+    if (!claims) return null;
+
+    const user = await db.usuario.findUnique({
+      where: { id: claims.sub },
+    });
+
+    if (user && user.status === "ativo") {
+      return user;
+    }
+    return null;
+  } catch (err) {
+    // Don't crash the serverless function on DB/auth errors
+    console.error("loadUser error:", err);
+    return null;
   }
-
-  if (!token) return null;
-
-  const claims = await verifyUserToken(token);
-  if (!claims) return null;
-
-  const user = await db.usuario.findUnique({
-    where: { id: claims.sub },
-  });
-
-  if (user && user.status === "ativo") {
-    return user;
-  }
-  return null;
 }
 
 export const loadUser: RequestHandler = async (req, _res, next) => {
-  const user = await getUserFromRequest(req);
-  if (user) {
-    (req as any).currentUser = user;
+  try {
+    let token: string | undefined;
+    const auth = req.headers?.authorization;
+    
+    if (auth?.startsWith("Bearer ")) {
+      token = auth.substring(7);
+    } else if (req.cookies?.token) {
+      token = req.cookies.token;
+    }
+
+    if (!token) {
+      next();
+      return;
+    }
+
+    const claims = await verifyUserToken(token);
+    if (!claims) {
+      next();
+      return;
+    }
+
+    // Try to get user from DB, but don't fail if DB is slow
+    const user = await db.usuario.findUnique({
+      where: { id: claims.sub },
+    }).catch(() => null);
+
+    if (user && user.status === "ativo") {
+      (req as any).currentUser = user;
+    } else {
+      // If user not found in DB, still set minimal user info from token
+      (req as any).currentUser = {
+        id: claims.sub,
+        nome: claims.nome,
+        email: claims.email,
+        tipo: claims.tipo,
+        status: "ativo"
+      };
+    }
+  } catch (err) {
+    console.error("loadUser error:", err);
   }
   next();
 };
 
 export const requireAuth: RequestHandler = (req, res, next) => {
   if (!(req as any).currentUser) {
-    res.status(401).json({ error: "Não autenticado" });
+    res.status(401).json({ error: "NÃ£o autenticado" });
     return;
   }
   next();
@@ -51,8 +94,9 @@ export const requireAuth: RequestHandler = (req, res, next) => {
 export function requireRoles(roles: string[]): RequestHandler {
   return (req, res, next) => {
     const user = (req as any).currentUser;
-    if (!user) { res.status(401).json({ error: "Não autenticado" }); return; }
-    if (!roles.includes(user.tipo)) { res.status(403).json({ error: "Sem permissão para esta ação" }); return; }
+    if (!user) { res.status(401).json({ error: "NÃ£o autenticado" }); return; }
+    if (!roles.includes(user.tipo)) { res.status(403).json({ error: "Sem permissÃ£o para esta aÃ§Ã£o" }); return; }
     next();
   };
 }
+

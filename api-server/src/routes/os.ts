@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { db } from "@workspace/db";
+﻿import { Router, type IRouter } from "express";
+import { db } from "../lib/prisma";
 import {
   GetOSParams,
   UpdateOSBody,
@@ -9,7 +9,7 @@ import {
   AvancarEtapaOSParams,
   AddObservacaoOSParams,
   AddObservacaoOSBody,
-} from "@workspace/api-zod";
+} from "../schemas";
 import { requireAuth, requireRoles, SECTOR_ROLES, PRODUCTION_ROLES, SALES_ROLES } from "../middleware/auth";
 
 const router: IRouter = Router();
@@ -86,12 +86,12 @@ router.get("/os/:id", requireAuth, requireRoles(ALL_ROLES), async (req, res): Pr
     include: { cliente: true },
   });
 
-  if (!os) { res.status(404).json({ error: "OS não encontrada" }); return; }
+  if (!os) { res.status(404).json({ error: "OS nÃ£o encontrada" }); return; }
 
   const currentUser = (req as any).currentUser;
   // TODO: add proper ownership check via venda.usuarioId or cliente when needed
   // if (currentUser.tipo === "vendedor" && os.usuarioId && os.usuarioId !== currentUser.id) {
-  //   res.status(403).json({ error: "Sem permissão" }); return;
+  //   res.status(403).json({ error: "Sem permissÃ£o" }); return;
   // }
 
   const observacoes = await db.oSObservacao.findMany({
@@ -143,7 +143,7 @@ router.patch("/os/:id", requireAuth, requireRoles(PRODUCTION_ROLES), async (req,
     const row = await db.ordemServico.update({ where: { id: p.data.id }, data: parsed.data });
     res.json(row);
   } catch {
-    res.status(404).json({ error: "OS não encontrada" });
+    res.status(404).json({ error: "OS nÃ£o encontrada" });
   }
 });
 
@@ -166,7 +166,7 @@ router.post("/os/:id/avancar", requireAuth, requireRoles(PRODUCTION_ROLES), asyn
     data: { status: "concluido", dataFim: new Date(), usuarioId: userId },
   }).catch(() => {});
 
-  // Cria se não existir
+  // Cria se nÃ£o existir
   const exists = await db.oSEtapaProducao.findFirst({ where: { osId, etapa: etapaAtual as any } });
   if (!exists) {
     await db.oSEtapaProducao.create({
@@ -218,3 +218,5 @@ router.post("/os/:id/observacoes", requireAuth, requireRoles(ALL_ROLES), async (
 });
 
 export default router;
+
+

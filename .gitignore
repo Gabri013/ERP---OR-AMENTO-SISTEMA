@@ -42,3 +42,5 @@ node_modules/.bin/
 
 # Replit artifacts
 .replit-artifact/
+
+.vercel

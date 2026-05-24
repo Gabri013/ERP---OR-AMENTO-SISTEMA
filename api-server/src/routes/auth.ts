@@ -1,7 +1,7 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
-import { db } from "@workspace/db";
-import { LoginBody, LoginResponse } from "@workspace/api-zod";
+import { db } from "../lib/prisma";
+import { LoginBody, LoginResponse } from "../schemas";
 import { signUserToken, verifyUserToken } from "../lib/jwt";
 
 const router: IRouter = Router();
@@ -25,13 +25,13 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   });
 
   if (!user || user.status !== "ativo") {
-    res.status(401).json({ error: "Credenciais inválidas" });
+    res.status(401).json({ error: "Credenciais invÃ¡lidas" });
     return;
   }
 
   const valid = await bcrypt.compare(senha, user.senha);
   if (!valid) {
-    res.status(401).json({ error: "Credenciais inválidas" });
+    res.status(401).json({ error: "Credenciais invÃ¡lidas" });
     return;
   }
 
@@ -52,14 +52,15 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   });
 
   // Return both the profile (for existing clients) and the token
-  const profile = LoginResponse.parse({
+  const profile = {
     id: user.id,
     nome: user.nome,
     email: user.email,
     tipo: user.tipo,
-  });
+    token
+  };
 
-  res.json({ ...profile, token });
+  res.json(profile);
 });
 
 /**
@@ -110,3 +111,5 @@ router.get("/auth/me", async (req, res): Promise<void> => {
 });
 
 export default router;
+
+

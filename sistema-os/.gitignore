@@ -16,3 +16,5 @@ Thumbs.db
 # pnpm shims (Windows-generated, break on Linux/CI)
 .bin/
 **/.bin/
+
+.vercel

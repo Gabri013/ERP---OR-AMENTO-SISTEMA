@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { db } from "@workspace/db";
+﻿import { Router, type IRouter } from "express";
+import { db } from "../lib/prisma";
 import {
   CreateOrcamentoBody,
   UpdateOrcamentoBody,
@@ -8,7 +8,7 @@ import {
   DeleteOrcamentoParams,
   ConverterOrcamentoParams,
   ListOrcamentosQueryParams,
-} from "@workspace/api-zod";
+} from "../schemas";
 import { requireAuth, requireRoles, SALES_ROLES } from "../middleware/auth";
 
 const router: IRouter = Router();
@@ -109,11 +109,11 @@ router.get("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (req
     include: { cliente: true },
   });
 
-  if (!orc) { res.status(404).json({ error: "Orçamento não encontrado" }); return; }
+  if (!orc) { res.status(404).json({ error: "OrÃ§amento nÃ£o encontrado" }); return; }
 
   const currentUser = (req as any).currentUser;
   if (currentUser.tipo === "vendedor" && orc.usuarioId !== currentUser.id) {
-    res.status(403).json({ error: "Sem permissão para este orçamento" }); return;
+    res.status(403).json({ error: "Sem permissÃ£o para este orÃ§amento" }); return;
   }
 
   const itens = await db.orcamentoItem.findMany({
@@ -153,7 +153,7 @@ router.patch("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (r
     const row = await db.orcamento.update({ where: { id: p.data.id }, data });
     res.json(serializeOrc(row));
   } catch {
-    res.status(404).json({ error: "Orçamento não encontrado" });
+    res.status(404).json({ error: "OrÃ§amento nÃ£o encontrado" });
   }
 });
 
@@ -165,7 +165,7 @@ router.delete("/orcamentos/:id", requireAuth, requireRoles(["master", "gerente"]
     await db.orcamento.delete({ where: { id: p.data.id } });
     res.sendStatus(204);
   } catch {
-    res.status(404).json({ error: "Orçamento não encontrado" });
+    res.status(404).json({ error: "OrÃ§amento nÃ£o encontrado" });
   }
 });
 
@@ -174,8 +174,8 @@ router.post("/orcamentos/:id/converter", requireAuth, requireRoles(SALES_ROLES),
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
   const orc = await db.orcamento.findUnique({ where: { id: p.data.id } });
-  if (!orc) { res.status(404).json({ error: "Orçamento não encontrado" }); return; }
-  if (orc.status === "convertido") { res.status(400).json({ error: "Orçamento já convertido" }); return; }
+  if (!orc) { res.status(404).json({ error: "OrÃ§amento nÃ£o encontrado" }); return; }
+  if (orc.status === "convertido") { res.status(400).json({ error: "OrÃ§amento jÃ¡ convertido" }); return; }
 
   const userId = (req as any).currentUser?.id ?? 1;
   const numero = await getNextVendaNum();
@@ -228,3 +228,5 @@ router.post("/orcamentos/:id/converter", requireAuth, requireRoles(SALES_ROLES),
 });
 
 export default router;
+
+

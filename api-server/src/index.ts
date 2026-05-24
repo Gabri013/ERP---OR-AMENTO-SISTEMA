@@ -1,27 +1,21 @@
 import dotenv from "dotenv";
 import app from "./app";
-import { logger } from "./lib/logger";
 
-// Carregar .env da raiz do projeto
-dotenv.config({ path: "../../../.env" });
+// Carregar .env (funciona local e no Vercel)
+dotenv.config({ path: process.env.VERCEL ? undefined : "../../../.env" });
 
-const rawPort = process.env["PORT"] || "5000";
+// Para Vercel Serverless: exportar o app como handler
+// Para desenvolvimento local: o listen continua abaixo
+export default app;
 
-if (!process.env["PORT"]) {
-  console.warn("⚠️  PORT not set — defaulting to 5000 (for local development)");
-}
+// Local development only
+if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+  const rawPort = process.env["PORT"] || "5000";
+  const port = Number(rawPort);
 
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
-
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
+  if (!Number.isNaN(port) && port > 0) {
+    app.listen(port, () => {
+      console.log(`Server listening on port ${port}`);
+    });
   }
-
-  logger.info({ port }, "Server listening");
-});
+}

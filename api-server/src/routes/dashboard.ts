@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { db } from "@workspace/db";
+﻿import { Router, type IRouter } from "express";
+import { db } from "../lib/prisma";
 import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
@@ -151,3 +151,4 @@ router.get("/dashboard/os-atrasadas", requireAuth, async (req, res): Promise<voi
 });
 
 export default router;
+

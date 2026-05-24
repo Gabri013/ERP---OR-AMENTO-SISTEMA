@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { db } from "@workspace/db";
+﻿import { Router, type IRouter } from "express";
+import { db } from "../lib/prisma";
 import {
   CreateClienteBody,
   UpdateClienteBody,
@@ -7,7 +7,7 @@ import {
   GetClienteParams,
   DeleteClienteParams,
   ListClientesQueryParams,
-} from "@workspace/api-zod";
+} from "../schemas";
 
 const router: IRouter = Router();
 
@@ -55,7 +55,7 @@ router.get("/clientes/:id", async (req, res): Promise<void> => {
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
   const row = await db.cliente.findUnique({ where: { id: p.data.id } });
-  if (!row) { res.status(404).json({ error: "Cliente não encontrado" }); return; }
+  if (!row) { res.status(404).json({ error: "Cliente nÃ£o encontrado" }); return; }
 
   res.json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
 });
@@ -74,7 +74,7 @@ router.patch("/clientes/:id", async (req, res): Promise<void> => {
     });
     res.json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
   } catch {
-    res.status(404).json({ error: "Cliente não encontrado" });
+    res.status(404).json({ error: "Cliente nÃ£o encontrado" });
   }
 });
 
@@ -86,8 +86,10 @@ router.delete("/clientes/:id", async (req, res): Promise<void> => {
     await db.cliente.delete({ where: { id: p.data.id } });
     res.sendStatus(204);
   } catch {
-    res.status(404).json({ error: "Cliente não encontrado" });
+    res.status(404).json({ error: "Cliente nÃ£o encontrado" });
   }
 });
 
 export default router;
+
+

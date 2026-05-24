@@ -23,7 +23,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
+      "@workspace/api-client-react": path.resolve(import.meta.dirname, "src", "lib", "api-client-react"),
+      // "@assets" removed because the folder doesn't exist in this repo
     },
     dedupe: ["react", "react-dom"],
   },

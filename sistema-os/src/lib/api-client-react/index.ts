@@ -13,9 +13,17 @@ const API_URL = (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') || 'h
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   // Ensure all calls go through /api (backend mounts router at /api)
   const normalizedPath = path.startsWith('/api') ? path : `/api${path.startsWith('/') ? '' : '/'}${path}`;
+  
+  // Add Authorization header if token exists
+  const token = localStorage.getItem("authToken");
+  const headers: HeadersInit = { 'Content-Type': 'application/json', ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
   const res = await fetch(`${API_URL}${normalizedPath}`, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers,
     credentials: 'include',
   });
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);

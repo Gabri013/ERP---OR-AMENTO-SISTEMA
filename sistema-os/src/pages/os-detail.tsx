@@ -13,10 +13,10 @@ import { ArrowLeft, ChevronRight, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 
-const ETAPAS = ["autorizacao","corte","dobra","solda","acabamento","finalizacao","montagem","concluida"];
+const ETAPAS = ["autorizacao","corte","dobra","solda","refrigeracao","acabamento","finalizacao","montagem","concluida"];
 const etapaLabels: Record<string, string> = {
   autorizacao: "Autorização", corte: "Corte", dobra: "Dobra", solda: "Solda",
-  acabamento: "Acabamento", finalizacao: "Finalização", montagem: "Montagem", concluida: "Concluída",
+  refrigeracao: "Refrigeração", acabamento: "Acabamento", finalizacao: "Finalização", montagem: "Montagem", concluida: "Concluída",
 };
 
 const prioridadeBg: Record<string, string> = {

@@ -68,7 +68,7 @@ export const CreateOrcamentoBody = z.object({
 
 export const UpdateOrcamentoBody = CreateOrcamentoBody.partial();
 
-export const ListOrcamentosQueryParams = z.object({ q: z.string().optional() });
+export const ListOrcamentosQueryParams = z.object({ q: z.string().optional(), status: z.string().optional() });
 export const GetOrcamentoParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 export const UpdateOrcamentoParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 export const DeleteOrcamentoParams = z.object({ id: z.string().or(z.number()).transform(Number) });
@@ -87,7 +87,7 @@ export const CreateVendaBody = z.object({
 
 export const UpdateVendaBody = CreateVendaBody.partial();
 
-export const ListVendasQueryParams = z.object({ q: z.string().optional() });
+export const ListVendasQueryParams = z.object({ q: z.string().optional(), status: z.string().optional() });
 export const GetVendaParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 export const UpdateVendaParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 export const GerarOsParaVendaParams = z.object({ id: z.string().or(z.number()).transform(Number) });
@@ -109,7 +109,7 @@ export const UpdateOSBody = z.object({
 
 export const GetOSParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 export const UpdateOSParams = z.object({ id: z.string().or(z.number()).transform(Number) });
-export const ListOSQueryParams = z.object({ q: z.string().optional() });
+export const ListOSQueryParams = z.object({ q: z.string().optional(), status: z.string().optional(), etapa: z.string().optional() });
 export const AvancarEtapaOSBody = z.object({
   novaEtapa: z.string(),
   observacao: z.string().optional(),
@@ -135,8 +135,8 @@ export const PagarContaBody = z.object({
   observacao: z.string().optional(),
 });
 
-export const ListContasReceberQueryParams = z.object({ q: z.string().optional() });
-export const ListContasPagarQueryParams = z.object({ q: z.string().optional() });
+export const ListContasReceberQueryParams = z.object({ q: z.string().optional(), status: z.string().optional() });
+export const ListContasPagarQueryParams = z.object({ q: z.string().optional(), status: z.string().optional() });
 export const PagarContaReceberParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 export const PagarContaReceberBody = PagarContaBody;
 export const PagarContaPagarParams = z.object({ id: z.string().or(z.number()).transform(Number) });

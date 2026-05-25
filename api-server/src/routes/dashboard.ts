@@ -59,7 +59,7 @@ router.get("/dashboard/os-por-status", requireAuth, async (_req, res): Promise<v
   const statuses = ["pendente", "em_projeto", "em_revisao", "em_producao", "concluida", "cancelada"];
   const result = await Promise.all(
     statuses.map(async (status) => {
-      const count = await db.ordemServico.count({ where: { status } });
+      const count = await db.ordemServico.count({ where: { status: status as any } });
       return { status, count };
     })
   );

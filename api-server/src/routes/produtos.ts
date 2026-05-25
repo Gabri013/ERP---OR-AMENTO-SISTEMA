@@ -8,6 +8,7 @@ import {
   DeleteProdutoParams,
   ListProdutosQueryParams,
 } from "../schemas";
+import { requireAuth, requireRoles, SALES_ROLES } from "../middleware/auth";
 
 const router: IRouter = Router();
 
@@ -24,7 +25,7 @@ function serializeProduto(r: any) {
   };
 }
 
-router.get("/produtos", async (req, res): Promise<void> => {
+router.get("/produtos", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
   const params = ListProdutosQueryParams.safeParse(req.query);
   const q = params.success ? params.data.q : undefined;
 
@@ -41,7 +42,7 @@ router.get("/produtos", async (req, res): Promise<void> => {
   res.json(rows.map(serializeProduto));
 });
 
-router.post("/produtos", async (req, res): Promise<void> => {
+router.post("/produtos", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
   const parsed = CreateProdutoBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
@@ -52,7 +53,7 @@ router.post("/produtos", async (req, res): Promise<void> => {
   res.status(201).json(serializeProduto(row));
 });
 
-router.get("/produtos/:id", async (req, res): Promise<void> => {
+router.get("/produtos/:id", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
   const p = GetProdutoParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
@@ -62,7 +63,7 @@ router.get("/produtos/:id", async (req, res): Promise<void> => {
   res.json(serializeProduto(row));
 });
 
-router.patch("/produtos/:id", async (req, res): Promise<void> => {
+router.patch("/produtos/:id", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
   const p = UpdateProdutoParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
@@ -80,7 +81,7 @@ router.patch("/produtos/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.delete("/produtos/:id", async (req, res): Promise<void> => {
+router.delete("/produtos/:id", requireAuth, requireRoles(["master", "gerente"]), async (req, res): Promise<void> => {
   const p = DeleteProdutoParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 

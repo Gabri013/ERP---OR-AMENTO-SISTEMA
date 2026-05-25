@@ -8,10 +8,11 @@ import {
   DeleteClienteParams,
   ListClientesQueryParams,
 } from "../schemas";
+import { requireAuth, requireRoles, SALES_ROLES } from "../middleware/auth";
 
 const router: IRouter = Router();
 
-router.get("/clientes", async (req, res): Promise<void> => {
+router.get("/clientes", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
   const params = ListClientesQueryParams.safeParse(req.query);
   const q = params.success ? params.data.q : undefined;
 
@@ -39,7 +40,7 @@ router.get("/clientes", async (req, res): Promise<void> => {
   })));
 });
 
-router.post("/clientes", async (req, res): Promise<void> => {
+router.post("/clientes", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
   const parsed = CreateClienteBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -50,7 +51,7 @@ router.post("/clientes", async (req, res): Promise<void> => {
   res.status(201).json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
 });
 
-router.get("/clientes/:id", async (req, res): Promise<void> => {
+router.get("/clientes/:id", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
   const p = GetClienteParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
@@ -60,7 +61,7 @@ router.get("/clientes/:id", async (req, res): Promise<void> => {
   res.json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
 });
 
-router.patch("/clientes/:id", async (req, res): Promise<void> => {
+router.patch("/clientes/:id", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
   const p = UpdateClienteParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
@@ -78,7 +79,7 @@ router.patch("/clientes/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.delete("/clientes/:id", async (req, res): Promise<void> => {
+router.delete("/clientes/:id", requireAuth, requireRoles(["master", "gerente"]), async (req, res): Promise<void> => {
   const p = DeleteClienteParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 

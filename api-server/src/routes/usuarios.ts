@@ -33,10 +33,12 @@ router.post("/usuarios", requireAuth, requireRoles(["master"]), async (req, res)
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
   const hashedSenha = await bcrypt.hash(parsed.data.senha, 10);
+  const { senha: _s, ...rest } = parsed.data;
   const row = await db.usuario.create({
     data: {
-      ...parsed.data,
+      ...rest,
       senha: hashedSenha,
+      tipo: (rest.tipo ?? "vendedor") as any,
     },
   });
 

@@ -47,14 +47,27 @@ function serializeOS(r: any, cliente?: any) {
 router.get("/os", requireAuth, requireRoles(ALL_ROLES), async (req, res): Promise<void> => {
   const params = ListOSQueryParams.safeParse(req.query);
   const status = params.success ? params.data.status : undefined;
+  const etapa = params.success ? params.data.etapa : undefined;
   const currentUser = (req as any).currentUser;
 
+  // Sector users only see OS in their etapa
+  const sectorStage = SECTOR_STAGE_MAP[currentUser.tipo];
+
+  const where: any = {};
+  if (sectorStage) {
+    where.etapaAtual = sectorStage;
+    where.status = { notIn: ["concluida", "cancelada"] };
+  }
+  if (status) where.status = status;
+  if (etapa) where.etapaAtual = etapa;
+
   const rows = await db.ordemServico.findMany({
+    where,
     include: { cliente: true },
     orderBy: { createdAt: "desc" },
   });
 
-  let result = rows.map(r => ({
+  const result = rows.map(r => ({
     id: r.id, numero: r.numero, vendaId: r.vendaId, clienteId: r.clienteId,
     dataInicio: r.dataInicio, dataTermino: r.dataTermino, prioridade: r.prioridade,
     status: r.status, etapaAtual: r.etapaAtual,
@@ -69,11 +82,6 @@ router.get("/os", requireAuth, requireRoles(ALL_ROLES), async (req, res): Promis
     } : undefined,
   }));
 
-  if (currentUser.tipo === "vendedor") {
-    // vendedor filter logic (kept simple as original)
-  }
-
-  if (status) result = result.filter(r => r.status === status);
   res.json(result);
 });
 
@@ -156,7 +164,7 @@ router.patch("/os/:id", requireAuth, requireRoles(PRODUCTION_ROLES), async (req,
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
   try {
-    const row = await db.ordemServico.update({ where: { id: p.data.id }, data: parsed.data });
+    const row = await db.ordemServico.update({ where: { id: p.data.id }, data: parsed.data as any });
     res.json(row);
   } catch {
     res.status(404).json({ error: "OS nÃ£o encontrada" });

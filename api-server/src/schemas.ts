@@ -150,11 +150,11 @@ export const CreateUsuarioBody = z.object({
   telefoneWhatsapp: z.string().optional(),
 });
 
-export const UpdateUsuarioBody = CreateUsuarioBody.partial().omit({ senha: true });
+export const UpdateUsuarioBody = CreateUsuarioBody.partial();
 
 export const ListUsuariosQueryParams = z.object({ q: z.string().optional() });
-export const UpdateUsuarioParams = z.object({ id: z.string() });
-export const DeleteUsuarioParams = z.object({ id: z.string() });
+export const UpdateUsuarioParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const DeleteUsuarioParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 
 // ==================== DASHBOARD ====================
 export const HealthCheckResponse = z.object({

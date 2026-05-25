@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd api-server && npm install && npx prisma generate && npm run build && cd ../sistema-os && npm ci && npm run build",
+  "buildCommand": "cd api-server && npm install && npm run build && cd ../sistema-os && npm ci && npm run build",
   "outputDirectory": "sistema-os/dist/public",
   "installCommand": "echo 'Root has no package.json - frontend npm install runs in buildCommand'",
   "devCommand": "cd sistema-os && npm run dev",

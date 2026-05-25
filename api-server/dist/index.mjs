@@ -44680,7 +44680,9 @@ var wrapper_default = import_websocket.default;
 _e.webSocketConstructor = wrapper_default;
 var globalForPrisma = globalThis;
 function createPrismaClient() {
-  const pool = new eo({ connectionString: process.env.DATABASE_URL });
+  const connectionString = process.env.DATABASE_URL;
+  const cleanUrl = connectionString.replace(/[&?]channel_binding=[^&]*/g, "");
+  const pool = new eo({ connectionString: cleanUrl });
   const adapter = new PrismaNeon(pool);
   return new PrismaClient({
     adapter,

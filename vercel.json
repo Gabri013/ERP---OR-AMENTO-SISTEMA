@@ -4,11 +4,5 @@
   "outputDirectory": "sistema-os/dist/public",
   "installCommand": "echo 'Root has no package.json - frontend npm install runs in buildCommand'",
   "devCommand": "cd sistema-os && npm run dev",
-  "regions": ["iad1"],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api-server/dist/index.mjs"
-    }
-  ]
+  "regions": ["iad1"]
 }

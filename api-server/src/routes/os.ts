@@ -83,7 +83,10 @@ router.get("/os/:id", requireAuth, requireRoles(ALL_ROLES), async (req, res): Pr
 
   const os = await db.ordemServico.findUnique({
     where: { id: p.data.id },
-    include: { cliente: true },
+    include: {
+      cliente: true,
+      venda: { include: { itens: { include: { produto: true } } } },
+    },
   });
 
   if (!os) { res.status(404).json({ error: "OS nÃ£o encontrada" }); return; }
@@ -114,7 +117,20 @@ router.get("/os/:id", requireAuth, requireRoles(ALL_ROLES), async (req, res): Pr
     observacoesGerais: os.observacoesGerais, observacoesCortedobra: os.observacoesCortedobra,
     observacoesSolda: os.observacoesSolda, arquivoProjeto: os.arquivoProjeto,
     createdAt: os.createdAt instanceof Date ? os.createdAt.toISOString() : os.createdAt,
-    cliente: os.cliente ? { id: os.cliente.id, razaoSocial: os.cliente.razaoSocial } : undefined,
+    cliente: os.cliente ? {
+      id: os.cliente.id, razaoSocial: os.cliente.razaoSocial, nomeFantasia: os.cliente.nomeFantasia,
+      cnpjCpf: os.cliente.cnpjCpf, cidade: os.cliente.cidade, estado: os.cliente.estado,
+      telefone: os.cliente.telefone, email: os.cliente.email, observacoes: os.cliente.observacoes,
+    } : undefined,
+    venda: os.venda ? {
+      id: os.venda.id, numero: os.venda.numero, valorTotal: os.venda.valorTotal,
+      formaPagamento: os.venda.formaPagamento, status: os.venda.status,
+      itens: os.venda.itens.map((item: any) => ({
+        id: item.id, descricaoManual: item.descricaoManual, quantidade: item.quantidade,
+        valorUnitario: item.valorUnitario, valorTotal: item.valorTotal,
+        produto: item.produto ? { id: item.produto.id, nome: item.produto.nome, codigo: item.produto.codigo } : undefined,
+      })),
+    } : undefined,
     observacoes: observacoes.map(o => ({
       id: o.id, tipoSetor: o.tipoSetor, observacao: o.observacao,
       createdAt: o.createdAt instanceof Date ? o.createdAt.toISOString() : o.createdAt,
@@ -207,7 +223,7 @@ router.post("/os/:id/observacoes", requireAuth, requireRoles(ALL_ROLES), async (
 
   const obs = await db.oSObservacao.create({
     data: {
-      osId: p.data.id,
+      osId: p.data.id as number,
       tipoSetor: body.data.tipoSetor,
       observacao: body.data.observacao,
       usuarioId: userId,

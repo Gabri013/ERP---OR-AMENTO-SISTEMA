@@ -119,11 +119,11 @@ export function useListOS(params?: { status?: string; etapa?: string }) {
   const qs = sp.toString() ? `?${sp.toString()}` : '';
   return useQuery({ queryKey: ['os', params?.status, params?.etapa], queryFn: () => apiFetch<any[]>(`/os${qs}`).catch(() => []) });
 }
-export function useGetOS(id: string) { return useQuery({ queryKey: ['os', id], queryFn: () => apiFetch(`/os/${id}`).catch(() => null) }); }
+export function useGetOS(id: number | string) { return useQuery({ queryKey: ['os', id], queryFn: () => apiFetch(`/os/${id}`).catch(() => null), enabled: !!id }); }
 export function useAvancarEtapaOS(opts?: { mutation?: any }) {
-  return useMutation({ mutationFn: (d: any) => apiFetch(`/os/${d.id}/avancar`, { method: 'POST', body: JSON.stringify(d) }), ...opts?.mutation });
+  return useMutation({ mutationFn: (d: any) => apiFetch(`/os/${d.id}/avancar`, { method: 'POST', body: JSON.stringify(d.data || d) }), ...opts?.mutation });
 }
-export function addObservacaoOS() { return useMutation({ mutationFn: (d: any) => apiFetch(`/os/${d.osId}/observacao`, { method: 'POST', body: JSON.stringify(d) }) }); }
+export function addObservacaoOS(osId: number | string, data: { observacao: string; tipoSetor: string }) { return apiFetch(`/os/${osId}/observacoes`, { method: 'POST', body: JSON.stringify(data) }); }
 export function getListOSQueryKey() { return ['os']; }
 
 // ==================== USUARIOS ====================

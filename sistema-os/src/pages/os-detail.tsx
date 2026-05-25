@@ -142,6 +142,43 @@ export default function OSDetailPage() {
           </Card>
         </div>
 
+        {/* Itens da Venda */}
+        {(os as any).venda?.itens?.length > 0 && (
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Itens da OS (Venda #{(os as any).venda.numero})</CardTitle></CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="pb-2 font-medium">Produto</th>
+                      <th className="pb-2 font-medium text-right">Qtd</th>
+                      <th className="pb-2 font-medium text-right">Valor Unit.</th>
+                      <th className="pb-2 font-medium text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(os as any).venda.itens.map((item: any) => (
+                      <tr key={item.id} className="border-b last:border-0">
+                        <td className="py-2">{item.produto?.nome || item.descricaoManual || '—'}</td>
+                        <td className="py-2 text-right">{Number(item.quantidade)}</td>
+                        <td className="py-2 text-right">R$ {Number(item.valorUnitario).toFixed(2)}</td>
+                        <td className="py-2 text-right font-medium">R$ {Number(item.valorTotal).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="font-semibold">
+                      <td colSpan={3} className="pt-2 text-right">Total:</td>
+                      <td className="pt-2 text-right">R$ {Number((os as any).venda.valorTotal).toFixed(2)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {os.observacoesGerais && (
           <Card>
             <CardHeader><CardTitle className="text-sm">Observações Gerais</CardTitle></CardHeader>

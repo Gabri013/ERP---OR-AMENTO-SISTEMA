@@ -34,9 +34,9 @@ export const CreateClienteBody = z.object({
 
 export const UpdateClienteBody = CreateClienteBody.partial();
 
-export const GetClienteParams = z.object({ id: z.string() });
-export const UpdateClienteParams = z.object({ id: z.string() });
-export const DeleteClienteParams = z.object({ id: z.string() });
+export const GetClienteParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const UpdateClienteParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const DeleteClienteParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 
 // ==================== PRODUTOS ====================
 export const CreateProdutoBody = z.object({
@@ -51,9 +51,9 @@ export const CreateProdutoBody = z.object({
 export const UpdateProdutoBody = CreateProdutoBody.partial();
 
 export const ListProdutosQueryParams = z.object({ q: z.string().optional() });
-export const GetProdutoParams = z.object({ id: z.string() });
-export const UpdateProdutoParams = z.object({ id: z.string() });
-export const DeleteProdutoParams = z.object({ id: z.string() });
+export const GetProdutoParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const UpdateProdutoParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const DeleteProdutoParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 
 // ==================== ORÇAMENTOS ====================
 export const CreateOrcamentoBody = z.object({
@@ -69,10 +69,10 @@ export const CreateOrcamentoBody = z.object({
 export const UpdateOrcamentoBody = CreateOrcamentoBody.partial();
 
 export const ListOrcamentosQueryParams = z.object({ q: z.string().optional() });
-export const GetOrcamentoParams = z.object({ id: z.string() });
-export const UpdateOrcamentoParams = z.object({ id: z.string() });
-export const DeleteOrcamentoParams = z.object({ id: z.string() });
-export const ConverterOrcamentoParams = z.object({ id: z.string() });
+export const GetOrcamentoParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const UpdateOrcamentoParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const DeleteOrcamentoParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const ConverterOrcamentoParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 
 // ==================== VENDAS ====================
 export const CreateVendaBody = z.object({
@@ -88,9 +88,9 @@ export const CreateVendaBody = z.object({
 export const UpdateVendaBody = CreateVendaBody.partial();
 
 export const ListVendasQueryParams = z.object({ q: z.string().optional() });
-export const GetVendaParams = z.object({ id: z.string() });
-export const UpdateVendaParams = z.object({ id: z.string() });
-export const GerarOsParaVendaParams = z.object({ id: z.string() });
+export const GetVendaParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const UpdateVendaParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const GerarOsParaVendaParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 
 // ==================== OS ====================
 export const CreateOSBody = z.object({
@@ -107,15 +107,15 @@ export const UpdateOSBody = z.object({
   observacoesGerais: z.string().optional(),
 });
 
-export const GetOSParams = z.object({ id: z.string() });
-export const UpdateOSParams = z.object({ id: z.string() });
+export const GetOSParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const UpdateOSParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 export const ListOSQueryParams = z.object({ q: z.string().optional() });
 export const AvancarEtapaOSBody = z.object({
-  etapa: z.string().optional(),
+  novaEtapa: z.string(),
   observacao: z.string().optional(),
 });
-export const AvancarEtapaOSParams = z.object({ id: z.string() });
-export const AddObservacaoOSParams = z.object({ osId: z.string() });
+export const AvancarEtapaOSParams = z.object({ id: z.string().or(z.number()).transform(Number) });
+export const AddObservacaoOSParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 export const AddObservacaoOSBody = z.object({
   tipoSetor: z.string(),
   observacao: z.string(),
@@ -137,9 +137,9 @@ export const PagarContaBody = z.object({
 
 export const ListContasReceberQueryParams = z.object({ q: z.string().optional() });
 export const ListContasPagarQueryParams = z.object({ q: z.string().optional() });
-export const PagarContaReceberParams = z.object({ id: z.string() });
+export const PagarContaReceberParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 export const PagarContaReceberBody = PagarContaBody;
-export const PagarContaPagarParams = z.object({ id: z.string() });
+export const PagarContaPagarParams = z.object({ id: z.string().or(z.number()).transform(Number) });
 
 // ==================== USUARIOS ====================
 export const CreateUsuarioBody = z.object({

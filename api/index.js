@@ -1,8 +1,15 @@
-// Função serverless única para servir o backend Express
-// Usar JavaScript compilado para evitar múltiplas funções serverless
-const app = require('../api-server/dist/index.mjs');
+// Vercel serverless function handler for the Express API
+// Uses dynamic import() because api-server outputs ESM (.mjs)
+let appPromise;
 
-// Exportar como handler da Vercel
-module.exports = (req, res) => {
-  app.default(req, res);
+function getApp() {
+  if (!appPromise) {
+    appPromise = import('../api-server/dist/index.mjs').then(m => m.default);
+  }
+  return appPromise;
+}
+
+module.exports = async (req, res) => {
+  const app = await getApp();
+  app(req, res);
 };

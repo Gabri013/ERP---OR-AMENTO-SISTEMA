@@ -1,8 +1,10 @@
 import dotenv from "dotenv";
 import app from "./app";
 
-// Carregar .env (funciona local e no Vercel)
-dotenv.config({ path: process.env.VERCEL ? undefined : "../../../.env" });
+// Load .env for local development (on Vercel, env vars are injected by the platform)
+if (!process.env.VERCEL) {
+  dotenv.config();
+}
 
 // Para Vercel Serverless: exportar o app como handler
 // Para desenvolvimento local: o listen continua abaixo

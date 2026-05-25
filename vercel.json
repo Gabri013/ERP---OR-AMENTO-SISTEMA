@@ -2,15 +2,9 @@
   "version": 2,
   "buildCommand": "cd api-server && npm install && npx prisma generate && npm run build && cd ../sistema-os && npm ci && npm run build",
   "outputDirectory": "sistema-os/dist/public",
-  "installCommand": "cd api && npm install && cd ../api-server && npm install && npx prisma generate",
+  "installCommand": "npm install --prefix api && npm install --prefix api-server",
   "devCommand": "cd sistema-os && npm run dev",
   "regions": ["iad1"],
-  "functions": {
-    "api/**/*.js": {
-      "includeFiles": "api-server/dist/**,api-server/node_modules/.prisma/**,api-server/node_modules/@prisma/**",
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]

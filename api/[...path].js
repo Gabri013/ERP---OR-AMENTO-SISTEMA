@@ -1,15 +1,9 @@
-// Vercel serverless function handler for the Express API
-// Uses dynamic import() because api-server outputs ESM (.mjs)
-let appPromise;
-
-function getApp() {
-  if (!appPromise) {
-    appPromise = import('../api-server/dist/index.mjs').then(m => m.default);
-  }
-  return appPromise;
-}
+let handler;
 
 module.exports = async (req, res) => {
-  const app = await getApp();
-  app(req, res);
+  if (!handler) {
+    const mod = await import('../api-server/dist/index.mjs');
+    handler = mod.default;
+  }
+  return handler(req, res);
 };

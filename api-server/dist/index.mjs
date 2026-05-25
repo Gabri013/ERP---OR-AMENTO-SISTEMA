@@ -37443,11 +37443,7 @@ app.use(loadUser);
 app.use("/api", routes_default);
 app.use((err, _req, res, _next) => {
   console.error("Unhandled error:", err);
-  res.status(500).json({
-    error: "Internal server error",
-    message: err.message,
-    name: err.name
-  });
+  res.status(500).json({ error: "Internal server error" });
 });
 var app_default = app;
 

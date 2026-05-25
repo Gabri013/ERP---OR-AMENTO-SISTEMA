@@ -68,9 +68,13 @@ app.use(loadUser);
 app.use("/api", router);
 
 // Global error handler for serverless (prevents FUNCTION_INVOCATION_FAILED on uncaught errors)
-app.use((err: any, req: any, res: any, next: any) => {
+app.use((err: any, _req: any, res: any, _next: any) => {
   console.error("Unhandled error:", err);
-  res.status(500).json({ error: "Internal server error" });
+  res.status(500).json({
+    error: "Internal server error",
+    message: err.message,
+    name: err.name,
+  });
 });
 
 export default app;

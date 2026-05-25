@@ -47406,9 +47406,13 @@ app.use(import_express12.default.json());
 app.use(import_express12.default.urlencoded({ extended: true }));
 app.use(loadUser);
 app.use("/api", routes_default);
-app.use((err2, req, res, next) => {
+app.use((err2, _req, res, _next) => {
   console.error("Unhandled error:", err2);
-  res.status(500).json({ error: "Internal server error" });
+  res.status(500).json({
+    error: "Internal server error",
+    message: err2.message,
+    name: err2.name
+  });
 });
 var app_default = app;
 

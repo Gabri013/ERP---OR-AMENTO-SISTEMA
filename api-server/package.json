@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_ENV=development pnpm run build && pnpm run start",
-    "build": "tsc",
-    "start": "node --enable-source-maps ./dist/index.js",
+    "build": "node ./build.mjs",
+    "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

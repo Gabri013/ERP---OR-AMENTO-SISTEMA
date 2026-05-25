@@ -8,7 +8,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-const API_URL = (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:3000';
+const API_URL = (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:3001';
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   // Ensure all calls go through /api (backend mounts router at /api)
@@ -16,7 +16,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   
   // Add Authorization header if token exists
   const token = localStorage.getItem("authToken");
-  const headers: HeadersInit = { 'Content-Type': 'application/json', ...options.headers };
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(options.headers as Record<string, string> || {}) };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

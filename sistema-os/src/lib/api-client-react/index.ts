@@ -136,17 +136,17 @@ export function getListUsuariosQueryKey() { return ['usuarios']; }
 // ==================== CONTAS ====================
 export function useListContasPagar(params?: { status?: string }) {
   const qs = params?.status ? `?status=${params.status}` : '';
-  return useQuery({ queryKey: ['contas-pagar', params?.status], queryFn: () => apiFetch<any[]>(`/contas-pagar${qs}`).catch(() => []) });
+  return useQuery({ queryKey: ['contas-pagar', params?.status], queryFn: () => apiFetch<any[]>(`/financeiro/contas-pagar${qs}`).catch(() => []) });
 }
-export function createContaPagar(d: any) { return apiFetch('/contas-pagar', { method: 'POST', body: JSON.stringify(d) }); }
-export function pagarContaPagar(id: string, d: any) { return apiFetch(`/contas-pagar/${id}/pagar`, { method: 'POST', body: JSON.stringify(d) }); }
+export function createContaPagar(d: any) { return apiFetch('/financeiro/contas-pagar', { method: 'POST', body: JSON.stringify(d) }); }
+export function pagarContaPagar(id: string, d: any) { return apiFetch(`/financeiro/contas-pagar/${id}/pagar`, { method: 'POST', body: JSON.stringify(d) }); }
 export function getListContasPagarQueryKey() { return ['contas-pagar']; }
 
 export function useListContasReceber(params?: { status?: string }) {
   const qs = params?.status ? `?status=${params.status}` : '';
-  return useQuery({ queryKey: ['contas-receber', params?.status], queryFn: () => apiFetch<any[]>(`/contas-receber${qs}`).catch(() => []) });
+  return useQuery({ queryKey: ['contas-receber', params?.status], queryFn: () => apiFetch<any[]>(`/financeiro/contas-receber${qs}`).catch(() => []) });
 }
-export function pagarContaReceber(id: string, d: any) { return apiFetch(`/contas-receber/${id}/pagar`, { method: 'POST', body: JSON.stringify(d) }); }
+export function pagarContaReceber(id: string, d: any) { return apiFetch(`/financeiro/contas-receber/${id}/pagar`, { method: 'POST', body: JSON.stringify(d) }); }
 export function getListContasReceberQueryKey() { return ['contas-receber']; }
 
 // ==================== DASHBOARD ====================

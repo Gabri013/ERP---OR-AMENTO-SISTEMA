@@ -13,7 +13,8 @@ function formatCurrency(v: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 }
 function formatDate(d: string) {
-  return new Date(d + "T00:00:00").toLocaleDateString("pt-BR");
+  const dt = d.includes("T") ? new Date(d) : new Date(d + "T00:00:00");
+  return isNaN(dt.getTime()) ? "—" : dt.toLocaleDateString("pt-BR");
 }
 
 const statusColors: Record<string, string> = {

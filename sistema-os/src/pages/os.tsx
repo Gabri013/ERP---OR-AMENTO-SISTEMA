@@ -62,7 +62,8 @@ const prioridadeDot: Record<string, string> = {
 
 function formatDate(d: string | null | undefined) {
   if (!d) return "—";
-  return new Date(d + "T00:00:00").toLocaleDateString("pt-BR");
+  const dt = d.includes("T") ? new Date(d) : new Date(d + "T00:00:00");
+  return isNaN(dt.getTime()) ? "—" : dt.toLocaleDateString("pt-BR");
 }
 
 export default function OSPage() {

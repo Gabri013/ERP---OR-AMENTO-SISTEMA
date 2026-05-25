@@ -73,7 +73,7 @@ export default function FinanceiroPage() {
                   <div key={c.id} className="flex items-center justify-between text-sm p-2 rounded hover:bg-muted">
                     <div>
                       <p className="font-medium">{c.cliente?.razaoSocial ?? "—"}</p>
-                      <p className="text-xs text-muted-foreground">Venc: {new Date(c.dataVencimento + "T00:00:00").toLocaleDateString("pt-BR")}</p>
+                      <p className="text-xs text-muted-foreground">Venc: {(() => { const d = c.dataVencimento; const dt = d?.includes("T") ? new Date(d) : new Date(d + "T00:00:00"); return isNaN(dt.getTime()) ? "—" : dt.toLocaleDateString("pt-BR"); })()}</p>
                     </div>
                     <p className="font-semibold text-green-700">{formatCurrency(c.valorLiquido)}</p>
                   </div>
@@ -98,7 +98,7 @@ export default function FinanceiroPage() {
                   <div key={c.id} className="flex items-center justify-between text-sm p-2 rounded hover:bg-muted">
                     <div>
                       <p className="font-medium">{c.descricao}</p>
-                      <p className="text-xs text-muted-foreground">Venc: {new Date(c.dataVencimento + "T00:00:00").toLocaleDateString("pt-BR")}</p>
+                      <p className="text-xs text-muted-foreground">Venc: {(() => { const d = c.dataVencimento; const dt = d?.includes("T") ? new Date(d) : new Date(d + "T00:00:00"); return isNaN(dt.getTime()) ? "—" : dt.toLocaleDateString("pt-BR"); })()}</p>
                     </div>
                     <p className="font-semibold text-red-700">{formatCurrency(c.valor)}</p>
                   </div>

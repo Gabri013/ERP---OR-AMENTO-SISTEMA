@@ -30,7 +30,7 @@ const statusLabels: Record<string, string> = {
   pendente: "Pendente", em_producao: "Em Produção", concluida: "Concluída", cancelada: "Cancelada",
 };
 
-function formatDate(d: string) { return new Date(d + "T00:00:00").toLocaleDateString("pt-BR"); }
+function formatDate(d: string) { const dt = d.includes("T") ? new Date(d) : new Date(d + "T00:00:00"); return isNaN(dt.getTime()) ? "—" : dt.toLocaleDateString("pt-BR"); }
 function formatDateTime(d: string) { return new Date(d).toLocaleString("pt-BR"); }
 
 export default function OSDetailPage() {

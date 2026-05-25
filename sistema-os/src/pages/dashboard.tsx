@@ -45,7 +45,8 @@ function formatCurrency(value: number) {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr + "T00:00:00").toLocaleDateString("pt-BR");
+  const dt = dateStr.includes("T") ? new Date(dateStr) : new Date(dateStr + "T00:00:00");
+  return isNaN(dt.getTime()) ? "—" : dt.toLocaleDateString("pt-BR");
 }
 
 export default function DashboardPage() {

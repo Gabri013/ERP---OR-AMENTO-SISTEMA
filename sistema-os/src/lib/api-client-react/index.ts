@@ -8,7 +8,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-const API_URL = (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') || 'https://erp-orcamento-sistema.vercel.app';
+const API_URL = (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:3000';
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   // Ensure all calls go through /api (backend mounts router at /api)

@@ -8,10 +8,16 @@ import {
   DeleteClienteParams,
   ListClientesQueryParams,
 } from "../schemas";
+import { requireAuth, requireRoles, ALL_ROLES, ADMIN_ROLES } from "../middleware/auth";
+import { auditLog } from "../middleware/audit";
 
 const router: IRouter = Router();
 
-router.get("/clientes", async (req, res): Promise<void> => {
+router.get("/clientes", requireAuth, requireRoles(ALL_ROLES), auditLog({
+  action: "list",
+  module: "clientes",
+  table: "Cliente"
+}), async (req, res): Promise<void> => {
   const params = ListClientesQueryParams.safeParse(req.query);
   const q = params.success ? params.data.q : undefined;
 
@@ -39,28 +45,53 @@ router.get("/clientes", async (req, res): Promise<void> => {
   })));
 });
 
-router.post("/clientes", async (req, res): Promise<void> => {
+router.post("/clientes", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
+  action: "create",
+  module: "clientes",
+  table: "Cliente"
+}), async (req, res): Promise<void> => {
   const parsed = CreateClienteBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
 
-  const row = await db.cliente.create({ data: parsed.data });
+  const row = await db.cliente.create({ 
+    data: {
+      razaoSocial: parsed.data.razaoSocial,
+      nomeFantasia: parsed.data.nomeFantasia,
+      cnpjCpf: parsed.data.cnpjCpf,
+      endereco: parsed.data.endereco,
+      cidade: parsed.data.cidade,
+      estado: parsed.data.estado,
+      telefone: parsed.data.telefone,
+      email: parsed.data.email,
+      observacoes: parsed.data.observacoes,
+    }
+  });
   res.status(201).json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
 });
 
-router.get("/clientes/:id", async (req, res): Promise<void> => {
+router.get("/clientes/:id", requireAuth, requireRoles(ALL_ROLES), auditLog({
+  action: "view",
+  module: "clientes",
+  table: "Cliente"
+}), async (req, res): Promise<void> => {
   const p = GetClienteParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
-  const row = await db.cliente.findUnique({ where: { id: p.data.id } });
+  const id = Number(p.data.id);
+  const row = await db.cliente.findUnique({ where: { id } });
   if (!row) { res.status(404).json({ error: "Cliente nÃ£o encontrado" }); return; }
 
   res.json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
 });
 
-router.patch("/clientes/:id", async (req, res): Promise<void> => {
+router.patch("/clientes/:id", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
+  action: "update",
+  module: "clientes",
+  table: "Cliente"
+}), async (req, res): Promise<void> => {
   const p = UpdateClienteParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
@@ -68,8 +99,9 @@ router.patch("/clientes/:id", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
   try {
+    const id = Number(p.data.id);
     const row = await db.cliente.update({
-      where: { id: p.data.id },
+      where: { id },
       data: parsed.data,
     });
     res.json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
@@ -78,12 +110,17 @@ router.patch("/clientes/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.delete("/clientes/:id", async (req, res): Promise<void> => {
+router.delete("/clientes/:id", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
+  action: "delete",
+  module: "clientes",
+  table: "Cliente"
+}), async (req, res): Promise<void> => {
   const p = DeleteClienteParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
   try {
-    await db.cliente.delete({ where: { id: p.data.id } });
+    const id = Number(p.data.id);
+    await db.cliente.delete({ where: { id } });
     res.sendStatus(204);
   } catch {
     res.status(404).json({ error: "Cliente nÃ£o encontrado" });

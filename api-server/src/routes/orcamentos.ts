@@ -10,6 +10,8 @@ import {
   ListOrcamentosQueryParams,
 } from "../schemas";
 import { requireAuth, requireRoles, SALES_ROLES } from "../middleware/auth";
+import { auditLog } from "../middleware/audit";
+import { canTransitionOrcamento } from "../lib/stateMachine";
 
 const router: IRouter = Router();
 
@@ -100,12 +102,17 @@ router.post("/orcamentos", requireAuth, requireRoles(SALES_ROLES), async (req, r
   res.status(201).json(serializeOrc(orc, cliente));
 });
 
-router.get("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
+router.get("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), auditLog({
+  action: "view",
+  module: "orcamentos",
+  table: "Orcamento"
+}), async (req, res): Promise<void> => {
   const p = GetOrcamentoParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
+  const id = Number(p.data.id);
   const orc = await db.orcamento.findUnique({
-    where: { id: p.data.id },
+    where: { id },
     include: { cliente: true },
   });
 
@@ -117,7 +124,7 @@ router.get("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (req
   }
 
   const itens = await db.orcamentoItem.findMany({
-    where: { orcamentoId: p.data.id },
+    where: { orcamentoId: id },
     include: { produto: true },
   });
 
@@ -139,7 +146,11 @@ router.get("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (req
   res.json({ ...serializedOrc, itens: serializedItens });
 });
 
-router.patch("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
+router.patch("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), auditLog({
+  action: "update",
+  module: "orcamentos",
+  table: "Orcamento"
+}), async (req, res): Promise<void> => {
   const p = UpdateOrcamentoParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
@@ -149,33 +160,63 @@ router.patch("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (r
   const data: any = { ...parsed.data };
   if (data.desconto !== undefined) data.desconto = Number(data.desconto);
 
+  // Validar transição de status usando state machine
+  if (data.status) {
+    const orc = await db.orcamento.findUnique({ where: { id: Number(p.data.id) } });
+    if (orc) {
+      const validation = canTransitionOrcamento(orc.status, data.status);
+      if (!validation.valid) {
+        res.status(400).json({ error: validation.error });
+        return;
+      }
+    }
+  }
+
   try {
-    const row = await db.orcamento.update({ where: { id: p.data.id }, data });
+    const id = Number(p.data.id);
+    const row = await db.orcamento.update({ where: { id }, data });
     res.json(serializeOrc(row));
   } catch {
     res.status(404).json({ error: "OrÃ§amento nÃ£o encontrado" });
   }
 });
 
-router.delete("/orcamentos/:id", requireAuth, requireRoles(["master", "gerente"]), async (req, res): Promise<void> => {
+router.delete("/orcamentos/:id", requireAuth, requireRoles(["master", "gerente"]), auditLog({
+  action: "delete",
+  module: "orcamentos",
+  table: "Orcamento"
+}), async (req, res): Promise<void> => {
   const p = DeleteOrcamentoParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
   try {
-    await db.orcamento.delete({ where: { id: p.data.id } });
+    const id = Number(p.data.id);
+    await db.orcamento.delete({ where: { id } });
     res.sendStatus(204);
   } catch {
     res.status(404).json({ error: "OrÃ§amento nÃ£o encontrado" });
   }
 });
 
-router.post("/orcamentos/:id/converter", requireAuth, requireRoles(SALES_ROLES), async (req, res): Promise<void> => {
+router.post("/orcamentos/:id/converter", requireAuth, requireRoles(SALES_ROLES), auditLog({
+  action: "converter",
+  module: "orcamentos",
+  table: "Orcamento"
+}), async (req, res): Promise<void> => {
   const p = ConverterOrcamentoParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
-  const orc = await db.orcamento.findUnique({ where: { id: p.data.id } });
+  const id = Number(p.data.id);
+  const orc = await db.orcamento.findUnique({ where: { id } });
   if (!orc) { res.status(404).json({ error: "OrÃ§amento nÃ£o encontrado" }); return; }
   if (orc.status === "convertido") { res.status(400).json({ error: "OrÃ§amento jÃ¡ convertido" }); return; }
+
+  // Validar transição para convertido
+  const validation = canTransitionOrcamento(orc.status, "convertido");
+  if (!validation.valid) {
+    res.status(400).json({ error: validation.error });
+    return;
+  }
 
   const userId = (req as any).currentUser?.id ?? 1;
   const numero = await getNextVendaNum();

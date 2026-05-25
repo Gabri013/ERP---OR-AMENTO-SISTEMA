@@ -8,10 +8,10 @@ import {
   PagarContaPagarParams,
   CreateContaPagarBody,
 } from "../schemas";
-import { requireAuth, requireRoles } from "../middleware/auth";
+import { requireAuth, requireRoles, FINANCEIRO_ROLES } from "../middleware/auth";
+import { auditLog } from "../middleware/audit";
 
 const router: IRouter = Router();
-const MASTER_ONLY = ["master"];
 
 function serializeCR(r: any, cliente?: any) {
   return {
@@ -30,7 +30,11 @@ function serializeCR(r: any, cliente?: any) {
   };
 }
 
-router.get("/financeiro/contas-receber", requireAuth, requireRoles(MASTER_ONLY), async (req, res): Promise<void> => {
+router.get("/financeiro/contas-receber", requireAuth, requireRoles(FINANCEIRO_ROLES), auditLog({
+  action: "list",
+  module: "financeiro",
+  table: "ContaReceber"
+}), async (req, res): Promise<void> => {
   const params = ListContasReceberQueryParams.safeParse(req.query);
   const status = params.success ? params.data.status : undefined;
 
@@ -45,7 +49,11 @@ router.get("/financeiro/contas-receber", requireAuth, requireRoles(MASTER_ONLY),
   res.json(result);
 });
 
-router.post("/financeiro/contas-receber/:id/pagar", requireAuth, requireRoles(MASTER_ONLY), async (req, res): Promise<void> => {
+router.post("/financeiro/contas-receber/:id/pagar", requireAuth, requireRoles(FINANCEIRO_ROLES), auditLog({
+  action: "pagar",
+  module: "financeiro",
+  table: "ContaReceber"
+}), async (req, res): Promise<void> => {
   const p = PagarContaReceberParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
@@ -53,9 +61,10 @@ router.post("/financeiro/contas-receber/:id/pagar", requireAuth, requireRoles(MA
   if (!body.success) { res.status(400).json({ error: body.error.message }); return; }
 
   const userId = (req as any).currentUser?.id;
+  const id = Number(p.data.id);
 
   const updated = await db.contaReceber.update({
-    where: { id: p.data.id },
+    where: { id },
     data: {
       valorRecebido: Number(body.data.valorPago),
       dataPagamento: new Date(),
@@ -66,7 +75,7 @@ router.post("/financeiro/contas-receber/:id/pagar", requireAuth, requireRoles(MA
 
   await db.pagamento.create({
     data: {
-      contaReceberId: p.data.id,
+      contaReceberId: id,
       usuarioId: userId,
       valorPago: Number(body.data.valorPago),
       formaPagamento: body.data.formaPagamento,
@@ -78,7 +87,11 @@ router.post("/financeiro/contas-receber/:id/pagar", requireAuth, requireRoles(MA
   res.json(serializeCR(updated, cliente));
 });
 
-router.get("/financeiro/contas-pagar", requireAuth, requireRoles(MASTER_ONLY), async (req, res): Promise<void> => {
+router.get("/financeiro/contas-pagar", requireAuth, requireRoles(FINANCEIRO_ROLES), auditLog({
+  action: "list",
+  module: "financeiro",
+  table: "ContaPagar"
+}), async (req, res): Promise<void> => {
   const params = ListContasPagarQueryParams.safeParse(req.query);
 
   const rows = await db.contaPagar.findMany({ orderBy: { dataVencimento: "desc" } });
@@ -98,14 +111,20 @@ router.get("/financeiro/contas-pagar", requireAuth, requireRoles(MASTER_ONLY), a
   res.json(result);
 });
 
-router.post("/financeiro/contas-pagar", requireAuth, requireRoles(MASTER_ONLY), async (req, res): Promise<void> => {
+router.post("/financeiro/contas-pagar", requireAuth, requireRoles(FINANCEIRO_ROLES), auditLog({
+  action: "create",
+  module: "financeiro",
+  table: "ContaPagar"
+}), async (req, res): Promise<void> => {
   const parsed = CreateContaPagarBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
   const row = await db.contaPagar.create({
     data: {
-      ...parsed.data,
-      valor: Number(parsed.data.valor),
+      descricao: parsed.data.descricao,
+      fornecedor: parsed.data.fornecedor,
+      valor: String(parsed.data.valor),
+      dataVencimento: parsed.data.dataVencimento,
     },
   });
 
@@ -118,12 +137,17 @@ router.post("/financeiro/contas-pagar", requireAuth, requireRoles(MASTER_ONLY), 
   });
 });
 
-router.post("/financeiro/contas-pagar/:id/pagar", requireAuth, requireRoles(MASTER_ONLY), async (req, res): Promise<void> => {
+router.post("/financeiro/contas-pagar/:id/pagar", requireAuth, requireRoles(FINANCEIRO_ROLES), auditLog({
+  action: "pagar",
+  module: "financeiro",
+  table: "ContaPagar"
+}), async (req, res): Promise<void> => {
   const p = PagarContaPagarParams.safeParse(req.params);
   if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
 
+  const id = Number(p.data.id);
   const updated = await db.contaPagar.update({
-    where: { id: p.data.id },
+    where: { id },
     data: { status: "PAGO", dataPagamento: new Date() },
   });
 

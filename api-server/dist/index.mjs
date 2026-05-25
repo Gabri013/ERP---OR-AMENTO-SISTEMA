@@ -21008,27 +21008,27 @@ var require_router = __commonJS({
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
-    module.exports = Router12;
+    module.exports = Router13;
     module.exports.Route = Route;
-    function Router12(options) {
-      if (!(this instanceof Router12)) {
-        return new Router12(options);
+    function Router13(options) {
+      if (!(this instanceof Router13)) {
+        return new Router13(options);
       }
       const opts = options || {};
-      function router12(req, res, next) {
-        router12.handle(req, res, next);
+      function router13(req, res, next) {
+        router13.handle(req, res, next);
       }
-      Object.setPrototypeOf(router12, this);
-      router12.caseSensitive = opts.caseSensitive;
-      router12.mergeParams = opts.mergeParams;
-      router12.params = {};
-      router12.strict = opts.strict;
-      router12.stack = [];
-      return router12;
+      Object.setPrototypeOf(router13, this);
+      router13.caseSensitive = opts.caseSensitive;
+      router13.mergeParams = opts.mergeParams;
+      router13.params = {};
+      router13.strict = opts.strict;
+      router13.stack = [];
+      return router13;
     }
-    Router12.prototype = function() {
+    Router13.prototype = function() {
     };
-    Router12.prototype.param = function param(name, fn) {
+    Router13.prototype.param = function param(name, fn) {
       if (!name) {
         throw new TypeError("argument name is required");
       }
@@ -21048,7 +21048,7 @@ var require_router = __commonJS({
       params.push(fn);
       return this;
     };
-    Router12.prototype.handle = function handle(req, res, callback) {
+    Router13.prototype.handle = function handle(req, res, callback) {
       if (!callback) {
         throw new TypeError("argument callback is required");
       }
@@ -21175,7 +21175,7 @@ var require_router = __commonJS({
         }
       }
     };
-    Router12.prototype.use = function use(handler) {
+    Router13.prototype.use = function use(handler) {
       let offset = 0;
       let path = "/";
       if (typeof handler !== "function") {
@@ -21208,7 +21208,7 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router12.prototype.route = function route(path) {
+    Router13.prototype.route = function route(path) {
       const route2 = new Route(path);
       const layer = new Layer(path, {
         sensitive: this.caseSensitive,
@@ -21223,7 +21223,7 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router12.prototype[method] = function(path) {
+      Router13.prototype[method] = function(path) {
         const route = this.route(path);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
@@ -21406,13 +21406,13 @@ var require_application = __commonJS({
     var compileTrust = require_utils3().compileTrust;
     var resolve = __require("node:path").resolve;
     var once = require_once();
-    var Router12 = require_router();
+    var Router13 = require_router();
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var app2 = exports = module.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
     app2.init = function init() {
-      var router12 = null;
+      var router13 = null;
       this.cache = /* @__PURE__ */ Object.create(null);
       this.engines = /* @__PURE__ */ Object.create(null);
       this.settings = /* @__PURE__ */ Object.create(null);
@@ -21421,13 +21421,13 @@ var require_application = __commonJS({
         configurable: true,
         enumerable: true,
         get: function getrouter() {
-          if (router12 === null) {
-            router12 = new Router12({
+          if (router13 === null) {
+            router13 = new Router13({
               caseSensitive: this.enabled("case sensitive routing"),
               strict: this.enabled("strict routing")
             });
           }
-          return router12;
+          return router13;
         }
       });
     };
@@ -21498,15 +21498,15 @@ var require_application = __commonJS({
       if (fns.length === 0) {
         throw new TypeError("app.use() requires a middleware function");
       }
-      var router12 = this.router;
+      var router13 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router12.use(path, fn2);
+          return router13.use(path, fn2);
         }
         debug(".use app under %s", path);
         fn2.mountpath = path;
         fn2.parent = this;
-        router12.use(path, function mounted_app(req, res, next) {
+        router13.use(path, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -24079,7 +24079,7 @@ var require_express = __commonJS({
     var EventEmitter = __require("node:events").EventEmitter;
     var mixin = require_merge_descriptors();
     var proto = require_application();
-    var Router12 = require_router();
+    var Router13 = require_router();
     var req = require_request();
     var res = require_response();
     exports = module.exports = createApplication;
@@ -24101,8 +24101,8 @@ var require_express = __commonJS({
     exports.application = proto;
     exports.request = req;
     exports.response = res;
-    exports.Route = Router12.Route;
-    exports.Router = Router12;
+    exports.Route = Router13.Route;
+    exports.Router = Router13;
     exports.json = bodyParser.json;
     exports.raw = bodyParser.raw;
     exports.static = require_serve_static();
@@ -28686,11 +28686,11 @@ var require_logger = __commonJS({
 var import_dotenv = __toESM(require_main(), 1);
 
 // src/app.ts
-var import_express12 = __toESM(require_express2(), 1);
+var import_express13 = __toESM(require_express2(), 1);
 var import_pino_http = __toESM(require_logger(), 1);
 
 // src/routes/index.ts
-var import_express11 = __toESM(require_express2(), 1);
+var import_express12 = __toESM(require_express2(), 1);
 
 // src/routes/health.ts
 var import_express = __toESM(require_express2(), 1);
@@ -32749,9 +32749,9 @@ var ListClientesQueryParams = external_exports.object({
   q: external_exports.string().optional()
 });
 var CreateClienteBody = external_exports.object({
-  razaoSocial: external_exports.string(),
+  razaoSocial: external_exports.string().min(1),
   nomeFantasia: external_exports.string().optional(),
-  cnpjCpf: external_exports.string(),
+  cnpjCpf: external_exports.string().min(1),
   endereco: external_exports.string().optional(),
   cidade: external_exports.string().optional(),
   estado: external_exports.string().optional(),
@@ -32786,7 +32786,10 @@ var CreateOrcamentoBody = external_exports.object({
   itens: external_exports.array(external_exports.any()).optional()
 });
 var UpdateOrcamentoBody = CreateOrcamentoBody.partial();
-var ListOrcamentosQueryParams = external_exports.object({ q: external_exports.string().optional() });
+var ListOrcamentosQueryParams = external_exports.object({
+  q: external_exports.string().optional(),
+  status: external_exports.string().optional()
+});
 var GetOrcamentoParams = external_exports.object({ id: external_exports.string() });
 var UpdateOrcamentoParams = external_exports.object({ id: external_exports.string() });
 var DeleteOrcamentoParams = external_exports.object({ id: external_exports.string() });
@@ -32841,8 +32844,14 @@ var PagarContaBody = external_exports.object({
   formaPagamento: external_exports.string(),
   observacao: external_exports.string().optional()
 });
-var ListContasReceberQueryParams = external_exports.object({ q: external_exports.string().optional() });
-var ListContasPagarQueryParams = external_exports.object({ q: external_exports.string().optional() });
+var ListContasReceberQueryParams = external_exports.object({
+  q: external_exports.string().optional(),
+  status: external_exports.string().optional()
+});
+var ListContasPagarQueryParams = external_exports.object({
+  q: external_exports.string().optional(),
+  status: external_exports.string().optional()
+});
 var PagarContaReceberParams = external_exports.object({ id: external_exports.string() });
 var PagarContaReceberBody = PagarContaBody;
 var PagarContaPagarParams = external_exports.object({ id: external_exports.string() });
@@ -35917,193 +35926,14 @@ var auth_default = router2;
 
 // src/routes/clientes.ts
 var import_express3 = __toESM(require_express2(), 1);
-var router3 = (0, import_express3.Router)();
-router3.get("/clientes", async (req, res) => {
-  const params = ListClientesQueryParams.safeParse(req.query);
-  const q = params.success ? params.data.q : void 0;
-  let rows;
-  if (q) {
-    rows = await db.cliente.findMany({
-      where: {
-        OR: [
-          { razaoSocial: { contains: q, mode: "insensitive" } },
-          { nomeFantasia: { contains: q, mode: "insensitive" } },
-          { cnpjCpf: { contains: q, mode: "insensitive" } }
-        ]
-      },
-      orderBy: { razaoSocial: "asc" }
-    });
-  } else {
-    rows = await db.cliente.findMany({ orderBy: { razaoSocial: "asc" } });
-  }
-  res.json(rows.map((r) => ({
-    id: r.id,
-    razaoSocial: r.razaoSocial,
-    nomeFantasia: r.nomeFantasia,
-    cnpjCpf: r.cnpjCpf,
-    endereco: r.endereco,
-    cidade: r.cidade,
-    estado: r.estado,
-    telefone: r.telefone,
-    email: r.email,
-    observacoes: r.observacoes,
-    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt
-  })));
-});
-router3.post("/clientes", async (req, res) => {
-  const parsed = CreateClienteBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  const row = await db.cliente.create({ data: parsed.data });
-  res.status(201).json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
-});
-router3.get("/clientes/:id", async (req, res) => {
-  const p = GetClienteParams.safeParse(req.params);
-  if (!p.success) {
-    res.status(400).json({ error: p.error.message });
-    return;
-  }
-  const row = await db.cliente.findUnique({ where: { id: p.data.id } });
-  if (!row) {
-    res.status(404).json({ error: "Cliente n\xC3\xA3o encontrado" });
-    return;
-  }
-  res.json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
-});
-router3.patch("/clientes/:id", async (req, res) => {
-  const p = UpdateClienteParams.safeParse(req.params);
-  if (!p.success) {
-    res.status(400).json({ error: p.error.message });
-    return;
-  }
-  const parsed = UpdateClienteBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  try {
-    const row = await db.cliente.update({
-      where: { id: p.data.id },
-      data: parsed.data
-    });
-    res.json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
-  } catch {
-    res.status(404).json({ error: "Cliente n\xC3\xA3o encontrado" });
-  }
-});
-router3.delete("/clientes/:id", async (req, res) => {
-  const p = DeleteClienteParams.safeParse(req.params);
-  if (!p.success) {
-    res.status(400).json({ error: p.error.message });
-    return;
-  }
-  try {
-    await db.cliente.delete({ where: { id: p.data.id } });
-    res.sendStatus(204);
-  } catch {
-    res.status(404).json({ error: "Cliente n\xC3\xA3o encontrado" });
-  }
-});
-var clientes_default = router3;
-
-// src/routes/produtos.ts
-var import_express4 = __toESM(require_express2(), 1);
-var router4 = (0, import_express4.Router)();
-function serializeProduto(r) {
-  return {
-    id: r.id,
-    codigo: r.codigo,
-    nome: r.nome,
-    descricao: r.descricao,
-    foto: r.foto,
-    valor: typeof r.valor === "object" && r.valor !== null ? Number(r.valor) : Number(r.valor),
-    estoque: r.estoque,
-    status: r.status
-  };
-}
-router4.get("/produtos", async (req, res) => {
-  const params = ListProdutosQueryParams.safeParse(req.query);
-  const q = params.success ? params.data.q : void 0;
-  let rows;
-  if (q) {
-    rows = await db.produto.findMany({
-      where: { nome: { contains: q, mode: "insensitive" } },
-      orderBy: { nome: "asc" }
-    });
-  } else {
-    rows = await db.produto.findMany({ orderBy: { nome: "asc" } });
-  }
-  res.json(rows.map(serializeProduto));
-});
-router4.post("/produtos", async (req, res) => {
-  const parsed = CreateProdutoBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  const data = { ...parsed.data };
-  if (data.valor !== void 0) data.valor = String(data.valor);
-  const row = await db.produto.create({ data });
-  res.status(201).json(serializeProduto(row));
-});
-router4.get("/produtos/:id", async (req, res) => {
-  const p = GetProdutoParams.safeParse(req.params);
-  if (!p.success) {
-    res.status(400).json({ error: p.error.message });
-    return;
-  }
-  const row = await db.produto.findUnique({ where: { id: p.data.id } });
-  if (!row) {
-    res.status(404).json({ error: "Produto n\xC3\xA3o encontrado" });
-    return;
-  }
-  res.json(serializeProduto(row));
-});
-router4.patch("/produtos/:id", async (req, res) => {
-  const p = UpdateProdutoParams.safeParse(req.params);
-  if (!p.success) {
-    res.status(400).json({ error: p.error.message });
-    return;
-  }
-  const parsed = UpdateProdutoBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  const data = { ...parsed.data };
-  if (data.valor !== void 0) data.valor = String(data.valor);
-  try {
-    const row = await db.produto.update({ where: { id: p.data.id }, data });
-    res.json(serializeProduto(row));
-  } catch {
-    res.status(404).json({ error: "Produto n\xC3\xA3o encontrado" });
-  }
-});
-router4.delete("/produtos/:id", async (req, res) => {
-  const p = DeleteProdutoParams.safeParse(req.params);
-  if (!p.success) {
-    res.status(400).json({ error: p.error.message });
-    return;
-  }
-  try {
-    await db.produto.delete({ where: { id: p.data.id } });
-    res.sendStatus(204);
-  } catch {
-    res.status(404).json({ error: "Produto n\xC3\xA3o encontrado" });
-  }
-});
-var produtos_default = router4;
-
-// src/routes/usuarios.ts
-var import_express5 = __toESM(require_express2(), 1);
 
 // src/middleware/auth.ts
 var SECTOR_ROLES = ["corte", "dobra", "solda", "refrigeracao", "acabamento", "finalizacao", "montagem"];
-var PRODUCTION_ROLES = ["master", "gerente", "producao", "dashboard_producao", "projetista", ...SECTOR_ROLES];
+var PRODUCTION_ROLES = ["master", "gerente", "producao", "engenharia", "dashboard_producao", "projetista", ...SECTOR_ROLES];
 var SALES_ROLES = ["master", "gerente", "vendedor"];
-var ALL_ROLES = [.../* @__PURE__ */ new Set([...SALES_ROLES, ...PRODUCTION_ROLES])];
+var FINANCEIRO_ROLES = ["master", "gerente", "financeiro"];
+var ADMIN_ROLES = ["master", "gerente"];
+var ALL_ROLES = Array.from(/* @__PURE__ */ new Set([...SALES_ROLES, ...PRODUCTION_ROLES, ...FINANCEIRO_ROLES, "visualizador"]));
 var loadUser = async (req, _res, next) => {
   try {
     let token;
@@ -36163,7 +35993,275 @@ function requireRoles(roles) {
   };
 }
 
+// src/middleware/audit.ts
+function auditLog(options) {
+  return async (req, res, next) => {
+    const originalJson = res.json;
+    res.json = function(data) {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        const user = req.currentUser;
+        db.auditLog.create({
+          data: {
+            usuarioId: user?.id,
+            acao: options.action,
+            modulo: options.module,
+            registroId: options.recordId?.toString(),
+            tabela: options.table,
+            valorAntigo: options.oldValue ? JSON.stringify(options.oldValue) : null,
+            valorNovo: options.newValue ? JSON.stringify(options.newValue) : JSON.stringify(data),
+            ip: req.ip || req.socket.remoteAddress,
+            userAgent: req.get("user-agent")
+          }
+        }).catch((err) => {
+          console.error("Audit log error:", err);
+        });
+      }
+      return originalJson.call(this, data);
+    };
+    next();
+  };
+}
+
+// src/routes/clientes.ts
+var router3 = (0, import_express3.Router)();
+router3.get("/clientes", requireAuth, requireRoles(ALL_ROLES), auditLog({
+  action: "list",
+  module: "clientes",
+  table: "Cliente"
+}), async (req, res) => {
+  const params = ListClientesQueryParams.safeParse(req.query);
+  const q = params.success ? params.data.q : void 0;
+  let rows;
+  if (q) {
+    rows = await db.cliente.findMany({
+      where: {
+        OR: [
+          { razaoSocial: { contains: q, mode: "insensitive" } },
+          { nomeFantasia: { contains: q, mode: "insensitive" } },
+          { cnpjCpf: { contains: q, mode: "insensitive" } }
+        ]
+      },
+      orderBy: { razaoSocial: "asc" }
+    });
+  } else {
+    rows = await db.cliente.findMany({ orderBy: { razaoSocial: "asc" } });
+  }
+  res.json(rows.map((r) => ({
+    id: r.id,
+    razaoSocial: r.razaoSocial,
+    nomeFantasia: r.nomeFantasia,
+    cnpjCpf: r.cnpjCpf,
+    endereco: r.endereco,
+    cidade: r.cidade,
+    estado: r.estado,
+    telefone: r.telefone,
+    email: r.email,
+    observacoes: r.observacoes,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt
+  })));
+});
+router3.post("/clientes", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
+  action: "create",
+  module: "clientes",
+  table: "Cliente"
+}), async (req, res) => {
+  const parsed = CreateClienteBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const row = await db.cliente.create({
+    data: {
+      razaoSocial: parsed.data.razaoSocial,
+      nomeFantasia: parsed.data.nomeFantasia,
+      cnpjCpf: parsed.data.cnpjCpf,
+      endereco: parsed.data.endereco,
+      cidade: parsed.data.cidade,
+      estado: parsed.data.estado,
+      telefone: parsed.data.telefone,
+      email: parsed.data.email,
+      observacoes: parsed.data.observacoes
+    }
+  });
+  res.status(201).json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
+});
+router3.get("/clientes/:id", requireAuth, requireRoles(ALL_ROLES), auditLog({
+  action: "view",
+  module: "clientes",
+  table: "Cliente"
+}), async (req, res) => {
+  const p = GetClienteParams.safeParse(req.params);
+  if (!p.success) {
+    res.status(400).json({ error: p.error.message });
+    return;
+  }
+  const id = Number(p.data.id);
+  const row = await db.cliente.findUnique({ where: { id } });
+  if (!row) {
+    res.status(404).json({ error: "Cliente n\xC3\xA3o encontrado" });
+    return;
+  }
+  res.json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
+});
+router3.patch("/clientes/:id", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
+  action: "update",
+  module: "clientes",
+  table: "Cliente"
+}), async (req, res) => {
+  const p = UpdateClienteParams.safeParse(req.params);
+  if (!p.success) {
+    res.status(400).json({ error: p.error.message });
+    return;
+  }
+  const parsed = UpdateClienteBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  try {
+    const id = Number(p.data.id);
+    const row = await db.cliente.update({
+      where: { id },
+      data: parsed.data
+    });
+    res.json({ ...row, createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt });
+  } catch {
+    res.status(404).json({ error: "Cliente n\xC3\xA3o encontrado" });
+  }
+});
+router3.delete("/clientes/:id", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
+  action: "delete",
+  module: "clientes",
+  table: "Cliente"
+}), async (req, res) => {
+  const p = DeleteClienteParams.safeParse(req.params);
+  if (!p.success) {
+    res.status(400).json({ error: p.error.message });
+    return;
+  }
+  try {
+    const id = Number(p.data.id);
+    await db.cliente.delete({ where: { id } });
+    res.sendStatus(204);
+  } catch {
+    res.status(404).json({ error: "Cliente n\xC3\xA3o encontrado" });
+  }
+});
+var clientes_default = router3;
+
+// src/routes/produtos.ts
+var import_express4 = __toESM(require_express2(), 1);
+var router4 = (0, import_express4.Router)();
+function serializeProduto(r) {
+  return {
+    id: r.id,
+    codigo: r.codigo,
+    nome: r.nome,
+    descricao: r.descricao,
+    foto: r.foto,
+    valor: typeof r.valor === "object" && r.valor !== null ? Number(r.valor) : Number(r.valor),
+    estoque: r.estoque,
+    status: r.status
+  };
+}
+router4.get("/produtos", requireAuth, requireRoles(ALL_ROLES), auditLog({
+  action: "list",
+  module: "produtos",
+  table: "Produto"
+}), async (req, res) => {
+  const params = ListProdutosQueryParams.safeParse(req.query);
+  const q = params.success ? params.data.q : void 0;
+  let rows;
+  if (q) {
+    rows = await db.produto.findMany({
+      where: { nome: { contains: q, mode: "insensitive" } },
+      orderBy: { nome: "asc" }
+    });
+  } else {
+    rows = await db.produto.findMany({ orderBy: { nome: "asc" } });
+  }
+  res.json(rows.map(serializeProduto));
+});
+router4.post("/produtos", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
+  action: "create",
+  module: "produtos",
+  table: "Produto"
+}), async (req, res) => {
+  const parsed = CreateProdutoBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const data = { ...parsed.data };
+  if (data.valor !== void 0) data.valor = String(data.valor);
+  const row = await db.produto.create({ data });
+  res.status(201).json(serializeProduto(row));
+});
+router4.get("/produtos/:id", requireAuth, requireRoles(ALL_ROLES), auditLog({
+  action: "view",
+  module: "produtos",
+  table: "Produto"
+}), async (req, res) => {
+  const p = GetProdutoParams.safeParse(req.params);
+  if (!p.success) {
+    res.status(400).json({ error: p.error.message });
+    return;
+  }
+  const id = Number(p.data.id);
+  const row = await db.produto.findUnique({ where: { id } });
+  if (!row) {
+    res.status(404).json({ error: "Produto n\xC3\xA3o encontrado" });
+    return;
+  }
+  res.json(serializeProduto(row));
+});
+router4.patch("/produtos/:id", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
+  action: "update",
+  module: "produtos",
+  table: "Produto"
+}), async (req, res) => {
+  const p = UpdateProdutoParams.safeParse(req.params);
+  if (!p.success) {
+    res.status(400).json({ error: p.error.message });
+    return;
+  }
+  const parsed = UpdateProdutoBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const data = { ...parsed.data };
+  if (data.valor !== void 0) data.valor = String(data.valor);
+  try {
+    const id = Number(p.data.id);
+    const row = await db.produto.update({ where: { id }, data });
+    res.json(serializeProduto(row));
+  } catch {
+    res.status(404).json({ error: "Produto n\xC3\xA3o encontrado" });
+  }
+});
+router4.delete("/produtos/:id", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
+  action: "delete",
+  module: "produtos",
+  table: "Produto"
+}), async (req, res) => {
+  const p = DeleteProdutoParams.safeParse(req.params);
+  if (!p.success) {
+    res.status(400).json({ error: p.error.message });
+    return;
+  }
+  try {
+    const id = Number(p.data.id);
+    await db.produto.delete({ where: { id } });
+    res.sendStatus(204);
+  } catch {
+    res.status(404).json({ error: "Produto n\xC3\xA3o encontrado" });
+  }
+});
+var produtos_default = router4;
+
 // src/routes/usuarios.ts
+var import_express5 = __toESM(require_express2(), 1);
 var router5 = (0, import_express5.Router)();
 function serializeUser(r) {
   return {
@@ -36237,6 +36335,65 @@ var usuarios_default = router5;
 
 // src/routes/orcamentos.ts
 var import_express6 = __toESM(require_express2(), 1);
+
+// src/lib/stateMachine.ts
+var ORCAMENTO_TRANSITIONS = {
+  pendente: ["em_projeto", "em_revisao", "convertido", "cancelada"],
+  em_projeto: ["em_revisao", "em_producao", "concluida", "cancelada"],
+  em_revisao: ["em_projeto", "em_producao", "concluida", "cancelada"],
+  em_producao: ["concluida", "cancelada"],
+  concluida: [],
+  // Estado final
+  cancelada: [],
+  // Estado final
+  convertido: []
+  // Estado final
+};
+var VENDA_TRANSITIONS = {
+  em_andamento: ["concluida", "cancelada"],
+  concluida: [],
+  // Estado final
+  cancelada: []
+  // Estado final
+};
+var OS_TRANSITIONS = {
+  pendente: ["em_projeto", "em_revisao", "em_producao", "cancelada"],
+  em_projeto: ["em_revisao", "em_producao", "cancelada"],
+  em_revisao: ["em_projeto", "em_producao", "cancelada"],
+  em_producao: ["concluida", "cancelada"],
+  concluida: [],
+  // Estado final
+  cancelada: []
+  // Estado final
+};
+var ETAPA_TRANSITIONS = {
+  autorizacao: ["corte", "concluida"],
+  corte: ["dobra", "concluida"],
+  dobra: ["solda", "concluida"],
+  solda: ["refrigeracao", "concluida"],
+  refrigeracao: ["acabamento", "concluida"],
+  acabamento: ["finalizacao", "concluida"],
+  finalizacao: ["montagem", "concluida"],
+  montagem: ["concluida"],
+  concluida: []
+  // Estado final
+};
+function canTransition(currentStatus, newStatus, type) {
+  const transitions = type === "orcamento" ? ORCAMENTO_TRANSITIONS : type === "venda" ? VENDA_TRANSITIONS : type === "os" ? OS_TRANSITIONS : ETAPA_TRANSITIONS;
+  const validTransitions = transitions[currentStatus] || [];
+  if (!validTransitions.includes(newStatus)) {
+    return {
+      valid: false,
+      error: `Transi\xE7\xE3o inv\xE1lida de ${currentStatus} para ${newStatus} em ${type}. Transi\xE7\xF5es permitidas: ${validTransitions.join(", ") || "nenhuma"}`
+    };
+  }
+  return { valid: true };
+}
+function canTransitionOrcamento(currentStatus, newStatus) {
+  return canTransition(currentStatus, newStatus, "orcamento");
+}
+
+// src/routes/orcamentos.ts
 var router6 = (0, import_express6.Router)();
 async function getNextOrcamentoNum() {
   const count = await db.orcamento.count();
@@ -36326,14 +36483,19 @@ router6.post("/orcamentos", requireAuth, requireRoles(SALES_ROLES), async (req, 
   const cliente = await db.cliente.findUnique({ where: { id: orc.clienteId } });
   res.status(201).json(serializeOrc(orc, cliente));
 });
-router6.get("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (req, res) => {
+router6.get("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), auditLog({
+  action: "view",
+  module: "orcamentos",
+  table: "Orcamento"
+}), async (req, res) => {
   const p = GetOrcamentoParams.safeParse(req.params);
   if (!p.success) {
     res.status(400).json({ error: p.error.message });
     return;
   }
+  const id = Number(p.data.id);
   const orc = await db.orcamento.findUnique({
-    where: { id: p.data.id },
+    where: { id },
     include: { cliente: true }
   });
   if (!orc) {
@@ -36346,7 +36508,7 @@ router6.get("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (re
     return;
   }
   const itens = await db.orcamentoItem.findMany({
-    where: { orcamentoId: p.data.id },
+    where: { orcamentoId: id },
     include: { produto: true }
   });
   const serializedOrc = serializeOrc(orc, orc.cliente);
@@ -36370,7 +36532,11 @@ router6.get("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (re
   }));
   res.json({ ...serializedOrc, itens: serializedItens });
 });
-router6.patch("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (req, res) => {
+router6.patch("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), auditLog({
+  action: "update",
+  module: "orcamentos",
+  table: "Orcamento"
+}), async (req, res) => {
   const p = UpdateOrcamentoParams.safeParse(req.params);
   if (!p.success) {
     res.status(400).json({ error: p.error.message });
@@ -36383,39 +36549,65 @@ router6.patch("/orcamentos/:id", requireAuth, requireRoles(SALES_ROLES), async (
   }
   const data = { ...parsed.data };
   if (data.desconto !== void 0) data.desconto = Number(data.desconto);
+  if (data.status) {
+    const orc = await db.orcamento.findUnique({ where: { id: Number(p.data.id) } });
+    if (orc) {
+      const validation = canTransitionOrcamento(orc.status, data.status);
+      if (!validation.valid) {
+        res.status(400).json({ error: validation.error });
+        return;
+      }
+    }
+  }
   try {
-    const row = await db.orcamento.update({ where: { id: p.data.id }, data });
+    const id = Number(p.data.id);
+    const row = await db.orcamento.update({ where: { id }, data });
     res.json(serializeOrc(row));
   } catch {
     res.status(404).json({ error: "Or\xC3\xA7amento n\xC3\xA3o encontrado" });
   }
 });
-router6.delete("/orcamentos/:id", requireAuth, requireRoles(["master", "gerente"]), async (req, res) => {
+router6.delete("/orcamentos/:id", requireAuth, requireRoles(["master", "gerente"]), auditLog({
+  action: "delete",
+  module: "orcamentos",
+  table: "Orcamento"
+}), async (req, res) => {
   const p = DeleteOrcamentoParams.safeParse(req.params);
   if (!p.success) {
     res.status(400).json({ error: p.error.message });
     return;
   }
   try {
-    await db.orcamento.delete({ where: { id: p.data.id } });
+    const id = Number(p.data.id);
+    await db.orcamento.delete({ where: { id } });
     res.sendStatus(204);
   } catch {
     res.status(404).json({ error: "Or\xC3\xA7amento n\xC3\xA3o encontrado" });
   }
 });
-router6.post("/orcamentos/:id/converter", requireAuth, requireRoles(SALES_ROLES), async (req, res) => {
+router6.post("/orcamentos/:id/converter", requireAuth, requireRoles(SALES_ROLES), auditLog({
+  action: "converter",
+  module: "orcamentos",
+  table: "Orcamento"
+}), async (req, res) => {
   const p = ConverterOrcamentoParams.safeParse(req.params);
   if (!p.success) {
     res.status(400).json({ error: p.error.message });
     return;
   }
-  const orc = await db.orcamento.findUnique({ where: { id: p.data.id } });
+  const id = Number(p.data.id);
+  const orc = await db.orcamento.findUnique({ where: { id } });
   if (!orc) {
     res.status(404).json({ error: "Or\xC3\xA7amento n\xC3\xA3o encontrado" });
     return;
   }
   if (orc.status === "convertido") {
     res.status(400).json({ error: "Or\xC3\xA7amento j\xC3\xA1 convertido" });
+    return;
+  }
+  const validation = canTransitionOrcamento(orc.status, "convertido");
+  if (!validation.valid) {
+    res.status(400).json({ error: validation.error });
     return;
   }
   const userId = req.currentUser?.id ?? 1;
@@ -36974,7 +37166,6 @@ var os_default = router8;
 // src/routes/financeiro.ts
 var import_express9 = __toESM(require_express2(), 1);
 var router9 = (0, import_express9.Router)();
-var MASTER_ONLY = ["master"];
 function serializeCR(r, cliente) {
   return {
     id: r.id,
@@ -37003,7 +37194,11 @@ function serializeCR(r, cliente) {
     } : void 0
   };
 }
-router9.get("/financeiro/contas-receber", requireAuth, requireRoles(MASTER_ONLY), async (req, res) => {
+router9.get("/financeiro/contas-receber", requireAuth, requireRoles(FINANCEIRO_ROLES), auditLog({
+  action: "list",
+  module: "financeiro",
+  table: "ContaReceber"
+}), async (req, res) => {
   const params = ListContasReceberQueryParams.safeParse(req.query);
   const status = params.success ? params.data.status : void 0;
   const rows = await db.contaReceber.findMany({
@@ -37014,7 +37209,11 @@ router9.get("/financeiro/contas-receber", requireAuth, requireRoles(MASTER_ONLY)
   if (status) result = result.filter((r) => r.status === status);
   res.json(result);
 });
-router9.post("/financeiro/contas-receber/:id/pagar", requireAuth, requireRoles(MASTER_ONLY), async (req, res) => {
+router9.post("/financeiro/contas-receber/:id/pagar", requireAuth, requireRoles(FINANCEIRO_ROLES), auditLog({
+  action: "pagar",
+  module: "financeiro",
+  table: "ContaReceber"
+}), async (req, res) => {
   const p = PagarContaReceberParams.safeParse(req.params);
   if (!p.success) {
     res.status(400).json({ error: p.error.message });
@@ -37026,8 +37225,9 @@ router9.post("/financeiro/contas-receber/:id/pagar", requireAuth, requireRoles(M
     return;
   }
   const userId = req.currentUser?.id;
+  const id = Number(p.data.id);
   const updated = await db.contaReceber.update({
-    where: { id: p.data.id },
+    where: { id },
     data: {
       valorRecebido: Number(body.data.valorPago),
       dataPagamento: /* @__PURE__ */ new Date(),
@@ -37037,7 +37237,7 @@ router9.post("/financeiro/contas-receber/:id/pagar", requireAuth, requireRoles(M
   });
   await db.pagamento.create({
     data: {
-      contaReceberId: p.data.id,
+      contaReceberId: id,
       usuarioId: userId,
       valorPago: Number(body.data.valorPago),
       formaPagamento: body.data.formaPagamento,
@@ -37047,7 +37247,11 @@ router9.post("/financeiro/contas-receber/:id/pagar", requireAuth, requireRoles(M
   const cliente = await db.cliente.findUnique({ where: { id: updated.clienteId } });
   res.json(serializeCR(updated, cliente));
 });
-router9.get("/financeiro/contas-pagar", requireAuth, requireRoles(MASTER_ONLY), async (req, res) => {
+router9.get("/financeiro/contas-pagar", requireAuth, requireRoles(FINANCEIRO_ROLES), auditLog({
+  action: "list",
+  module: "financeiro",
+  table: "ContaPagar"
+}), async (req, res) => {
   const params = ListContasPagarQueryParams.safeParse(req.query);
   const rows = await db.contaPagar.findMany({ orderBy: { dataVencimento: "desc" } });
   let result = rows.map((r) => ({
@@ -37065,7 +37269,11 @@ router9.get("/financeiro/contas-pagar", requireAuth, requireRoles(MASTER_ONLY), 
   }
   res.json(result);
 });
-router9.post("/financeiro/contas-pagar", requireAuth, requireRoles(MASTER_ONLY), async (req, res) => {
+router9.post("/financeiro/contas-pagar", requireAuth, requireRoles(FINANCEIRO_ROLES), auditLog({
+  action: "create",
+  module: "financeiro",
+  table: "ContaPagar"
+}), async (req, res) => {
   const parsed = CreateContaPagarBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -37073,8 +37281,10 @@ router9.post("/financeiro/contas-pagar", requireAuth, requireRoles(MASTER_ONLY),
   }
   const row = await db.contaPagar.create({
     data: {
-      ...parsed.data,
-      valor: Number(parsed.data.valor)
+      descricao: parsed.data.descricao,
+      fornecedor: parsed.data.fornecedor,
+      valor: String(parsed.data.valor),
+      dataVencimento: parsed.data.dataVencimento
     }
   });
   res.status(201).json({
@@ -37088,14 +37298,19 @@ router9.post("/financeiro/contas-pagar", requireAuth, requireRoles(MASTER_ONLY),
     createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt
   });
 });
-router9.post("/financeiro/contas-pagar/:id/pagar", requireAuth, requireRoles(MASTER_ONLY), async (req, res) => {
+router9.post("/financeiro/contas-pagar/:id/pagar", requireAuth, requireRoles(FINANCEIRO_ROLES), auditLog({
+  action: "pagar",
+  module: "financeiro",
+  table: "ContaPagar"
+}), async (req, res) => {
   const p = PagarContaPagarParams.safeParse(req.params);
   if (!p.success) {
     res.status(400).json({ error: p.error.message });
     return;
   }
+  const id = Number(p.data.id);
   const updated = await db.contaPagar.update({
-    where: { id: p.data.id },
+    where: { id },
     data: { status: "PAGO", dataPagamento: /* @__PURE__ */ new Date() }
   });
   res.json({
@@ -37114,12 +37329,18 @@ var financeiro_default = router9;
 // src/routes/dashboard.ts
 var import_express10 = __toESM(require_express2(), 1);
 var router10 = (0, import_express10.Router)();
-router10.get("/dashboard/stats", requireAuth, async (req, res) => {
+router10.get("/dashboard/stats", requireAuth, auditLog({
+  action: "view",
+  module: "dashboard",
+  table: "Dashboard"
+}), async (req, res) => {
   const currentUser = req.currentUser;
   const isVendedor = currentUser.tipo === "vendedor";
   const startOfMonth = /* @__PURE__ */ new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
+  const startOfLastMonth = new Date(startOfMonth);
+  startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1);
   const allVendas = await db.venda.findMany();
   let ownVendas = allVendas;
   if (isVendedor) {
@@ -37128,15 +37349,30 @@ router10.get("/dashboard/stats", requireAuth, async (req, res) => {
   const totalVendas = ownVendas.length;
   const ownThisMonth = ownVendas.filter((v) => v.createdAt >= startOfMonth);
   const receitaMes = ownThisMonth.reduce((acc, v) => acc + Number(v.valorTotal), 0);
+  const ownLastMonth = ownVendas.filter((v) => v.createdAt >= startOfLastMonth && v.createdAt < startOfMonth);
+  const receitaMesAnterior = ownLastMonth.reduce((acc, v) => acc + Number(v.valorTotal), 0);
+  const crescimentoReceita = receitaMesAnterior > 0 ? (receitaMes - receitaMesAnterior) / receitaMesAnterior * 100 : 0;
   const totalOrcamentos = await db.orcamento.count();
   const totalOs = await db.ordemServico.count();
   const totalClientes = await db.cliente.count();
   const osPendentes = await db.ordemServico.count({ where: { status: "pendente" } });
   const osEmProducao = await db.ordemServico.count({ where: { status: "em_producao" } });
-  const isMaster = currentUser.tipo === "master";
+  const osConcluidas = await db.ordemServico.count({ where: { status: "concluida" } });
+  const hoje = /* @__PURE__ */ new Date();
+  const osAtrasadas = await db.ordemServico.count({
+    where: {
+      status: { in: ["pendente", "em_projeto", "em_revisao", "em_producao"] },
+      dataTermino: { lt: hoje }
+    }
+  });
+  const orcamentosConvertidos = await db.orcamento.count({ where: { status: "convertido" } });
+  const taxaConversao = totalOrcamentos > 0 ? orcamentosConvertidos / totalOrcamentos * 100 : 0;
+  const canSeeFinanceiro = FINANCEIRO_ROLES.includes(currentUser.tipo);
   let contasReceberPendentes = 0;
   let contasReceberValor = 0;
-  if (isMaster) {
+  let contasReceberAtrasadas = 0;
+  let valorRecebidoMes = 0;
+  if (canSeeFinanceiro) {
     const cr = await db.contaReceber.aggregate({
       _count: { id: true },
       _sum: { valorLiquido: true },
@@ -37144,6 +37380,41 @@ router10.get("/dashboard/stats", requireAuth, async (req, res) => {
     });
     contasReceberPendentes = cr._count.id || 0;
     contasReceberValor = Number(cr._sum.valorLiquido || 0);
+    const crAtrasadas = await db.contaReceber.aggregate({
+      _count: { id: true },
+      where: {
+        status: "PENDENTE",
+        dataVencimento: { lt: hoje }
+      }
+    });
+    contasReceberAtrasadas = crAtrasadas._count.id || 0;
+    const pagamentosMes = await db.pagamento.findMany({
+      where: {
+        createdAt: { gte: startOfMonth }
+      }
+    });
+    valorRecebidoMes = pagamentosMes.reduce((acc, p) => acc + Number(p.valorPago), 0);
+  }
+  const canSeeRanking = ["master", "gerente"].includes(currentUser.tipo);
+  let rankingVendedores = [];
+  if (canSeeRanking) {
+    const vendasPorUsuario = await db.venda.groupBy({
+      by: ["usuarioId"],
+      _count: { id: true },
+      _sum: { valorTotal: true },
+      orderBy: { _sum: { valorTotal: "desc" } },
+      take: 5
+    });
+    for (const venda of vendasPorUsuario) {
+      const usuario = await db.usuario.findUnique({ where: { id: venda.usuarioId } });
+      if (usuario) {
+        rankingVendedores.push({
+          nome: usuario.nome,
+          totalVendas: venda._count.id,
+          valorTotal: Number(venda._sum.valorTotal || 0)
+        });
+      }
+    }
   }
   res.json({
     totalVendas,
@@ -37151,13 +37422,24 @@ router10.get("/dashboard/stats", requireAuth, async (req, res) => {
     totalOs,
     totalClientes,
     receitaMes,
+    crescimentoReceita: Math.round(crescimentoReceita * 10) / 10,
     osPendentes,
     osEmProducao,
-    contasReceberPendentes: isMaster ? contasReceberPendentes : null,
-    contasReceberValor: isMaster ? contasReceberValor : null
+    osConcluidas,
+    osAtrasadas,
+    taxaConversao: Math.round(taxaConversao * 10) / 10,
+    contasReceberPendentes: canSeeFinanceiro ? contasReceberPendentes : null,
+    contasReceberValor: canSeeFinanceiro ? contasReceberValor : null,
+    contasReceberAtrasadas: canSeeFinanceiro ? contasReceberAtrasadas : null,
+    valorRecebidoMes: canSeeFinanceiro ? valorRecebidoMes : null,
+    rankingVendedores: canSeeRanking ? rankingVendedores : null
   });
 });
-router10.get("/dashboard/os-por-status", requireAuth, async (_req, res) => {
+router10.get("/dashboard/os-por-status", requireAuth, auditLog({
+  action: "view",
+  module: "dashboard",
+  table: "OS"
+}), async (_req, res) => {
   const statuses = ["pendente", "em_projeto", "em_revisao", "em_producao", "concluida", "cancelada"];
   const result = await Promise.all(
     statuses.map(async (status) => {
@@ -37167,7 +37449,11 @@ router10.get("/dashboard/os-por-status", requireAuth, async (_req, res) => {
   );
   res.json(result);
 });
-router10.get("/dashboard/vendas-recentes", requireAuth, async (req, res) => {
+router10.get("/dashboard/vendas-recentes", requireAuth, auditLog({
+  action: "view",
+  module: "dashboard",
+  table: "Venda"
+}), async (req, res) => {
   const currentUser = req.currentUser;
   const rows = await db.venda.findMany({
     include: { cliente: true },
@@ -37206,7 +37492,11 @@ router10.get("/dashboard/vendas-recentes", requireAuth, async (req, res) => {
   }
   res.json(result.slice(0, 5));
 });
-router10.get("/dashboard/os-atrasadas", requireAuth, async (req, res) => {
+router10.get("/dashboard/os-atrasadas", requireAuth, auditLog({
+  action: "view",
+  module: "dashboard",
+  table: "OS"
+}), async (req, res) => {
   const currentUser = req.currentUser;
   const allowedRoles = ["master", "gerente", "producao", "dashboard_producao"];
   if (!allowedRoles.includes(currentUser.tipo)) {
@@ -37250,19 +37540,106 @@ router10.get("/dashboard/os-atrasadas", requireAuth, async (req, res) => {
 });
 var dashboard_default = router10;
 
-// src/routes/index.ts
+// src/routes/notificacoes.ts
+var import_express11 = __toESM(require_express2(), 1);
 var router11 = (0, import_express11.Router)();
-router11.use(health_default);
-router11.use(auth_default);
-router11.use(clientes_default);
-router11.use(produtos_default);
-router11.use(usuarios_default);
-router11.use(orcamentos_default);
-router11.use(vendas_default);
-router11.use(os_default);
-router11.use(financeiro_default);
-router11.use(dashboard_default);
-var routes_default = router11;
+router11.get("/notificacoes", requireAuth, auditLog({
+  action: "list",
+  module: "notificacoes",
+  table: "Notificacao"
+}), async (req, res) => {
+  const currentUser = req.currentUser;
+  const notificacoes = await db.notificacao.findMany({
+    where: { usuarioId: currentUser.id },
+    orderBy: { createdAt: "desc" },
+    take: 50
+  });
+  const naoLidas = await db.notificacao.count({
+    where: { usuarioId: currentUser.id, lida: false }
+  });
+  res.json({
+    notificacoes: notificacoes.map((n) => ({
+      id: n.id,
+      titulo: n.titulo,
+      mensagem: n.mensagem,
+      tipo: n.tipo,
+      lida: n.lida,
+      link: n.link,
+      createdAt: n.createdAt.toISOString(),
+      readAt: n.readAt?.toISOString()
+    })),
+    naoLidas
+  });
+});
+router11.post("/notificacoes/:id/marcar-lida", requireAuth, auditLog({
+  action: "update",
+  module: "notificacoes",
+  table: "Notificacao"
+}), async (req, res) => {
+  const currentUser = req.currentUser;
+  const id = Number(req.params.id);
+  const notificacao = await db.notificacao.findUnique({ where: { id } });
+  if (!notificacao) {
+    res.status(404).json({ error: "Notifica\xE7\xE3o n\xE3o encontrada" });
+    return;
+  }
+  if (notificacao.usuarioId !== currentUser.id) {
+    res.status(403).json({ error: "Sem permiss\xE3o para esta notifica\xE7\xE3o" });
+    return;
+  }
+  await db.notificacao.update({
+    where: { id },
+    data: { lida: true, readAt: /* @__PURE__ */ new Date() }
+  });
+  res.json({ success: true });
+});
+router11.post("/notificacoes/marcar-todas-lidas", requireAuth, auditLog({
+  action: "update",
+  module: "notificacoes",
+  table: "Notificacao"
+}), async (req, res) => {
+  const currentUser = req.currentUser;
+  await db.notificacao.updateMany({
+    where: { usuarioId: currentUser.id, lida: false },
+    data: { lida: true, readAt: /* @__PURE__ */ new Date() }
+  });
+  res.json({ success: true });
+});
+router11.delete("/notificacoes/:id", requireAuth, auditLog({
+  action: "delete",
+  module: "notificacoes",
+  table: "Notificacao"
+}), async (req, res) => {
+  const currentUser = req.currentUser;
+  const id = Number(req.params.id);
+  const notificacao = await db.notificacao.findUnique({ where: { id } });
+  if (!notificacao) {
+    res.status(404).json({ error: "Notifica\xE7\xE3o n\xE3o encontrada" });
+    return;
+  }
+  if (notificacao.usuarioId !== currentUser.id) {
+    res.status(403).json({ error: "Sem permiss\xE3o para esta notifica\xE7\xE3o" });
+    return;
+  }
+  await db.notificacao.delete({ where: { id } });
+  res.json({ success: true });
+});
+var notificacoes_default = router11;
+
+// src/routes/index.ts
+var router12 = (0, import_express12.Router)();
+router12.use(health_default);
+router12.use(auth_default);
+router12.use(clientes_default);
+router12.use(produtos_default);
+router12.use(usuarios_default);
+router12.use(orcamentos_default);
+router12.use(vendas_default);
+router12.use(os_default);
+router12.use(financeiro_default);
+router12.use(dashboard_default);
+router12.use(notificacoes_default);
+var routes_default = router12;
 
 // src/lib/logger.ts
 var import_pino = __toESM(require_pino(), 1);
@@ -37283,7 +37660,26 @@ var logger = (0, import_pino.default)({
 });
 
 // src/app.ts
-var app = (0, import_express12.default)();
+var app = (0, import_express13.default)();
+var allowedOrigins = (process.env.CORS_ORIGIN || "").split(",").map((o) => o.trim()).filter(Boolean);
+allowedOrigins.push("http://127.0.0.1:51573");
+allowedOrigins.push("https://erp-orcamento-sistema.vercel.app");
+if (allowedOrigins.length === 2) {
+  allowedOrigins.push("http://localhost:5173", "http://localhost:3000");
+}
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  }
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+  next();
+});
 app.use(
   (0, import_pino_http.default)({
     logger,
@@ -37303,25 +37699,8 @@ app.use(
     }
   })
 );
-var allowedOrigins = (process.env.CORS_ORIGIN || "").split(",").map((o) => o.trim()).filter(Boolean);
-if (allowedOrigins.length === 0) {
-  allowedOrigins.push("http://localhost:5173", "http://localhost:3000");
-}
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  }
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
-  next();
-});
-app.use(import_express12.default.json());
-app.use(import_express12.default.urlencoded({ extended: true }));
+app.use(import_express13.default.json());
+app.use(import_express13.default.urlencoded({ extended: true }));
 app.use(loadUser);
 app.use("/api", routes_default);
 app.use((err, req, res, next) => {

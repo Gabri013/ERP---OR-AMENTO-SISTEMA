@@ -3,9 +3,11 @@ import { db } from "../lib/prisma";
 import { verifyUserToken } from "../lib/jwt";
 
 export const SECTOR_ROLES = ["corte","dobra","solda","refrigeracao","acabamento","finalizacao","montagem"];
-export const PRODUCTION_ROLES = ["master","gerente","producao","dashboard_producao","projetista",...SECTOR_ROLES];
+export const PRODUCTION_ROLES = ["master","gerente","producao","engenharia","dashboard_producao","projetista",...SECTOR_ROLES];
 export const SALES_ROLES = ["master","gerente","vendedor"];
-export const ALL_ROLES = [...new Set([...SALES_ROLES,...PRODUCTION_ROLES])];
+export const FINANCEIRO_ROLES = ["master","gerente","financeiro"];
+export const ADMIN_ROLES = ["master","gerente"];
+export const ALL_ROLES = Array.from(new Set([...SALES_ROLES,...PRODUCTION_ROLES,...FINANCEIRO_ROLES,"visualizador"]));
 
 async function getUserFromRequest(req: any) {
   try {

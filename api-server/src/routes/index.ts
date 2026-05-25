@@ -9,6 +9,7 @@ import vendasRouter from "./vendas";
 import osRouter from "./os";
 import financeiroRouter from "./financeiro";
 import dashboardRouter from "./dashboard";
+import notificacoesRouter from "./notificacoes";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(vendasRouter);
 router.use(osRouter);
 router.use(financeiroRouter);
 router.use(dashboardRouter);
+router.use(notificacoesRouter);
 
 export default router;

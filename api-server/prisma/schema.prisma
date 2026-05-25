@@ -42,6 +42,8 @@ model Usuario {
   orcamentos       Orcamento[]
   pagamentos       Pagamento[]
   vendas           Venda[]
+  auditLogs        AuditLog[]
+  notificacoes     Notificacao[]
 }
 
 model Produto {
@@ -284,4 +286,55 @@ enum TipoUsuario {
   gerente
   vendedor
   producao
+  financeiro
+  engenharia
+  visualizador
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  usuarioId   Int?
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+  acao        String
+  modulo      String
+  registroId  String?
+  tabela      String?
+  valorAntigo String?
+  valorNovo   String?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+}
+
+model Permissao {
+  id          Int      @id @default(autoincrement())
+  nome        String   @unique
+  descricao   String?
+  modulo      String
+  acoes       String[]
+  createdAt   DateTime @default(now())
+  roles       RolePermissao[]
+}
+
+model RolePermissao {
+  id           Int        @id @default(autoincrement())
+  tipoUsuario  TipoUsuario
+  permissaoId  Int
+  permissao    Permissao  @relation(fields: [permissaoId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@unique([tipoUsuario, permissaoId])
+}
+
+model Notificacao {
+  id          Int      @id @default(autoincrement())
+  usuarioId   Int
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+  titulo      String
+  mensagem    String
+  tipo        String   // info, warning, success, error
+  lida        Boolean  @default(false)
+  link        String?  // Link opcional para redirecionamento
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
 }

@@ -5,11 +5,11 @@ import app from "./app";
 dotenv.config({ path: process.env.VERCEL ? undefined : "../../../.env" });
 
 // Para Vercel Serverless: exportar o app como handler
-// Para desenvolvimento local: o listen continua abaixo
+// Para desenvolvimento local e Render: o listen continua abaixo
 export default app;
 
-// Local development only
-if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+// Local development and Render
+if (!process.env.VERCEL) {
   const rawPort = process.env["PORT"] || "5000";
   const port = Number(rawPort);
 

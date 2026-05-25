@@ -92,8 +92,8 @@ export function useListOrcamentos(params?: { status?: string }) {
   const qs = params?.status ? `?status=${params.status}` : '';
   return useQuery({ queryKey: ['orcamentos', params?.status], queryFn: () => apiFetch<any[]>(`/orcamentos${qs}`).catch(() => []) });
 }
-export function useGetOrcamento(id: string) { return useQuery({ queryKey: ['orcamento', id], queryFn: () => apiFetch(`/orcamentos/${id}`).catch(() => null) }); }
-export function useConverterOrcamento() { return useMutation({ mutationFn: (id: string) => apiFetch(`/orcamentos/${id}/converter`, { method: 'POST' }) }); }
+export function useGetOrcamento(id: number | string) { return useQuery({ queryKey: ['orcamento', id], queryFn: () => apiFetch(`/orcamentos/${id}`).catch(() => null), enabled: !!id }); }
+export function useConverterOrcamento(opts?: { mutation?: any }) { return useMutation({ mutationFn: (d: any) => apiFetch(`/orcamentos/${typeof d === 'object' ? d.id : d}/converter`, { method: 'POST' }), ...opts?.mutation }); }
 export function updateOrcamento(id: string, d: any) { return apiFetch(`/orcamentos/${id}`, { method: 'PATCH', body: JSON.stringify(d) }); }
 export function deleteOrcamento(id: string) { return apiFetch(`/orcamentos/${id}`, { method: 'DELETE' }); }
 export function createOrcamento(d: any) { return apiFetch('/orcamentos', { method: 'POST', body: JSON.stringify(d) }); }
@@ -104,9 +104,9 @@ export function useListVendas(params?: { status?: string }) {
   const qs = params?.status ? `?status=${params.status}` : '';
   return useQuery({ queryKey: ['vendas', params?.status], queryFn: () => apiFetch<any[]>(`/vendas${qs}`).catch(() => []) });
 }
-export function useGetVenda(id: string) { return useQuery({ queryKey: ['venda', id], queryFn: () => apiFetch(`/vendas/${id}`).catch(() => null) }); }
+export function useGetVenda(id: number | string) { return useQuery({ queryKey: ['venda', id], queryFn: () => apiFetch(`/vendas/${id}`).catch(() => null), enabled: !!id }); }
 export function useGerarOsParaVenda(opts?: { mutation?: any }) {
-  return useMutation({ mutationFn: (id: string) => apiFetch(`/vendas/${id}/gerar-os`, { method: 'POST' }), ...opts?.mutation });
+  return useMutation({ mutationFn: (d: any) => apiFetch(`/vendas/${typeof d === 'object' ? d.id : d}/gerar-os`, { method: 'POST' }), ...opts?.mutation });
 }
 export function createVenda(d: any) { return apiFetch('/vendas', { method: 'POST', body: JSON.stringify(d) }); }
 export function getListVendasQueryKey() { return ['vendas']; }

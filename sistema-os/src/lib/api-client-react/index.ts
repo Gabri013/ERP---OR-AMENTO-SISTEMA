@@ -68,7 +68,8 @@ export function useGetMe() {
 }
 
 // ==================== CLIENTES ====================
-export function useListClientes(q?: string) {
+export function useListClientes(params?: { q?: string }) {
+  const q = params?.q;
   return useQuery({ queryKey: ['clientes', q], queryFn: () => apiFetch<any[]>(`/clientes${q ? `?q=${q}` : ''}`).catch(() => []) });
 }
 export function createCliente(d: any) { return apiFetch('/clientes', { method: 'POST', body: JSON.stringify(d) }); }
@@ -77,7 +78,8 @@ export function deleteCliente(id: string) { return apiFetch(`/clientes/${id}`, {
 export function getListClientesQueryKey() { return ['clientes']; }
 
 // ==================== PRODUTOS ====================
-export function useListProdutos(q?: string) {
+export function useListProdutos(params?: { q?: string }) {
+  const q = params?.q;
   return useQuery({ queryKey: ['produtos', q], queryFn: () => apiFetch<any[]>(`/produtos${q ? `?q=${q}` : ''}`).catch(() => []) });
 }
 export function createProduto(d: any) { return apiFetch('/produtos', { method: 'POST', body: JSON.stringify(d) }); }
@@ -86,7 +88,10 @@ export function deleteProduto(id: string) { return apiFetch(`/produtos/${id}`, {
 export function getListProdutosQueryKey() { return ['produtos']; }
 
 // ==================== ORÇAMENTOS ====================
-export function useListOrcamentos() { return useQuery({ queryKey: ['orcamentos'], queryFn: () => apiFetch<any[]>('/orcamentos').catch(() => []) }); }
+export function useListOrcamentos(params?: { status?: string }) {
+  const qs = params?.status ? `?status=${params.status}` : '';
+  return useQuery({ queryKey: ['orcamentos', params?.status], queryFn: () => apiFetch<any[]>(`/orcamentos${qs}`).catch(() => []) });
+}
 export function useGetOrcamento(id: string) { return useQuery({ queryKey: ['orcamento', id], queryFn: () => apiFetch(`/orcamentos/${id}`).catch(() => null) }); }
 export function useConverterOrcamento() { return useMutation({ mutationFn: (id: string) => apiFetch(`/orcamentos/${id}/converter`, { method: 'POST' }) }); }
 export function updateOrcamento(id: string, d: any) { return apiFetch(`/orcamentos/${id}`, { method: 'PATCH', body: JSON.stringify(d) }); }
@@ -95,16 +100,29 @@ export function createOrcamento(d: any) { return apiFetch('/orcamentos', { metho
 export function getListOrcamentosQueryKey() { return ['orcamentos']; }
 
 // ==================== VENDAS ====================
-export function useListVendas() { return useQuery({ queryKey: ['vendas'], queryFn: () => apiFetch<any[]>('/vendas').catch(() => []) }); }
+export function useListVendas(params?: { status?: string }) {
+  const qs = params?.status ? `?status=${params.status}` : '';
+  return useQuery({ queryKey: ['vendas', params?.status], queryFn: () => apiFetch<any[]>(`/vendas${qs}`).catch(() => []) });
+}
 export function useGetVenda(id: string) { return useQuery({ queryKey: ['venda', id], queryFn: () => apiFetch(`/vendas/${id}`).catch(() => null) }); }
-export function useGerarOsParaVenda() { return useMutation({ mutationFn: (id: string) => apiFetch(`/vendas/${id}/gerar-os`, { method: 'POST' }) }); }
+export function useGerarOsParaVenda(opts?: { mutation?: any }) {
+  return useMutation({ mutationFn: (id: string) => apiFetch(`/vendas/${id}/gerar-os`, { method: 'POST' }), ...opts?.mutation });
+}
 export function createVenda(d: any) { return apiFetch('/vendas', { method: 'POST', body: JSON.stringify(d) }); }
 export function getListVendasQueryKey() { return ['vendas']; }
 
 // ==================== OS ====================
-export function useListOS() { return useQuery({ queryKey: ['os'], queryFn: () => apiFetch<any[]>('/os').catch(() => []) }); }
+export function useListOS(params?: { status?: string; etapa?: string }) {
+  const sp = new URLSearchParams();
+  if (params?.status) sp.set('status', params.status);
+  if (params?.etapa) sp.set('etapa', params.etapa);
+  const qs = sp.toString() ? `?${sp.toString()}` : '';
+  return useQuery({ queryKey: ['os', params?.status, params?.etapa], queryFn: () => apiFetch<any[]>(`/os${qs}`).catch(() => []) });
+}
 export function useGetOS(id: string) { return useQuery({ queryKey: ['os', id], queryFn: () => apiFetch(`/os/${id}`).catch(() => null) }); }
-export function useAvancarEtapaOS() { return useMutation({ mutationFn: (d: any) => apiFetch(`/os/${d.id}/avancar`, { method: 'POST', body: JSON.stringify(d) }) }); }
+export function useAvancarEtapaOS(opts?: { mutation?: any }) {
+  return useMutation({ mutationFn: (d: any) => apiFetch(`/os/${d.id}/avancar`, { method: 'POST', body: JSON.stringify(d) }), ...opts?.mutation });
+}
 export function addObservacaoOS() { return useMutation({ mutationFn: (d: any) => apiFetch(`/os/${d.osId}/observacao`, { method: 'POST', body: JSON.stringify(d) }) }); }
 export function getListOSQueryKey() { return ['os']; }
 
@@ -116,12 +134,18 @@ export function deleteUsuario(id: string) { return apiFetch(`/usuarios/${id}`, {
 export function getListUsuariosQueryKey() { return ['usuarios']; }
 
 // ==================== CONTAS ====================
-export function useListContasPagar() { return useQuery({ queryKey: ['contas-pagar'], queryFn: () => apiFetch<any[]>('/contas-pagar').catch(() => []) }); }
+export function useListContasPagar(params?: { status?: string }) {
+  const qs = params?.status ? `?status=${params.status}` : '';
+  return useQuery({ queryKey: ['contas-pagar', params?.status], queryFn: () => apiFetch<any[]>(`/contas-pagar${qs}`).catch(() => []) });
+}
 export function createContaPagar(d: any) { return apiFetch('/contas-pagar', { method: 'POST', body: JSON.stringify(d) }); }
 export function pagarContaPagar(id: string, d: any) { return apiFetch(`/contas-pagar/${id}/pagar`, { method: 'POST', body: JSON.stringify(d) }); }
 export function getListContasPagarQueryKey() { return ['contas-pagar']; }
 
-export function useListContasReceber() { return useQuery({ queryKey: ['contas-receber'], queryFn: () => apiFetch<any[]>('/contas-receber').catch(() => []) }); }
+export function useListContasReceber(params?: { status?: string }) {
+  const qs = params?.status ? `?status=${params.status}` : '';
+  return useQuery({ queryKey: ['contas-receber', params?.status], queryFn: () => apiFetch<any[]>(`/contas-receber${qs}`).catch(() => []) });
+}
 export function pagarContaReceber(id: string, d: any) { return apiFetch(`/contas-receber/${id}/pagar`, { method: 'POST', body: JSON.stringify(d) }); }
 export function getListContasReceberQueryKey() { return ['contas-receber']; }
 

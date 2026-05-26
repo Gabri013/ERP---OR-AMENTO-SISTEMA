@@ -9,6 +9,7 @@ import {
 } from "../schemas";
 import { requireAuth, requireRoles } from "../middleware/auth";
 import { validate } from "../middleware/validate";
+import { validateBody, validateParams } from "../middleware/validateZod";
 import { response } from "../utils/response";
 
 const router: IRouter = Router();
@@ -48,7 +49,7 @@ router.post(
   "/usuarios",
   requireAuth,
   requireRoles(["master"]),
-  validate(CreateUsuarioBody),
+  validateBody(CreateUsuarioBody),
   async (req, res): Promise<void> => {
     const hashedSenha = await bcrypt.hash(req.body.senha, 10);
     const row = await db.usuario.create({
@@ -70,6 +71,8 @@ router.patch(
   "/usuarios/:id",
   requireAuth,
   requireRoles(["master"]),
+  validateParams(UpdateUsuarioParams),
+  validateBody(UpdateUsuarioBody),
   async (req, res): Promise<void> => {
     const p = UpdateUsuarioParams.safeParse(req.params);
     if (!p.success) {
@@ -77,15 +80,7 @@ router.patch(
       return;
     }
 
-    const parsed = UpdateUsuarioBody.safeParse(req.body);
-    if (!parsed.success) {
-      res
-        .status(400)
-        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
-      return;
-    }
-
-    const data: any = { ...parsed.data };
+    const data: any = { ...req.body };
     if (data.senha) {
       data.senha = await bcrypt.hash(data.senha, 10);
     }

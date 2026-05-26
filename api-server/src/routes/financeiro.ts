@@ -15,6 +15,7 @@ import {
 } from "../middleware/auth";
 import { auditLog } from "../middleware/audit";
 import { response } from "../utils/response";
+import { validateBody, validateParams } from "../middleware/validateZod";
 
 const router: IRouter = Router();
 
@@ -101,6 +102,8 @@ router.post(
   "/financeiro/contas-receber/:id/pagar",
   requireAuth,
   requireRoles(FINANCEIRO_ROLES),
+  validateParams(PagarContaReceberParams),
+  validateBody(PagarContaReceberBody),
   auditLog({
     action: "pagar",
     module: "financeiro",
@@ -113,23 +116,15 @@ router.post(
       return;
     }
 
-    const body = PagarContaReceberBody.safeParse(req.body);
-    if (!body.success) {
-      res
-        .status(400)
-        .json(response.error(body.error.message, "VALIDATION_ERROR"));
-      return;
-    }
-
     const userId = (req as any).currentUser?.id;
     const id = Number(p.data.id);
 
     const updated = await db.contaReceber.update({
       where: { id },
       data: {
-        valorRecebido: Number(body.data.valorPago),
+        valorRecebido: Number(req.body.valorPago),
         dataPagamento: new Date(),
-        formaPagamento: body.data.formaPagamento,
+        formaPagamento: req.body.formaPagamento,
         status: "PAGO",
       },
     });
@@ -138,9 +133,9 @@ router.post(
       data: {
         contaReceberId: id,
         usuarioId: userId,
-        valorPago: Number(body.data.valorPago),
-        formaPagamento: body.data.formaPagamento,
-        observacao: body.data.observacao,
+        valorPago: Number(req.body.valorPago),
+        formaPagamento: req.body.formaPagamento,
+        observacao: req.body.observacao,
       },
     });
 
@@ -194,26 +189,19 @@ router.post(
   "/financeiro/contas-pagar",
   requireAuth,
   requireRoles(FINANCEIRO_ROLES),
+  validateBody(CreateContaPagarBody),
   auditLog({
     action: "create",
     module: "financeiro",
     table: "ContaPagar",
   }),
   async (req, res): Promise<void> => {
-    const parsed = CreateContaPagarBody.safeParse(req.body);
-    if (!parsed.success) {
-      res
-        .status(400)
-        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
-      return;
-    }
-
     const row = await db.contaPagar.create({
       data: {
-        descricao: parsed.data.descricao,
-        fornecedor: parsed.data.fornecedor,
-        valor: String(parsed.data.valor),
-        dataVencimento: parsed.data.dataVencimento,
+        descricao: req.body.descricao,
+        fornecedor: req.body.fornecedor,
+        valor: String(req.body.valor),
+        dataVencimento: req.body.dataVencimento,
       },
     });
 

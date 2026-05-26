@@ -17,7 +17,14 @@ export function errorHandler(
 
   logger.error({ err, url: req.url, method: req.method }, "Unhandled error");
 
+  const detail = err instanceof Error ? err.message : String(err);
   return res
     .status(500)
-    .json(response.error("Erro interno do servidor", "INTERNAL_SERVER_ERROR"));
+    .json(
+      response.error(
+        "Erro interno do servidor",
+        "INTERNAL_SERVER_ERROR",
+        detail,
+      ),
+    );
 }

@@ -263,6 +263,7 @@ enum StatusOS {
 enum StatusConta {
   PENDENTE
   PAGO
+  ATRASADO
 }
 
 enum Prioridade {
@@ -291,6 +292,16 @@ enum TipoUsuario {
   financeiro
   engenharia
   visualizador
+  // sector / production roles present in the database
+  projetista
+  dashboard_producao
+  corte
+  dobra
+  solda
+  refrigeracao
+  acabamento
+  finalizacao
+  montagem
 }
 
 model AuditLog {

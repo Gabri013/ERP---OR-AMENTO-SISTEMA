@@ -59,6 +59,7 @@ model Produto {
   valor          Decimal         @db.Decimal(12, 2)
   estoque        Int             @default(0)
   status         String          @default("ativo")
+  tipoProduto    String          @default("padrao")
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   orcamentoItens OrcamentoItem[]
@@ -401,15 +402,18 @@ model OSChecklist {
 }
 
 model OSAnexo {
-  id          Int        @id @default(autoincrement())
+  id          Int          @id @default(autoincrement())
   osId        Int
   vendaItemId Int?
   nome        String
-  url         String
-  tipo        String     @default("outro")
+  url         String?
+  conteudo    Bytes?
+  mimeType    String?
+  tamanho     Int?
+  tipo        String       @default("outro")
   descricao   String?
   usuarioId   Int?
-  createdAt   DateTime   @default(now())
+  createdAt   DateTime     @default(now())
   os          OrdemServico @relation(fields: [osId], references: [id], onDelete: Cascade)
   vendaItem   VendaItem?   @relation(fields: [vendaItemId], references: [id], onDelete: SetNull)
   usuario     Usuario?     @relation(fields: [usuarioId], references: [id])

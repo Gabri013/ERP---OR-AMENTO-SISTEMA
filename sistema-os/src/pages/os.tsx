@@ -97,6 +97,26 @@ const prioridadeDot: Record<string, string> = {
   vermelho: "bg-red-500",
 };
 
+function getSectorColor(os: any): string {
+  const etapa = os.etapaAtual ?? "";
+  if (etapa === "refrigeracao") return "bg-blue-500";
+  if (etapa === "mobiliario") return "bg-green-500";
+  if (etapa === "coccao") return "bg-yellow-500";
+  if (etapa === "solda") return "bg-orange-500";
+  if (etapa === "corte") return "bg-cyan-500";
+  if (etapa === "dobra") return "bg-violet-500";
+  if (etapa === "engenharia" || etapa === "programacao") return "bg-indigo-500";
+  if (etapa === "concluida" || etapa === "entregue") return "bg-emerald-500";
+  if (etapa === "embalagem" || etapa === "expedicao") return "bg-teal-500";
+  // Fall back to priority color
+  const prio: Record<string, string> = {
+    vermelho: "bg-red-500",
+    amarelo: "bg-yellow-500",
+    verde: "bg-green-500",
+  };
+  return prio[os.prioridade] ?? "bg-gray-400";
+}
+
 function formatDate(d: string | null | undefined) {
   if (!d) return "—";
   return new Date(d + "T00:00:00").toLocaleDateString("pt-BR");
@@ -268,8 +288,8 @@ export default function OSPage() {
                     <TableRow key={os.id}>
                       <TableCell>
                         <div
-                          className={`w-2.5 h-2.5 rounded-full ${prioridadeDot[os.prioridade] ?? "bg-gray-400"}`}
-                          title={os.prioridade}
+                          className={`w-2.5 h-2.5 rounded-full ${getSectorColor(os)}`}
+                          title={`Etapa: ${os.etapaAtual ?? "—"} | Prioridade: ${os.prioridade}`}
                         />
                       </TableCell>
                       <TableCell className="font-mono font-medium text-sm">

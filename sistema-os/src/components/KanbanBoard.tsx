@@ -48,6 +48,20 @@ const prioridadeDot: Record<string, string> = {
   verde: "bg-green-500",
 };
 
+function getSectorColor(item: KanbanCardData): string {
+  const etapa = item.etapaAtual ?? "";
+  if (etapa === "refrigeracao") return "bg-blue-500";
+  if (etapa === "mobiliario") return "bg-green-500";
+  if (etapa === "coccao") return "bg-yellow-500";
+  if (etapa === "solda") return "bg-orange-500";
+  if (etapa === "corte") return "bg-cyan-500";
+  if (etapa === "dobra") return "bg-violet-500";
+  if (etapa === "engenharia" || etapa === "programacao") return "bg-indigo-500";
+  if (etapa === "concluida" || etapa === "entregue") return "bg-emerald-500";
+  if (etapa === "embalagem" || etapa === "expedicao") return "bg-teal-500";
+  return prioridadeDot[item.prioridade ?? ""] ?? "bg-gray-400";
+}
+
 const etapaLabels: Record<string, string> = {
   programacao: "Programação",
   engenharia: "Engenharia",
@@ -115,12 +129,13 @@ function KanbanCard({
               {/* Header */}
               <div className="flex items-center justify-between gap-1">
                 <div className="flex items-center gap-1.5">
-                  {item.prioridade && (
+                  {(item.prioridade || item.etapaAtual) && (
                     <div
                       className={cn(
                         "w-2 h-2 rounded-full shrink-0",
-                        prioridadeDot[item.prioridade] ?? "bg-gray-400",
+                        getSectorColor(item),
                       )}
+                      title={`Etapa: ${item.etapaAtual ?? "—"} | Prioridade: ${item.prioridade ?? "—"}`}
                     />
                   )}
                   <span className="font-mono font-bold text-xs">

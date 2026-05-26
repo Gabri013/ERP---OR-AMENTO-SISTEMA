@@ -29,7 +29,7 @@ export const ListClientesQueryParams = z.object({
 export const CreateClienteBody = z.object({
   razaoSocial: z.string().min(1),
   nomeFantasia: z.string().optional(),
-  cnpjCpf: z.string().min(1),
+  cnpjCpf: z.string().min(1).optional(),
   endereco: z.string().optional(),
   cidade: z.string().optional(),
   estado: z.string().optional(),

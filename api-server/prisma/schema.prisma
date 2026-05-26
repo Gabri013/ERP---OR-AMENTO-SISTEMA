@@ -12,7 +12,7 @@ model Cliente {
   id            Int            @id @default(autoincrement())
   razaoSocial   String
   nomeFantasia  String?
-  cnpjCpf       String
+  cnpjCpf       String?
   endereco      String?
   cidade        String?
   estado        String?

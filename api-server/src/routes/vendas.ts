@@ -115,13 +115,15 @@ router.post(
       0,
     );
 
+    const dataVendaDate = new Date(vendaData.dataVenda as string);
+
     const venda = await db.venda.create({
       data: {
         numero,
         orcamentoId: vendaData.orcamentoId ?? null,
         clienteId: vendaData.clienteId,
         usuarioId: userId,
-        dataVenda: vendaData.dataVenda as any,
+        dataVenda: dataVendaDate,
         valorTotal: valorTotal - Number(vendaData.desconto ?? 0),
         desconto: vendaData.desconto ?? 0,
         formaPagamento: vendaData.formaPagamento,
@@ -160,7 +162,7 @@ router.post(
           valorBruto: valorParcela,
           valorLiquido: valorParcela,
           valorRecebido: 0,
-          dataVencimento: vendaData.dataVenda as any,
+          dataVencimento: dataVendaDate,
           formaPagamento: vendaData.formaPagamento ?? "pix",
           status: "PENDENTE",
         },

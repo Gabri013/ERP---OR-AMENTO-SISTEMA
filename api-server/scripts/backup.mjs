@@ -33,15 +33,15 @@ try {
 
   // Manter apenas últimos 7 backups
   const files = fs.readdirSync(BACKUP_DIR)
-    .filter((f: string) => f.startsWith('backup-') && f.endsWith('.sql'))
-    .map((f: string) => ({ 
+    .filter((f) => f.startsWith('backup-') && f.endsWith('.sql'))
+    .map((f) => ({ 
       file: f, 
       time: fs.statSync(path.join(BACKUP_DIR, f)).mtime.getTime() 
     }))
-    .sort((a: any, b: any) => b.time - a.time);
+    .sort((a, b) => b.time - a.time);
 
   if (files.length > 7) {
-    files.slice(7).forEach(({ file }: { file: string }) => {
+    files.slice(7).forEach(({ file }) => {
       fs.unlinkSync(path.join(BACKUP_DIR, file));
       console.log(`🗑️  Removido backup antigo: ${file}`);
     });

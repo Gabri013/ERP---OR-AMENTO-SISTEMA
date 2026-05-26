@@ -21,6 +21,7 @@ import ContasPagarPage from "@/pages/contas-pagar";
 import ClientesPage from "@/pages/clientes";
 import ProdutosPage from "@/pages/produtos";
 import UsuariosPage from "@/pages/usuarios";
+import OSPrintPage from "@/pages/os-print";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,6 +111,7 @@ function Router() {
           <UsuariosPage />
         </AuthGuard>
       </Route>
+      <Route path="/os/:id/print" component={OSPrintPage} />
       <Route component={NotFound} />
     </Switch>
   );

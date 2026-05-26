@@ -9,6 +9,7 @@ import {
   GerarOsParaVendaParams,
 } from "../schemas";
 import { requireAuth, requireRoles, SALES_ROLES } from "../middleware/auth";
+import { auditLog } from "../middleware/audit";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
 
@@ -273,6 +274,7 @@ router.post(
   "/vendas/:id/gerar-os",
   requireAuth,
   requireRoles(SALES_ROLES),
+  auditLog({ action: "create", module: "os", table: "OrdemServico" }),
   async (req, res): Promise<void> => {
     const p = GerarOsParaVendaParams.safeParse(req.params);
     if (!p.success) {
@@ -282,6 +284,7 @@ router.post(
 
     const venda = await db.venda.findUnique({
       where: { id: Number(p.data.id) },
+      include: { itens: { include: { produto: true } } },
     });
     if (!venda) {
       res.status(404).json(response.error("Venda não encontrada", "NOT_FOUND"));
@@ -299,27 +302,50 @@ router.post(
     }
 
     const numero = await getNextOSNum();
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date();
+    const prazoDefault = new Date(today);
+    prazoDefault.setDate(prazoDefault.getDate() + 30);
+
+    const userId = (req as any).currentUser?.id ?? 1;
 
     const os = await db.ordemServico.create({
       data: {
         numero,
         vendaId: venda.id,
         clienteId: venda.clienteId,
-        dataInicio: today as any,
+        dataInicio: today,
+        dataTermino: prazoDefault,
         prioridade: "verde",
         status: "pendente",
         etapaAtual: "autorizacao",
+        observacoesGerais: venda.observacoes ?? undefined,
       },
     });
+
+    // Create initial etapa entries
+    const ETAPAS_PRODUCAO = [
+      "autorizacao",
+      "corte",
+      "dobra",
+      "solda",
+      "refrigeracao",
+      "acabamento",
+      "finalizacao",
+      "montagem",
+    ] as const;
+    for (const etapa of ETAPAS_PRODUCAO) {
+      await db.oSEtapaProducao.create({
+        data: { osId: os.id, etapa: etapa as any, status: "pendente" },
+      });
+    }
 
     await db.oSHistoricoStatus.create({
       data: {
         osId: os.id,
         statusAnterior: null,
         statusNovo: "pendente",
-        observacao: "OS gerada automaticamente a partir da venda",
-        usuarioId: (req as any).currentUser?.id ?? 1,
+        observacao: `OS gerada a partir da venda ${venda.numero}`,
+        usuarioId: userId,
       },
     });
 
@@ -338,6 +364,22 @@ router.post(
           os.createdAt instanceof Date
             ? os.createdAt.toISOString()
             : os.createdAt,
+        itens: venda.itens.map((i) => ({
+          id: i.id,
+          produtoId: i.produtoId,
+          descricaoManual: i.descricaoManual,
+          quantidade: Number(i.quantidade),
+          valorUnitario: Number(i.valorUnitario),
+          valorTotal: Number(i.valorTotal),
+          produto: i.produto
+            ? {
+                id: i.produto.id,
+                codigo: i.produto.codigo,
+                nome: i.produto.nome,
+                descricao: i.produto.descricao,
+              }
+            : null,
+        })),
       }),
     );
   },

@@ -1,7 +1,4 @@
 {
-  "buildCommand": "cd sistema-os && npm install && npm run build",
-  "outputDirectory": "sistema-os/dist",
-  "framework": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

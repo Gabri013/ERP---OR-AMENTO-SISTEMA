@@ -23,6 +23,7 @@ import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
 import { validateBody, validateParams } from "../middleware/validateZod";
 import { generateOSPDF } from "../lib/pdf";
+import { sendOSEmail } from "../lib/email";
 
 const router: IRouter = Router();
 const ALL_ROLES = [...new Set([...SALES_ROLES, ...PRODUCTION_ROLES])];
@@ -611,6 +612,31 @@ router.patch(
     });
 
     res.json(response.success(updated));
+  },
+);
+
+// GET /os/:id/pdf - Generate PDF
+router.get(
+  "/os/:id/pdf",
+  requireAuth,
+  requireRoles(ALL_ROLES),
+  validateParams(GetOSParams),
+  async (req, res): Promise<void> => {
+    const p = GetOSParams.safeParse(req.params);
+    if (!p.success) {
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
+      return;
+    }
+
+    try {
+      const pdfBuffer = await generateOSPDF(Number(p.data.id));
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=os-${p.data.id}.pdf`);
+      res.send(pdfBuffer);
+    } catch (error) {
+      res.status(500).json(response.error('Erro ao gerar PDF', 'PDF_ERROR'));
+    }
   },
 );
 

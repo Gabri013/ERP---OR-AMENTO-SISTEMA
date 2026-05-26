@@ -13,6 +13,7 @@ import { auditLog } from "../middleware/audit";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
 import { validateBody, validateParams } from "../middleware/validateZod";
+import { sendVendaEmail, sendOSEmail } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -166,6 +167,12 @@ router.post(
     const cliente = await db.cliente.findUnique({
       where: { id: venda.clienteId },
     });
+
+    // Send email notification if client has email
+    if (cliente?.email) {
+      sendVendaEmail(venda.id, cliente.email, numero).catch(console.error);
+    }
+
     res.status(201).json(response.success(serializeVenda(venda, cliente)));
   },
 );
@@ -347,6 +354,14 @@ router.post(
         usuarioId: userId,
       },
     });
+
+    // Send email notification if client has email
+    const cliente = await db.cliente.findUnique({
+      where: { id: venda.clienteId },
+    });
+    if (cliente?.email) {
+      sendOSEmail(os.id, cliente.email, numero).catch(console.error);
+    }
 
     res.status(201).json(
       response.success({

@@ -16,6 +16,7 @@ import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
 import { validateBody, validateParams } from "../middleware/validateZod";
 import { generateOrcamentoPDF } from "../lib/pdf";
+import { sendOrcamentoEmail } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -142,6 +143,12 @@ router.post(
     const cliente = await db.cliente.findUnique({
       where: { id: orc.clienteId },
     });
+
+    // Send email notification if client has email
+    if (cliente?.email) {
+      sendOrcamentoEmail(orc.id, cliente.email, numero).catch(console.error);
+    }
+
     res.status(201).json(response.success(serializeOrc(orc, cliente)));
   },
 );

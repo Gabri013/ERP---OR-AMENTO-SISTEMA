@@ -22,34 +22,89 @@ import {
   Check,
   Box,
   Eye,
+  Factory,
+  TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 type NavChild = { href: string; label: string; roles?: string[] };
-type NavLeaf  = { href: string; icon: any; label: string; roles?: string[] };
-type NavGroup = { label: string; icon: any; children: NavChild[]; roles?: string[] };
-type NavItem  = NavLeaf | NavGroup;
+type NavLeaf = { href: string; icon: any; label: string; roles?: string[] };
+type NavGroup = {
+  label: string;
+  icon: any;
+  children: NavChild[];
+  roles?: string[];
+};
+type NavItem = NavLeaf | NavGroup;
 
 const ALL_NAV: NavItem[] = [
+  // Dashboard — everyone
   { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/orcamentos", icon: FileText, label: "Orçamentos", roles: ["master","gerente","vendedor"] },
-  { href: "/vendas", icon: ShoppingCart, label: "Vendas", roles: ["master","gerente","vendedor"] },
-  { href: "/os", icon: ClipboardList, label: "Ordens de Serviço" },
+
+  // ====== COMERCIAL ======
+  {
+    label: "Comercial",
+    icon: TrendingUp,
+    roles: ["master", "gerente", "vendedor"],
+    children: [
+      { href: "/orcamentos", label: "Orçamentos" },
+      { href: "/vendas", label: "Vendas" },
+      { href: "/kanban-comercial", label: "Pipeline (Kanban)" },
+      { href: "/cadastros/clientes", label: "Clientes" },
+    ],
+  },
+
+  // ====== PRODUÇÃO ======
+  {
+    label: "Produção",
+    icon: Factory,
+    roles: [
+      "master",
+      "gerente",
+      "producao",
+      "engenharia",
+      "projetista",
+      "dashboard_producao",
+      "corte",
+      "dobra",
+      "solda",
+      "refrigeracao",
+      "acabamento",
+      "finalizacao",
+      "montagem",
+    ],
+    children: [
+      { href: "/os", label: "Ordens de Serviço" },
+      { href: "/kanban-producao", label: "Kanban Produção" },
+    ],
+  },
+
+  // ====== ENGENHARIA ======
+  {
+    href: "/engenharia",
+    icon: Wrench,
+    label: "Engenharia",
+    roles: ["master", "gerente", "engenharia", "projetista"],
+  },
+
+  // ====== FINANCEIRO ======
   {
     label: "Financeiro",
     icon: DollarSign,
-    roles: ["master"],
+    roles: ["master", "gerente", "financeiro"],
     children: [
       { href: "/financeiro", label: "Visão Geral" },
       { href: "/financeiro/contas-receber", label: "Contas a Receber" },
       { href: "/financeiro/contas-pagar", label: "Contas a Pagar" },
     ],
   },
+
+  // ====== CADASTROS ======
   {
     label: "Cadastros",
     icon: Package,
-    roles: ["master","gerente","vendedor"],
+    roles: ["master", "gerente"],
     children: [
       { href: "/cadastros/clientes", label: "Clientes" },
       { href: "/cadastros/produtos", label: "Produtos" },
@@ -77,16 +132,20 @@ function canSeeItem(item: NavItem, tipo: string): boolean {
 interface NavItemProps {
   item: NavItem;
   location: string;
+  tipo: string;
   onNavigate?: () => void;
 }
 
-function NavItemView({ item, location, onNavigate }: NavItemProps) {
+function NavItemView({ item, location, tipo, onNavigate }: NavItemProps) {
   const [open, setOpen] = useState(false);
 
   if ("children" in item && item.children) {
-    const visibleChildren = item.children.filter(c => !("roles" in c) || !(c as any).roles || (c as any).roles.includes("master"));
+    const visibleChildren = item.children.filter(
+      (c) =>
+        !("roles" in c) || !(c as any).roles || (c as any).roles.includes(tipo),
+    );
     if (!visibleChildren.length) return null;
-    const isActive = visibleChildren.some(c => location.startsWith(c.href));
+    const isActive = visibleChildren.some((c) => location.startsWith(c.href));
     const Icon = item.icon;
     return (
       <div>
@@ -96,16 +155,18 @@ function NavItemView({ item, location, onNavigate }: NavItemProps) {
             "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
             isActive
               ? "bg-sidebar-accent text-sidebar-accent-foreground"
-              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
           )}
         >
           <Icon className="h-4 w-4 shrink-0" />
           <span className="flex-1 text-left">{item.label}</span>
-          <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
+          <ChevronDown
+            className={cn("h-3 w-3 transition-transform", open && "rotate-180")}
+          />
         </button>
         {open && (
           <div className="ml-7 mt-1 space-y-1">
-            {visibleChildren.map(child => (
+            {visibleChildren.map((child) => (
               <Link
                 key={child.href}
                 href={child.href}
@@ -114,7 +175,7 @@ function NavItemView({ item, location, onNavigate }: NavItemProps) {
                   "block px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
                   location === child.href
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
                 )}
               >
                 {child.label}
@@ -137,7 +198,7 @@ function NavItemView({ item, location, onNavigate }: NavItemProps) {
         "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
         isActive
           ? "bg-sidebar-primary text-sidebar-primary-foreground"
-          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
       )}
     >
       <Icon className="h-4 w-4 shrink-0" />
@@ -174,16 +235,23 @@ export function Layout({ children }: LayoutProps) {
   const tipo = user?.tipo ?? "";
 
   // Build the navigation items visible to this user
-  const visibleNav = ALL_NAV.filter(item => canSeeItem(item, tipo)).map(item => {
-    if ("children" in item && item.children) {
-      const visibleChildren = item.children.filter(c => !("roles" in c) || !(c as any).roles || (c as any).roles.includes(tipo));
-      return { ...item, children: visibleChildren };
-    }
-    return item;
-  }).filter(item => {
-    if ("children" in item && item.children) return item.children.length > 0;
-    return true;
-  });
+  const visibleNav = ALL_NAV.filter((item) => canSeeItem(item, tipo))
+    .map((item) => {
+      if ("children" in item && item.children) {
+        const visibleChildren = item.children.filter(
+          (c) =>
+            !("roles" in c) ||
+            !(c as any).roles ||
+            (c as any).roles.includes(tipo),
+        );
+        return { ...item, children: visibleChildren };
+      }
+      return item;
+    })
+    .filter((item) => {
+      if ("children" in item && item.children) return item.children.length > 0;
+      return true;
+    });
 
   // For sector users, show a sector badge
   const SectorIcon = SECTOR_ICONS[tipo];
@@ -195,21 +263,33 @@ export function Layout({ children }: LayoutProps) {
           <Wrench className="h-5 w-5 text-sidebar-primary-foreground" />
         </div>
         <div>
-          <p className="text-sidebar-foreground font-bold text-sm leading-tight">Sistema OS</p>
-          <p className="text-sidebar-foreground/50 text-xs">Gestão Industrial</p>
+          <p className="text-sidebar-foreground font-bold text-sm leading-tight">
+            Sistema OS
+          </p>
+          <p className="text-sidebar-foreground/50 text-xs">
+            Gestão Industrial
+          </p>
         </div>
       </div>
 
       {SectorIcon && (
         <div className="mx-3 mt-3 flex items-center gap-2 px-3 py-2 rounded-md bg-sidebar-accent/30 border border-sidebar-border/20">
           <SectorIcon className="h-4 w-4 text-sidebar-primary shrink-0" />
-          <span className="text-sidebar-foreground text-xs font-medium">{roleLabels[tipo]}</span>
+          <span className="text-sidebar-foreground text-xs font-medium">
+            {roleLabels[tipo]}
+          </span>
         </div>
       )}
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {visibleNav.map((item, i) => (
-          <NavItemView key={i} item={item} location={location} onNavigate={onNavigate} />
+          <NavItemView
+            key={i}
+            item={item}
+            location={location}
+            tipo={tipo}
+            onNavigate={onNavigate}
+          />
         ))}
       </nav>
 
@@ -221,8 +301,12 @@ export function Layout({ children }: LayoutProps) {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sidebar-foreground text-xs font-medium truncate">{user?.nome}</p>
-            <p className="text-sidebar-foreground/50 text-xs truncate">{roleLabels[tipo] ?? tipo}</p>
+            <p className="text-sidebar-foreground text-xs font-medium truncate">
+              {user?.nome}
+            </p>
+            <p className="text-sidebar-foreground/50 text-xs truncate">
+              {roleLabels[tipo] ?? tipo}
+            </p>
           </div>
         </div>
         <Button
@@ -246,7 +330,10 @@ export function Layout({ children }: LayoutProps) {
 
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setMobileOpen(false)}
+          />
           <aside className="relative w-60 flex flex-col">
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </aside>
@@ -255,7 +342,11 @@ export function Layout({ children }: LayoutProps) {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
-          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileOpen(true)}
+          >
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2">
@@ -264,9 +355,7 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );

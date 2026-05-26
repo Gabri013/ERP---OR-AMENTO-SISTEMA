@@ -179,16 +179,21 @@ model OSHistoricoStatus {
 }
 
 model OSEtapaProducao {
-  id         Int           @id @default(autoincrement())
-  osId       Int
-  etapa      EtapaProducao
-  status     String        @default("pendente")
-  dataInicio DateTime?
-  dataFim    DateTime?
-  usuarioId  Int?
-  createdAt  DateTime      @default(now())
-  os         OrdemServico  @relation(fields: [osId], references: [id])
-  usuario    Usuario?      @relation(fields: [usuarioId], references: [id])
+  id            Int           @id @default(autoincrement())
+  osId          Int
+  etapa         EtapaProducao
+  status        String        @default("pendente")
+  responsavel   String?
+  lider         String?
+  tempoEstimado Int?
+  tempoReal     Int?
+  observacao    String?
+  dataInicio    DateTime?
+  dataFim       DateTime?
+  usuarioId     Int?
+  createdAt     DateTime      @default(now())
+  os            OrdemServico  @relation(fields: [osId], references: [id])
+  usuario       Usuario?      @relation(fields: [usuarioId], references: [id])
 }
 
 model ContaReceber {
@@ -253,10 +258,13 @@ enum StatusVenda {
 
 enum StatusOS {
   pendente
+  liberada
   em_projeto
   em_revisao
   em_producao
+  pausado
   concluida
+  entregue
   cancelada
 }
 
@@ -276,15 +284,24 @@ enum Prioridade {
 }
 
 enum EtapaProducao {
-  autorizacao
+  programacao
+  engenharia
   corte
   dobra
+  tubo
   solda
+  coccao
   refrigeracao
+  mobiliario
+  montagem
+  revisao
+  embalagem
+  expedicao
+  autorizacao
   acabamento
   finalizacao
-  montagem
   concluida
+  entregue
 }
 
 enum TipoUsuario {

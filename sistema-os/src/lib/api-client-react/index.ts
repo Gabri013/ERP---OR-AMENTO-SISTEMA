@@ -440,5 +440,32 @@ export function useGetOsAtrasadas() {
   });
 }
 
+// ==================== KANBAN ====================
+export function useGetKanbanProducao() {
+  return useQuery({
+    queryKey: ["kanban-producao"],
+    queryFn: () => apiFetch<any>("/kanban/producao"),
+    refetchInterval: 30000,
+  });
+}
+
+export function useGetKanbanComercial() {
+  return useQuery({
+    queryKey: ["kanban-comercial"],
+    queryFn: () => apiFetch<any>("/kanban/comercial").catch(() => ({})),
+    refetchInterval: 30000,
+  });
+}
+
+export function useMoveOSKanban() {
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      apiFetch(`/os/${id}/kanban`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+  });
+}
+
 // Fallback
 export const apiClient = {};

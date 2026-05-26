@@ -22,6 +22,9 @@ import ClientesPage from "@/pages/clientes";
 import ProdutosPage from "@/pages/produtos";
 import UsuariosPage from "@/pages/usuarios";
 import OSPrintPage from "@/pages/os-print";
+import KanbanProducaoPage from "@/pages/kanban-producao";
+import KanbanComercialPage from "@/pages/kanban-comercial";
+import EngenhariaPage from "@/pages/engenharia";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -112,6 +115,21 @@ function Router() {
         </AuthGuard>
       </Route>
       <Route path="/os/:id/print" component={OSPrintPage} />
+      <Route path="/kanban-producao">
+        <AuthGuard>
+          <KanbanProducaoPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/kanban-comercial">
+        <AuthGuard>
+          <KanbanComercialPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/engenharia">
+        <AuthGuard>
+          <EngenhariaPage />
+        </AuthGuard>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

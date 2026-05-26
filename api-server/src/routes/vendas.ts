@@ -324,14 +324,19 @@ router.post(
 
     // Create initial etapa entries
     const ETAPAS_PRODUCAO = [
-      "autorizacao",
+      "programacao",
+      "engenharia",
       "corte",
       "dobra",
+      "tubo",
       "solda",
+      "coccao",
       "refrigeracao",
-      "acabamento",
-      "finalizacao",
+      "mobiliario",
       "montagem",
+      "revisao",
+      "embalagem",
+      "expedicao",
     ] as const;
     for (const etapa of ETAPAS_PRODUCAO) {
       await db.oSEtapaProducao.create({

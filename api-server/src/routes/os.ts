@@ -21,6 +21,7 @@ import { auditLog } from "../middleware/audit";
 import { canTransitionEtapa, canTransitionOS } from "../lib/stateMachine";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
+import { validateBody, validateParams } from "../middleware/validateZod";
 
 const router: IRouter = Router();
 const ALL_ROLES = [...new Set([...SALES_ROLES, ...PRODUCTION_ROLES])];
@@ -242,6 +243,8 @@ router.patch(
   "/os/:id",
   requireAuth,
   requireRoles(PRODUCTION_ROLES),
+  validateParams(UpdateOSParams),
+  validateBody(UpdateOSBody),
   auditLog({ action: "update", module: "os", table: "OrdemServico" }),
   async (req, res): Promise<void> => {
     const p = UpdateOSParams.safeParse(req.params);
@@ -250,20 +253,12 @@ router.patch(
       return;
     }
 
-    const parsed = UpdateOSBody.safeParse(req.body);
-    if (!parsed.success) {
-      res
-        .status(400)
-        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
-      return;
-    }
-
-    if (parsed.data.status) {
+    if (req.body.status) {
       const atual = await db.ordemServico.findUnique({
         where: { id: Number(p.data.id) },
       });
       if (atual) {
-        const validation = canTransitionOS(atual.status, parsed.data.status);
+        const validation = canTransitionOS(atual.status, req.body.status);
         if (!validation.valid) {
           res
             .status(422)
@@ -281,7 +276,7 @@ router.patch(
     try {
       const row = await db.ordemServico.update({
         where: { id: Number(p.data.id) },
-        data: parsed.data as any,
+        data: req.body as any,
       });
       res.json(response.success(row));
     } catch {
@@ -294,19 +289,13 @@ router.post(
   "/os/:id/avancar",
   requireAuth,
   requireRoles(PRODUCTION_ROLES),
+  validateParams(AvancarEtapaOSParams),
+  validateBody(AvancarEtapaOSBody),
   auditLog({ action: "update", module: "os", table: "OrdemServico" }),
   async (req, res): Promise<void> => {
     const p = AvancarEtapaOSParams.safeParse(req.params);
     if (!p.success) {
       res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
-      return;
-    }
-
-    const body = AvancarEtapaOSBody.safeParse(req.body);
-    if (!body.success) {
-      res
-        .status(400)
-        .json(response.error(body.error.message, "VALIDATION_ERROR"));
       return;
     }
 
@@ -318,8 +307,8 @@ router.post(
       return;
     }
 
-    const novaEtapa = body.data.novaEtapa || body.data.etapa;
-    const observacao = body.data.observacao;
+    const novaEtapa = req.body.novaEtapa || req.body.etapa;
+    const observacao = req.body.observacao;
 
     if (!novaEtapa) {
       res
@@ -407,6 +396,8 @@ router.post(
   "/os/:id/observacoes",
   requireAuth,
   requireRoles(ALL_ROLES),
+  validateParams(AddObservacaoOSParams),
+  validateBody(AddObservacaoOSBody),
   auditLog({ action: "create", module: "os", table: "OSObservacao" }),
   async (req, res): Promise<void> => {
     const p = AddObservacaoOSParams.safeParse(req.params);
@@ -415,21 +406,13 @@ router.post(
       return;
     }
 
-    const body = AddObservacaoOSBody.safeParse(req.body);
-    if (!body.success) {
-      res
-        .status(400)
-        .json(response.error(body.error.message, "VALIDATION_ERROR"));
-      return;
-    }
-
     const userId = (req as any).currentUser?.id;
 
     const obs = await db.oSObservacao.create({
       data: {
         osId: Number(p.data.id),
-        tipoSetor: body.data.tipoSetor,
-        observacao: body.data.observacao,
+        tipoSetor: req.body.tipoSetor,
+        observacao: req.body.observacao,
         usuarioId: userId,
       },
     });

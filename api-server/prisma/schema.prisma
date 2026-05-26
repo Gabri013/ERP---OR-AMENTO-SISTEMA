@@ -12,12 +12,12 @@ model Cliente {
   id            Int            @id @default(autoincrement())
   razaoSocial   String
   nomeFantasia  String?
-  cnpjCpf       String?
+  cnpjCpf       String?        @index
   endereco      String?
   cidade        String?
   estado        String?
   telefone      String?
-  email         String?
+  email         String?        @index
   observacoes   String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -30,7 +30,7 @@ model Cliente {
 model Usuario {
   id               Int                 @id @default(autoincrement())
   nome             String
-  email            String              @unique
+  email            String              @unique @index
   senha            String
   tipo             TipoUsuario         @default(vendedor)
   status           String              @default("ativo")
@@ -68,7 +68,7 @@ model Produto {
 
 model Orcamento {
   id            Int             @id @default(autoincrement())
-  numero        String          @unique
+  numero        String          @unique @index
   clienteId     Int
   usuarioId     Int
   dataOrcamento DateTime

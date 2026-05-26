@@ -90,10 +90,12 @@ router.get(
     const status = params.success
       ? (req.query.status as string | undefined)
       : undefined;
+    const vendaId = req.query.vendaId ? Number(req.query.vendaId) : undefined;
 
     const { page, limit, skip } = getPagination(req);
     const where: any = {};
     if (status) where.status = status;
+    if (vendaId) where.vendaId = vendaId;
 
     const [rows, total] = await Promise.all([
       db.ordemServico.findMany({

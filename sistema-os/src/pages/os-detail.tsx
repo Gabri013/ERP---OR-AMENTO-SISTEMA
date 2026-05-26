@@ -167,7 +167,13 @@ export default function OSDetailPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open(`/os/${os.id}/print`, "_blank")}
+              onClick={() => {
+                const token = localStorage.getItem("authToken") ?? "";
+                window.open(
+                  `/os/${(os as any).id}/print?token=${encodeURIComponent(token)}`,
+                  "_blank",
+                );
+              }}
             >
               <Printer className="h-4 w-4 mr-1" />
               Imprimir

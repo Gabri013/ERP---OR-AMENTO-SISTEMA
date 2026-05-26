@@ -43,23 +43,39 @@ export default function VendaDetailPage() {
   const gerarOsMut = useGerarOsParaVenda({
     mutation: {
       onSuccess: (os: any) => {
-        toast({ title: `OS ${os?.numero ?? ""} criada com sucesso!` });
+        const osData = os?.data ?? os;
+        toast({ title: `OS ${osData?.numero ?? ""} criada com sucesso!` });
         qc.invalidateQueries();
-        setLocation(`/os/${os?.id}`);
+        if (osData?.id) setLocation(`/os/${osData.id}`);
       },
-      onError: (err: any) => {
-        // Se OS já existe, navega para ela
+      onError: async (err: any) => {
         const msg: string = err?.message ?? "";
-        if (msg.includes("já gerada") || msg.includes("ALREADY_EXISTS")) {
-          const existingOS = (venda as any)?.ordensServico?.[0];
-          if (existingOS?.id) {
-            toast({ title: "OS já existe, abrindo..." });
-            setLocation(`/os/${existingOS.id}`);
-          } else {
-            toast({
-              title: "OS já gerada para esta venda.",
-              description: "Veja as OS abaixo.",
+        if (
+          msg.includes("já gerada") ||
+          msg.includes("ALREADY_EXISTS") ||
+          msg.includes("400")
+        ) {
+          toast({ title: "OS já existe para esta venda, localizando..." });
+          try {
+            // Fetch OS list filtered by vendaId
+            const apiBase =
+              (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, "") ??
+              "https://erp-backend-evq2.onrender.com";
+            const token = localStorage.getItem("authToken") ?? "";
+            const r = await fetch(`${apiBase}/api/os?vendaId=${id}&limit=1`, {
+              headers: { Authorization: `Bearer ${token}` },
             });
+            const data = await r.json();
+            const osList = data?.data ?? [];
+            if (osList.length > 0) {
+              setLocation(`/os/${osList[0].id}`);
+            } else {
+              qc.invalidateQueries({ queryKey: ["venda", id] });
+              toast({ title: "OS já gerada. Atualizando dados..." });
+            }
+          } catch {
+            qc.invalidateQueries({ queryKey: ["venda", id] });
+            toast({ title: "OS já gerada para esta venda." });
           }
         } else {
           toast({

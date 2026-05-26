@@ -87848,7 +87848,7 @@ var SignJWT = class extends ProduceJWT {
 var JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || "sistema-os-jwt-secret-change-me";
 var JWT_ISSUER = "sistema-os";
 var JWT_AUDIENCE = "sistema-os-web";
-var JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "15m";
+var JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "8h";
 var REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 var secret = new TextEncoder().encode(JWT_SECRET);
 async function signUserToken(user, expiresIn = JWT_EXPIRES_IN) {
@@ -89175,7 +89175,9 @@ router7.get(
         ordensServico: ordens.map((os) => ({
           id: os.id,
           numero: os.numero,
-          status: os.status
+          status: os.status,
+          etapaAtual: os.etapaAtual,
+          prioridade: os.prioridade
         }))
       })
     );
@@ -89361,9 +89363,11 @@ router8.get(
   async (req, res) => {
     const params = ListOSQueryParams.safeParse(req.query);
     const status = params.success ? req.query.status : void 0;
+    const vendaId = req.query.vendaId ? Number(req.query.vendaId) : void 0;
     const { page, limit, skip } = getPagination(req);
     const where = {};
     if (status) where.status = status;
+    if (vendaId) where.vendaId = vendaId;
     const [rows, total] = await Promise.all([
       db.ordemServico.findMany({
         where,

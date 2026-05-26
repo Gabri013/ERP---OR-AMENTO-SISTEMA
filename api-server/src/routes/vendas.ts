@@ -227,6 +227,8 @@ router.get(
           id: os.id,
           numero: os.numero,
           status: os.status,
+          etapaAtual: os.etapaAtual,
+          prioridade: os.prioridade,
         })),
       }),
     );

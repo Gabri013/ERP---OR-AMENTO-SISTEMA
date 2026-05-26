@@ -6,7 +6,7 @@ const JWT_SECRET =
   "sistema-os-jwt-secret-change-me";
 const JWT_ISSUER = "sistema-os";
 const JWT_AUDIENCE = "sistema-os-web";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "15m";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "8h";
 const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 
 const secret = new TextEncoder().encode(JWT_SECRET);

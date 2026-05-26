@@ -345,7 +345,7 @@ export function getListOSQueryKey() {
 export function useGetOSImprimir(id: string | number) {
   return useQuery({
     queryKey: ["os-imprimir", id],
-    queryFn: () => apiFetch<any>(`/os/${id}/imprimir`).catch(() => null),
+    queryFn: () => apiFetch<any>(`/os/${id}/imprimir`),
     enabled: !!id,
   });
 }

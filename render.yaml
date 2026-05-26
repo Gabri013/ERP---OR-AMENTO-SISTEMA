@@ -14,7 +14,7 @@ services:
       - key: JWT_SECRET
         value: erp-cozinca-prod-jwt-2026-f8k2m9x7p4w1n6q3v0y5r8j1h4b7e0t3
       - key: JWT_EXPIRES_IN
-        value: 15m
+        value: 8h
       - key: REFRESH_TOKEN_EXPIRES_IN
         value: 7d
       - key: NODE_ENV

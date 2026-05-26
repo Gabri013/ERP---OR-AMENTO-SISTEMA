@@ -44,8 +44,16 @@ const PROCESSOS_OS = [
 export default function OSPrintPage() {
   const [, params] = useRoute("/os/:id/print");
   const id = params?.id ?? "0";
-  const { data: os, isLoading } = useGetOSImprimir(id);
 
+  // Extract token from URL and persist to localStorage BEFORE API call
+  const urlToken = new URLSearchParams(window.location.search).get("token");
+  if (urlToken) {
+    try {
+      localStorage.setItem("authToken", urlToken);
+    } catch {}
+  }
+
+  const { data: os, isLoading, error } = useGetOSImprimir(id);
   const qrUrl = `${window.location.origin}/os/${id}`;
 
   useEffect(() => {
@@ -54,12 +62,27 @@ export default function OSPrintPage() {
 
   if (isLoading)
     return (
-      <div className="p-8 text-center text-sm text-gray-500">Carregando...</div>
+      <div className="p-8 text-center text-sm text-gray-500">
+        Carregando OS {id}...
+      </div>
     );
+
   if (!os)
     return (
-      <div className="p-8 text-center text-sm text-red-500">
-        OS não encontrada.
+      <div className="p-8 text-center space-y-3">
+        <p className="text-red-500 text-sm font-medium">
+          {(error as any)?.message?.includes("401") ||
+          (error as any)?.message?.includes("autenticado")
+            ? "Sessão expirada. Feche esta aba e abra novamente."
+            : "OS não encontrada."}
+        </p>
+        <p className="text-xs text-gray-400">OS: {id}</p>
+        <button
+          className="px-4 py-2 bg-gray-800 text-white rounded text-sm"
+          onClick={() => window.close()}
+        >
+          Fechar
+        </button>
       </div>
     );
 

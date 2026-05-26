@@ -15,7 +15,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/sistema-os/index.html"
+      "dest": "/index.html"
     }
   ]
 }

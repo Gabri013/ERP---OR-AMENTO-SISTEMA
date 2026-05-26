@@ -312,15 +312,9 @@ router.get(
 // GET /os/:id/anexos/:anexoId/view
 // Serve inline (for 3D viewer) — accepts token via query param for viewer
 // ──────────────────────────────────────────────────────
+// token via query param already handled in loadUser middleware
 router.get(
   "/os/:id/anexos/:anexoId/view",
-  // Auth via query param token (needed for Three.js loader which can't set headers)
-  async (req: any, res: any, next: any) => {
-    if (req.query.token && !req.headers.authorization) {
-      req.headers.authorization = `Bearer ${req.query.token}`;
-    }
-    next();
-  },
   requireAuth,
   requireRoles(ALL_ROLES),
   async (req, res): Promise<void> => {

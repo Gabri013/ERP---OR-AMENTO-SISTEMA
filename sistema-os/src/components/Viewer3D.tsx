@@ -313,6 +313,7 @@ export function Viewer3D({
   const format = formatProp?.toLowerCase() ?? getFormat(url);
   const isSupported = ["stl", "obj", "gltf", "glb"].includes(format);
 
+  const [contextLost, setContextLost] = useState(false);
   const [wireframe, setWireframe] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [autoRotate, setAutoRotate] = useState(false);
@@ -488,12 +489,37 @@ export function Viewer3D({
 
       {/* Canvas */}
       <div style={{ height: h }}>
-        {isSupported ? (
+        {isSupported && contextLost ? (
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-white/60">
+            <AlertTriangle className="h-8 w-8 text-yellow-400" />
+            <p className="text-sm">Contexto WebGL perdido</p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-white border-white/30 hover:bg-white/10"
+              onClick={() => setContextLost(false)}
+            >
+              Recarregar viewer
+            </Button>
+          </div>
+        ) : isSupported ? (
           <Canvas
             camera={{ position: [3, 2, 5], fov: 50 }}
             shadows
             gl={{ antialias: true, alpha: false }}
             style={{ background: "#0e1117" }}
+            onCreated={({ gl }) => {
+              gl.domElement.addEventListener(
+                "webglcontextlost",
+                () => setContextLost(true),
+                false,
+              );
+              gl.domElement.addEventListener(
+                "webglcontextrestored",
+                () => setContextLost(false),
+                false,
+              );
+            }}
           >
             <Scene
               url={url}

@@ -88121,6 +88121,8 @@ var loadUser = async (req, _res, next) => {
       token = auth.substring(7);
     } else if (req.cookies?.token) {
       token = req.cookies.token;
+    } else if (req.query?.token && typeof req.query.token === "string") {
+      token = req.query.token;
     }
     if (!token) {
       next();
@@ -90716,13 +90718,6 @@ router13.get(
 );
 router13.get(
   "/os/:id/anexos/:anexoId/view",
-  // Auth via query param token (needed for Three.js loader which can't set headers)
-  async (req, res, next) => {
-    if (req.query.token && !req.headers.authorization) {
-      req.headers.authorization = `Bearer ${req.query.token}`;
-    }
-    next();
-  },
   requireAuth,
   requireRoles(ALL_ROLES),
   async (req, res) => {

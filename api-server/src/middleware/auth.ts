@@ -73,6 +73,9 @@ export const loadUser: RequestHandler = async (req, _res, next) => {
       token = auth.substring(7);
     } else if (req.cookies?.token) {
       token = req.cookies.token;
+    } else if (req.query?.token && typeof req.query.token === "string") {
+      // Allow token via query param for file viewer (Three.js loaders can't set headers)
+      token = req.query.token;
     }
 
     if (!token) {

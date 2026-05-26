@@ -15,6 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ChevronRight, MessageSquare, Printer } from "lucide-react";
+import { ChecklistPanel } from "@/components/ChecklistPanel";
+import { AnexosPanel } from "@/components/AnexosPanel";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -392,6 +394,34 @@ export default function OSDetailPage() {
             </div>
           </CardContent>
         </Card>
+        {os && (
+          <ChecklistPanel
+            osId={os.id}
+            etapaAtual={os.etapaAtual}
+            canEdit={[
+              "master",
+              "gerente",
+              "producao",
+              "engenharia",
+              "corte",
+              "dobra",
+              "solda",
+              "refrigeracao",
+              "acabamento",
+              "finalizacao",
+              "montagem",
+            ].includes(user?.tipo ?? "")}
+          />
+        )}
+
+        {os && (
+          <AnexosPanel
+            osId={os.id}
+            canEdit={["master", "gerente", "engenharia", "producao"].includes(
+              user?.tipo ?? "",
+            )}
+          />
+        )}
       </div>
     </Layout>
   );

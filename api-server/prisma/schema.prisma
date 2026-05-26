@@ -40,6 +40,8 @@ model Usuario {
   osEtapas         OSEtapaProducao[]
   osHistoricos     OSHistoricoStatus[]
   osObservacoes    OSObservacao[]
+  checklists       OSChecklist[]
+  anexos           OSAnexo[]
   orcamentos       Orcamento[]
   pagamentos       Pagamento[]
   vendas           Venda[]
@@ -151,6 +153,8 @@ model OrdemServico {
   etapas                OSEtapaProducao[]
   historico             OSHistoricoStatus[]
   observacoes           OSObservacao[]
+  checklists            OSChecklist[]
+  anexos                OSAnexo[]
   cliente               Cliente             @relation(fields: [clienteId], references: [id])
   venda                 Venda?              @relation(fields: [vendaId], references: [id])
 }
@@ -379,4 +383,31 @@ model RefreshToken {
   usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model OSChecklist {
+  id          Int          @id @default(autoincrement())
+  osId        Int
+  etapa       String
+  item        String
+  concluido   Boolean      @default(false)
+  obrigatorio Boolean      @default(false)
+  usuarioId   Int?
+  concluidoEm DateTime?
+  createdAt   DateTime     @default(now())
+  os          OrdemServico @relation(fields: [osId], references: [id], onDelete: Cascade)
+  usuario     Usuario?     @relation(fields: [usuarioId], references: [id])
+}
+
+model OSAnexo {
+  id          Int          @id @default(autoincrement())
+  osId        Int
+  nome        String
+  url         String
+  tipo        String       @default("outro")
+  descricao   String?
+  usuarioId   Int?
+  createdAt   DateTime     @default(now())
+  os          OrdemServico @relation(fields: [osId], references: [id], onDelete: Cascade)
+  usuario     Usuario?     @relation(fields: [usuarioId], references: [id])
 }

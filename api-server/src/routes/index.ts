@@ -10,6 +10,9 @@ import osRouter from "./os";
 import financeiroRouter from "./financeiro";
 import dashboardRouter from "./dashboard";
 import notificacoesRouter from "./notificacoes";
+import checklistRouter from "./checklist";
+import anexosRouter from "./anexos";
+import exportRouter from "./export";
 
 const router: IRouter = Router();
 
@@ -24,5 +27,8 @@ router.use(osRouter);
 router.use(financeiroRouter);
 router.use(dashboardRouter);
 router.use(notificacoesRouter);
+router.use(checklistRouter);
+router.use(anexosRouter);
+router.use(exportRouter);
 
 export default router;

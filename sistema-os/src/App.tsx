@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthGuard } from "@/components/AuthGuard";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
@@ -34,21 +35,81 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
-      <Route path="/" component={DashboardPage} />
-      <Route path="/orcamentos" component={OrcamentosPage} />
-      <Route path="/orcamentos/novo" component={OrcamentoNovoPage} />
-      <Route path="/orcamentos/:id" component={OrcamentoDetailPage} />
-      <Route path="/vendas" component={VendasPage} />
-      <Route path="/vendas/nova" component={VendaNovaPage} />
-      <Route path="/vendas/:id" component={VendaDetailPage} />
-      <Route path="/os" component={OSPage} />
-      <Route path="/os/:id" component={OSDetailPage} />
-      <Route path="/financeiro" component={FinanceiroPage} />
-      <Route path="/financeiro/contas-receber" component={ContasReceberPage} />
-      <Route path="/financeiro/contas-pagar" component={ContasPagarPage} />
-      <Route path="/cadastros/clientes" component={ClientesPage} />
-      <Route path="/cadastros/produtos" component={ProdutosPage} />
-      <Route path="/cadastros/usuarios" component={UsuariosPage} />
+      <Route path="/">
+        <AuthGuard>
+          <DashboardPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/orcamentos">
+        <AuthGuard>
+          <OrcamentosPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/orcamentos/novo">
+        <AuthGuard>
+          <OrcamentoNovoPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/orcamentos/:id">
+        <AuthGuard>
+          <OrcamentoDetailPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/vendas">
+        <AuthGuard>
+          <VendasPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/vendas/nova">
+        <AuthGuard>
+          <VendaNovaPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/vendas/:id">
+        <AuthGuard>
+          <VendaDetailPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/os">
+        <AuthGuard>
+          <OSPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/os/:id">
+        <AuthGuard>
+          <OSDetailPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/financeiro">
+        <AuthGuard>
+          <FinanceiroPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/financeiro/contas-receber">
+        <AuthGuard>
+          <ContasReceberPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/financeiro/contas-pagar">
+        <AuthGuard>
+          <ContasPagarPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/cadastros/clientes">
+        <AuthGuard>
+          <ClientesPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/cadastros/produtos">
+        <AuthGuard>
+          <ProdutosPage />
+        </AuthGuard>
+      </Route>
+      <Route path="/cadastros/usuarios">
+        <AuthGuard>
+          <UsuariosPage />
+        </AuthGuard>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

@@ -1,21 +1,31 @@
 import dotenv from "dotenv";
+import http from "http";
 import app from "./app";
+import { initSocket } from "./lib/socket";
+import { logger } from "./lib/logger";
 
-// Carregar .env (funciona local e no Vercel)
-dotenv.config({ path: process.env.VERCEL ? undefined : "../../../.env" });
+// Load .env for local development
+if (!process.env.VERCEL) {
+  dotenv.config();
+}
 
-// Para Vercel Serverless: exportar o app como handler
-// Para desenvolvimento local e Render: o listen continua abaixo
+// Create HTTP server so socket.io can attach
+const httpServer = http.createServer(app);
+
+// Initialize socket.io
+initSocket(httpServer);
+
+// Export app for Vercel serverless (fallback, socket.io won't work in serverless)
 export default app;
 
-// Local development and Render
+// Start listening for Render / local dev
 if (!process.env.VERCEL) {
-  const rawPort = process.env["PORT"] || "5000";
+  const rawPort = process.env["PORT"] || "3001";
   const port = Number(rawPort);
 
   if (!Number.isNaN(port) && port > 0) {
-    app.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
+    httpServer.listen(port, () => {
+      logger.info({ port }, `Server listening on port ${port}`);
     });
   }
 }

@@ -2,12 +2,18 @@
 // Minimal Zod schemas to replace the missing @workspace/api-zod package.
 // These allow the routes to run. You can improve the validation later.
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // ==================== AUTH ====================
 export const LoginBody = z.object({
-  email: z.any().transform(val => String(val)).pipe(z.string().email()),
-  senha: z.any().transform(val => String(val)).pipe(z.string().min(6)),
+  email: z
+    .any()
+    .transform((val) => String(val))
+    .pipe(z.string().email()),
+  senha: z
+    .any()
+    .transform((val) => String(val))
+    .pipe(z.string().min(6)),
 });
 
 export const LoginResponse = z.object({
@@ -68,7 +74,7 @@ export const CreateOrcamentoBody = z.object({
 
 export const UpdateOrcamentoBody = CreateOrcamentoBody.partial();
 
-export const ListOrcamentosQueryParams = z.object({ 
+export const ListOrcamentosQueryParams = z.object({
   q: z.string().optional(),
   status: z.string().optional(),
 });
@@ -90,7 +96,10 @@ export const CreateVendaBody = z.object({
 
 export const UpdateVendaBody = CreateVendaBody.partial();
 
-export const ListVendasQueryParams = z.object({ q: z.string().optional() });
+export const ListVendasQueryParams = z.object({
+  q: z.string().optional(),
+  status: z.string().optional(),
+});
 export const GetVendaParams = z.object({ id: z.string() });
 export const UpdateVendaParams = z.object({ id: z.string() });
 export const GerarOsParaVendaParams = z.object({ id: z.string() });
@@ -115,10 +124,11 @@ export const UpdateOSParams = z.object({ id: z.string() });
 export const ListOSQueryParams = z.object({ q: z.string().optional() });
 export const AvancarEtapaOSBody = z.object({
   etapa: z.string().optional(),
+  novaEtapa: z.string().optional(),
   observacao: z.string().optional(),
 });
 export const AvancarEtapaOSParams = z.object({ id: z.string() });
-export const AddObservacaoOSParams = z.object({ osId: z.string() });
+export const AddObservacaoOSParams = z.object({ id: z.string() });
 export const AddObservacaoOSBody = z.object({
   tipoSetor: z.string(),
   observacao: z.string(),
@@ -138,11 +148,11 @@ export const PagarContaBody = z.object({
   observacao: z.string().optional(),
 });
 
-export const ListContasReceberQueryParams = z.object({ 
+export const ListContasReceberQueryParams = z.object({
   q: z.string().optional(),
   status: z.string().optional(),
 });
-export const ListContasPagarQueryParams = z.object({ 
+export const ListContasPagarQueryParams = z.object({
   q: z.string().optional(),
   status: z.string().optional(),
 });
@@ -159,7 +169,9 @@ export const CreateUsuarioBody = z.object({
   telefoneWhatsapp: z.string().optional(),
 });
 
-export const UpdateUsuarioBody = CreateUsuarioBody.partial().omit({ senha: true });
+export const UpdateUsuarioBody = CreateUsuarioBody.partial().omit({
+  senha: true,
+});
 
 export const ListUsuariosQueryParams = z.object({ q: z.string().optional() });
 export const UpdateUsuarioParams = z.object({ id: z.string() });

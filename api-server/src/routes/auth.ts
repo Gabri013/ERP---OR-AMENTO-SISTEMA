@@ -2,9 +2,23 @@
 import bcrypt from "bcryptjs";
 import { db } from "../lib/prisma";
 import { LoginBody, LoginResponse } from "../schemas";
-import { signUserToken, verifyUserToken } from "../lib/jwt";
+import {
+  signRefreshToken,
+  signUserToken,
+  verifyRefreshToken,
+  verifyUserToken,
+} from "../lib/jwt";
+import { response } from "../utils/response";
 
 const router: IRouter = Router();
+
+// RefreshToken delegate — added via migration, cast until `npm run db:generate` runs
+/* eslint-disable-next-line */
+const refreshTokenModel = (db as any).refreshToken as {
+  create: Function;
+  deleteMany: Function;
+  findUnique: Function;
+};
 
 /**
  * POST /api/auth/login
@@ -35,11 +49,19 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const token = await signUserToken({
+  const claims = {
     sub: user.id,
     nome: user.nome,
     email: user.email,
     tipo: user.tipo,
+  };
+
+  const token = await signUserToken(claims);
+  const refreshToken = await signRefreshToken(claims);
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  await refreshTokenModel.create({
+    data: { token: refreshToken, usuarioId: user.id, expiresAt },
   });
 
   // Also set httpOnly cookie for browser clients that prefer cookies
@@ -57,10 +79,11 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     nome: user.nome,
     email: user.email,
     tipo: user.tipo,
-    token
+    token,
+    refreshToken,
   };
 
-  res.json(profile);
+  res.json(response.success(profile));
 });
 
 /**
@@ -68,7 +91,11 @@ router.post("/auth/login", async (req, res): Promise<void> => {
  */
 router.post("/auth/logout", async (req, res): Promise<void> => {
   res.clearCookie("token", { path: "/" });
-  res.json({ ok: true });
+  const refreshToken = req.body?.refreshToken;
+  if (typeof refreshToken === "string" && refreshToken) {
+    await refreshTokenModel.deleteMany({ where: { token: refreshToken } });
+  }
+  res.json(response.success({ ok: true }));
 });
 
 /**
@@ -107,9 +134,93 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json({ id: user.id, nome: user.nome, email: user.email, tipo: user.tipo });
+  res.json(
+    response.success({
+      id: user.id,
+      nome: user.nome,
+      email: user.email,
+      tipo: user.tipo,
+    }),
+  );
+});
+
+router.post("/auth/refresh", async (req, res): Promise<void> => {
+  const refreshToken = req.body?.refreshToken;
+
+  if (!refreshToken || typeof refreshToken !== "string") {
+    res
+      .status(401)
+      .json(
+        response.error("Refresh token não fornecido", "REFRESH_TOKEN_MISSING"),
+      );
+    return;
+  }
+
+  const claims = await verifyRefreshToken(refreshToken);
+  if (!claims) {
+    res
+      .status(401)
+      .json(response.error("Refresh token inválido", "INVALID_REFRESH_TOKEN"));
+    return;
+  }
+
+  const storedToken = await refreshTokenModel.findUnique({
+    where: { token: refreshToken },
+  });
+
+  if (!storedToken || storedToken.expiresAt < new Date()) {
+    res
+      .status(401)
+      .json(
+        response.error(
+          "Refresh token expirado ou revogado",
+          "REFRESH_TOKEN_REVOKED",
+        ),
+      );
+    return;
+  }
+
+  const user = await db.usuario.findUnique({
+    where: { id: claims.sub },
+    select: { id: true, nome: true, email: true, tipo: true, status: true },
+  });
+
+  if (!user || user.status !== "ativo") {
+    res
+      .status(401)
+      .json(
+        response.error("Usuário não encontrado ou inativo", "USER_INACTIVE"),
+      );
+    return;
+  }
+
+  const nextClaims = {
+    sub: user.id,
+    nome: user.nome,
+    email: user.email,
+    tipo: user.tipo,
+  };
+  const accessToken = await signUserToken(nextClaims);
+  const nextRefreshToken = await signRefreshToken(nextClaims);
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  await refreshTokenModel.deleteMany({ where: { token: refreshToken } });
+  await refreshTokenModel.create({
+    data: { token: nextRefreshToken, usuarioId: user.id, expiresAt },
+  });
+
+  res.json(
+    response.success({
+      accessToken,
+      refreshToken: nextRefreshToken,
+      user: {
+        id: user.id,
+        nome: user.nome,
+        email: user.email,
+        tipo: user.tipo,
+      },
+    }),
+  );
 });
 
 export default router;
-
-

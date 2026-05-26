@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Cliente {
@@ -44,6 +45,7 @@ model Usuario {
   vendas           Venda[]
   auditLogs        AuditLog[]
   notificacoes     Notificacao[]
+  refreshTokens    RefreshToken[]
 }
 
 model Produto {
@@ -337,4 +339,13 @@ model Notificacao {
   link        String?  // Link opcional para redirecionamento
   createdAt   DateTime @default(now())
   readAt      DateTime?
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  usuarioId Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

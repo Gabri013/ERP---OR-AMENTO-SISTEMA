@@ -23,14 +23,19 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@workspace/api-client-react": path.resolve(import.meta.dirname, "src", "lib", "api-client-react"),
+      "@workspace/api-client-react": path.resolve(
+        import.meta.dirname,
+        "src",
+        "lib",
+        "api-client-react",
+      ),
       // "@assets" removed because the folder doesn't exist in this repo
     },
     dedupe: ["react", "react-dom"],
   },
   root: path.resolve(import.meta.dirname),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
   },
   server: {
@@ -38,8 +43,8 @@ export default defineConfig({
     strictPort: false,
     host: process.env.HOST || "localhost",
     proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
+      "/api": {
+        target: "http://localhost:3001",
         changeOrigin: true,
       },
     },

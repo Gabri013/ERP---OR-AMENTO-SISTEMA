@@ -45,3 +45,14 @@ node_modules/.bin/
 
 .vercel
 .env*
+
+# Example files (keep, not secrets)
+!.env.example
+!api-server/.env.example
+!sistema-os/.env.example
+
+# Docker
+.docker/
+
+# Prisma generated (regenerate on install)
+api-server/node_modules/.prisma/

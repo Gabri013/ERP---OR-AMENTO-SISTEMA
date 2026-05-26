@@ -2,107 +2,124 @@ import { Router, type IRouter } from "express";
 import { db } from "../lib/prisma";
 import { requireAuth } from "../middleware/auth";
 import { auditLog } from "../middleware/audit";
+import { response } from "../utils/response";
 
 const router: IRouter = Router();
 
-router.get("/notificacoes", requireAuth, auditLog({
-  action: "list",
-  module: "notificacoes",
-  table: "Notificacao"
-}), async (req, res): Promise<void> => {
-  const currentUser = (req as any).currentUser;
-  
-  const notificacoes = await db.notificacao.findMany({
-    where: { usuarioId: currentUser.id },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
+// notificacao model is in schema — cast until `npm run db:generate` runs
+const nm = (db as any).notificacao;
 
-  const naoLidas = await db.notificacao.count({
-    where: { usuarioId: currentUser.id, lida: false },
-  });
+router.get(
+  "/notificacoes",
+  requireAuth,
+  auditLog({ action: "list", module: "notificacoes", table: "Notificacao" }),
+  async (req, res): Promise<void> => {
+    const currentUser = (req as any).currentUser;
 
-  res.json({
-    notificacoes: notificacoes.map(n => ({
-      id: n.id,
-      titulo: n.titulo,
-      mensagem: n.mensagem,
-      tipo: n.tipo,
-      lida: n.lida,
-      link: n.link,
-      createdAt: n.createdAt.toISOString(),
-      readAt: n.readAt?.toISOString(),
-    })),
-    naoLidas,
-  });
-});
+    const [notificacoes, naoLidas] = await Promise.all([
+      nm.findMany({
+        where: { usuarioId: currentUser.id },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      }),
+      nm.count({ where: { usuarioId: currentUser.id, lida: false } }),
+    ]);
 
-router.post("/notificacoes/:id/marcar-lida", requireAuth, auditLog({
-  action: "update",
-  module: "notificacoes",
-  table: "Notificacao"
-}), async (req, res): Promise<void> => {
-  const currentUser = (req as any).currentUser;
-  const id = Number(req.params.id);
+    res.json(
+      response.success({
+        notificacoes: notificacoes.map((n: any) => ({
+          id: n.id,
+          titulo: n.titulo,
+          mensagem: n.mensagem,
+          tipo: n.tipo,
+          lida: n.lida,
+          link: n.link,
+          createdAt: n.createdAt.toISOString(),
+          readAt: n.readAt?.toISOString() ?? null,
+        })),
+        naoLidas,
+      }),
+    );
+  },
+);
 
-  const notificacao = await db.notificacao.findUnique({ where: { id } });
-  
-  if (!notificacao) {
-    res.status(404).json({ error: "Notificação não encontrada" });
-    return;
-  }
+router.post(
+  "/notificacoes/:id/marcar-lida",
+  requireAuth,
+  auditLog({ action: "update", module: "notificacoes", table: "Notificacao" }),
+  async (req, res): Promise<void> => {
+    const currentUser = (req as any).currentUser;
+    const id = Number(req.params.id);
 
-  if (notificacao.usuarioId !== currentUser.id) {
-    res.status(403).json({ error: "Sem permissão para esta notificação" });
-    return;
-  }
+    const notificacao = await nm.findUnique({ where: { id } });
 
-  await db.notificacao.update({
-    where: { id },
-    data: { lida: true, readAt: new Date() },
-  });
+    if (!notificacao) {
+      res
+        .status(404)
+        .json(response.error("Notificação não encontrada", "NOT_FOUND"));
+      return;
+    }
 
-  res.json({ success: true });
-});
+    if (notificacao.usuarioId !== currentUser.id) {
+      res
+        .status(403)
+        .json(
+          response.error("Sem permissão para esta notificação", "FORBIDDEN"),
+        );
+      return;
+    }
 
-router.post("/notificacoes/marcar-todas-lidas", requireAuth, auditLog({
-  action: "update",
-  module: "notificacoes",
-  table: "Notificacao"
-}), async (req, res): Promise<void> => {
-  const currentUser = (req as any).currentUser;
+    await nm.update({
+      where: { id },
+      data: { lida: true, readAt: new Date() },
+    });
+    res.json(response.success({ ok: true }));
+  },
+);
 
-  await db.notificacao.updateMany({
-    where: { usuarioId: currentUser.id, lida: false },
-    data: { lida: true, readAt: new Date() },
-  });
+router.post(
+  "/notificacoes/marcar-todas-lidas",
+  requireAuth,
+  auditLog({ action: "update", module: "notificacoes", table: "Notificacao" }),
+  async (req, res): Promise<void> => {
+    const currentUser = (req as any).currentUser;
+    await nm.updateMany({
+      where: { usuarioId: currentUser.id, lida: false },
+      data: { lida: true, readAt: new Date() },
+    });
+    res.json(response.success({ ok: true }));
+  },
+);
 
-  res.json({ success: true });
-});
+router.delete(
+  "/notificacoes/:id",
+  requireAuth,
+  auditLog({ action: "delete", module: "notificacoes", table: "Notificacao" }),
+  async (req, res): Promise<void> => {
+    const currentUser = (req as any).currentUser;
+    const id = Number(req.params.id);
 
-router.delete("/notificacoes/:id", requireAuth, auditLog({
-  action: "delete",
-  module: "notificacoes",
-  table: "Notificacao"
-}), async (req, res): Promise<void> => {
-  const currentUser = (req as any).currentUser;
-  const id = Number(req.params.id);
+    const notificacao = await nm.findUnique({ where: { id } });
 
-  const notificacao = await db.notificacao.findUnique({ where: { id } });
-  
-  if (!notificacao) {
-    res.status(404).json({ error: "Notificação não encontrada" });
-    return;
-  }
+    if (!notificacao) {
+      res
+        .status(404)
+        .json(response.error("Notificação não encontrada", "NOT_FOUND"));
+      return;
+    }
 
-  if (notificacao.usuarioId !== currentUser.id) {
-    res.status(403).json({ error: "Sem permissão para esta notificação" });
-    return;
-  }
+    if (notificacao.usuarioId !== currentUser.id) {
+      res
+        .status(403)
+        .json(
+          response.error("Sem permissão para esta notificação", "FORBIDDEN"),
+        );
+      return;
+    }
 
-  await db.notificacao.delete({ where: { id } });
-
-  res.json({ success: true });
-});
+    await nm.delete({ where: { id } });
+    res.json(response.success({ ok: true }));
+  },
+);
 
 export default router;

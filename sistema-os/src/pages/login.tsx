@@ -3,12 +3,23 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLogin, getGetMeQueryKey, setAuthTokenGetter } from "@workspace/api-client-react";
+import {
+  useLogin,
+  getGetMeQueryKey,
+  setAuthTokenGetter,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Wrench } from "lucide-react";
 
@@ -39,19 +50,28 @@ export default function LoginPage() {
   }, [user, isLoading, setLocation]);
 
   const onSubmit = (data: FormData) => {
-    loginMutation.mutate({ data }, {
-      onSuccess: (data: any) => {
-        if (data?.token) {
-          localStorage.setItem("authToken", data.token);
-          setAuthTokenGetter(() => localStorage.getItem("authToken"));
-        }
-        qc.resetQueries({ queryKey: getGetMeQueryKey() });
-        setLocation("/");
+    loginMutation.mutate(
+      { data },
+      {
+        onSuccess: (data: any) => {
+          if (data?.token) {
+            localStorage.setItem("authToken", data.token);
+            if (data?.refreshToken)
+              localStorage.setItem("refreshToken", data.refreshToken);
+            setAuthTokenGetter(() => localStorage.getItem("authToken"));
+          }
+          qc.resetQueries({ queryKey: getGetMeQueryKey() });
+          setLocation("/");
+        },
+        onError: () => {
+          toast({
+            title: "Credenciais inválidas",
+            description: "Verifique seu e-mail e senha.",
+            variant: "destructive",
+          });
+        },
       },
-      onError: () => {
-        toast({ title: "Credenciais inválidas", description: "Verifique seu e-mail e senha.", variant: "destructive" });
-      },
-    });
+    );
   };
 
   return (
@@ -62,7 +82,9 @@ export default function LoginPage() {
             <Wrench className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Sistema OS</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gestão de Vendas e Ordens de Serviço</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            Gestão de Vendas e Ordens de Serviço
+          </p>
         </div>
 
         <div className="bg-card border border-border rounded-xl p-6 shadow-sm">

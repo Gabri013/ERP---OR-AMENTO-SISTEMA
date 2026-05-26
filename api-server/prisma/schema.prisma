@@ -138,7 +138,7 @@ model VendaItem {
 
 model OrdemServico {
   id                    Int                 @id @default(autoincrement())
-  numero                String              @unique
+  numero                String              @unique @index
   vendaId               Int?
   clienteId             Int
   dataInicio            DateTime

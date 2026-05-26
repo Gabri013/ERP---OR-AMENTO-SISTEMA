@@ -15,6 +15,7 @@ import { canTransitionOrcamento } from "../lib/stateMachine";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
 import { validateBody, validateParams } from "../middleware/validateZod";
+import { generateOrcamentoPDF } from "../lib/pdf";
 
 const router: IRouter = Router();
 
@@ -298,6 +299,7 @@ router.post(
   "/orcamentos/:id/converter",
   requireAuth,
   requireRoles(SALES_ROLES),
+  validateParams(ConverterOrcamentoParams),
   auditLog({
     action: "converter",
     module: "orcamentos",
@@ -416,6 +418,31 @@ router.post(
           : undefined,
       }),
     );
+  },
+);
+
+// GET /orcamentos/:id/pdf - Generate PDF
+router.get(
+  "/orcamentos/:id/pdf",
+  requireAuth,
+  requireRoles(SALES_ROLES),
+  validateParams(GetOrcamentoParams),
+  async (req, res): Promise<void> => {
+    const p = GetOrcamentoParams.safeParse(req.params);
+    if (!p.success) {
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
+      return;
+    }
+
+    try {
+      const pdfBuffer = await generateOrcamentoPDF(Number(p.data.id));
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=orcamento-${p.data.id}.pdf`);
+      res.send(pdfBuffer);
+    } catch (error) {
+      res.status(500).json(response.error('Erro ao gerar PDF', 'PDF_ERROR'));
+    }
   },
 );
 

@@ -22,6 +22,7 @@ import { canTransitionEtapa, canTransitionOS } from "../lib/stateMachine";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
 import { validateBody, validateParams } from "../middleware/validateZod";
+import { generateOSPDF } from "../lib/pdf";
 
 const router: IRouter = Router();
 const ALL_ROLES = [...new Set([...SALES_ROLES, ...PRODUCTION_ROLES])];

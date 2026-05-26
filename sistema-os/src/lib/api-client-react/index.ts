@@ -88,6 +88,15 @@ async function apiFetch<T>(
     const nextToken = await tryRefreshToken();
     if (nextToken) {
       res = await execute(nextToken);
+    } else {
+      // Refresh failed — clear auth and redirect to login
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+      useAuthStore.getState().logout();
+      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
+      throw new Error("Sessão expirada. Faça login novamente.");
     }
   }
 

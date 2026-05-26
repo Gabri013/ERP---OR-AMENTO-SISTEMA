@@ -39,11 +39,18 @@ export default function VendasPage() {
 
   const gerarOsMut = useGerarOsParaVenda({
     mutation: {
-      onSuccess: (os) => {
-        toast({ title: `OS ${os.numero} criada!` });
+      onSuccess: (os: any) => {
+        toast({ title: `OS ${os.numero ?? ""} criada com sucesso!` });
         qc.invalidateQueries({ queryKey: getListVendasQueryKey() });
       },
-      onError: () => toast({ title: "Erro ao gerar OS", variant: "destructive" }),
+      onError: (err: any) => {
+        const msg = err?.message || "";
+        if (msg.includes("já gerada") || msg.includes("ALREADY_EXISTS")) {
+          toast({ title: "OS já foi gerada para esta venda", description: "Acesse a venda para ver a OS vinculada." });
+        } else {
+          toast({ title: "Erro ao gerar OS", description: msg, variant: "destructive" });
+        }
+      },
     },
   });
 
@@ -108,13 +115,16 @@ export default function VendasPage() {
                         <Link href={`/vendas/${v.id}`}>
                           <a><Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button></a>
                         </Link>
-                        <Button
-                          variant="ghost" size="icon"
-                          title="Gerar OS"
-                          onClick={() => gerarOsMut.mutate({ id: v.id })}
-                        >
-                          <ClipboardPlus className="h-4 w-4 text-orange-600" />
-                        </Button>
+                        {(!v.ordensServico || v.ordensServico.length === 0) && (
+                          <Button
+                            variant="ghost" size="icon"
+                            title="Gerar OS"
+                            disabled={gerarOsMut.isPending}
+                            onClick={() => gerarOsMut.mutate({ id: v.id })}
+                          >
+                            <ClipboardPlus className="h-4 w-4 text-orange-600" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

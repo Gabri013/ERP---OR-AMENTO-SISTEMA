@@ -268,6 +268,7 @@ function ProdutoAnexoCard({
   const [viewer3d, setViewer3d] = useState<{
     url: string;
     nome: string;
+    format: string;
   } | null>(null);
 
   const apiBase =
@@ -298,10 +299,10 @@ function ProdutoAnexoCard({
       });
   };
 
-  const open3D = (anexoId: number, nome: string) => {
-    // Build authenticated URL for the viewer
+  const open3D = (anexoId: number, nome: string, tipo: string) => {
+    // Build authenticated URL — token in query param because Three.js loaders can't set headers
     const viewUrl = `${apiBase}/api/os/${osId}/anexos/${anexoId}/view?token=${encodeURIComponent(token)}`;
-    setViewer3d({ url: viewUrl, nome });
+    setViewer3d({ url: viewUrl, nome, format: tipo });
   };
 
   const hasAnexos = item.anexos?.length > 0;
@@ -429,7 +430,7 @@ function ProdutoAnexoCard({
                         size="icon"
                         className="h-7 w-7 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 shrink-0"
                         title="Visualizar 3D"
-                        onClick={() => open3D(a.id, a.nome)}
+                        onClick={() => open3D(a.id, a.nome, a.tipo)}
                       >
                         <Box className="h-3.5 w-3.5" />
                       </Button>
@@ -503,6 +504,7 @@ function ProdutoAnexoCard({
           onClose={() => setViewer3d(null)}
           url={viewer3d.url}
           nome={viewer3d.nome}
+          format={viewer3d.format}
         />
       )}
     </div>

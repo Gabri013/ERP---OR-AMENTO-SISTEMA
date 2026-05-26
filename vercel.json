@@ -1,15 +1,8 @@
 {
-  "version": 2,
   "buildCommand": "cd sistema-os && npm install && npm run build",
   "outputDirectory": "sistema-os/dist",
   "framework": null,
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

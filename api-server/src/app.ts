@@ -2,11 +2,13 @@ import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
+import swaggerUi from 'swagger-ui-express';
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { loadUser } from "./middleware/auth";
 import { applySecurityMiddlewares } from "./middleware/security";
 import { errorHandler } from "./middleware/errorHandler";
+import { swaggerSpec } from "./lib/swagger";
 
 const app: Express = express();
 
@@ -63,6 +65,12 @@ app.use(cookieParser());
 
 app.use(loadUser);
 app.use("/api", router);
+
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'ERP Cozinca API Docs',
+  customCss: '.swagger-ui .topbar { display: none }',
+}));
 
 // Global error handler
 app.use(errorHandler);

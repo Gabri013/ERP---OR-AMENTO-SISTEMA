@@ -19,35 +19,134 @@ dist-ssr/
 *.sln
 *.sw?
 
-# Environment
+# ============================================================================
+# ENVIRONMENT & SECRETS - CRITICAL: NEVER COMMIT THESE
+# ============================================================================
 .env
+.env.txt
 .env.local
 .env.*.local
+.env.production.local
+.env.development.local
+.env.test.local
+.env.backup
 
-# Logs
-logs
+# Keep example files only
+!.env.example
+
+# ============================================================================
+# LOGS & DIAGNOSTICS
+# ============================================================================
+logs/
 *.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
 
-# OS generated files
-Thumbs.db
-ehthumbs.db
+# ============================================================================
+# BUILD & RUNTIME ARTIFACTS
+# ============================================================================
+dist/
+dist-ssr/
+*.local
+build/
+.next/
+out/
+.turbo/
+
+# ============================================================================
+# COVERAGE & TESTING
+# ============================================================================
+coverage/
+.nyc_output/
+*.lcov
+.jest/
+
+# ============================================================================
+# DEPENDENCIES
+# ============================================================================
+node_modules/
+.pnp
+.pnp.js
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
 
 # pnpm specific - CRITICAL: never commit the Windows shims
 node_modules/.bin/
 **/node_modules/.bin/
 
-# Replit artifacts
+# ============================================================================
+# EDITOR & IDE
+# ============================================================================
+.vscode/*
+!.vscode/extensions.json
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.iml
+.swp
+.swo
+*.sw?
+*~
+
+# ============================================================================
+# OS & SYSTEM FILES
+# ============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ============================================================================
+# DEPLOYMENT & INFRASTRUCTURE
+# ============================================================================
+.vercel
+.vercel/
+.netlify
+.netlify/
+
+# ============================================================================
+# TEMPORARY & CACHE
+# ============================================================================
+.cache/
+.temp/
+tmp/
+temp/
+*.tmp
+
+# ============================================================================
+# PRISMA
+# ============================================================================
+prisma/migrations/
+
+# ============================================================================
+# DOCKER
+# ============================================================================
+docker-compose.override.yml
+
+# ============================================================================
+# REPLIT
+# ============================================================================
 .replit-artifact/
 
-.vercel
-.env*
-
-# Example files (keep, not secrets)
-!.env.example
+# ============================================================================
+# BACKUP FILES
+# ============================================================================
+*.backup
+*.bak
+*.old
+*.~
 !api-server/.env.example
 !sistema-os/.env.example
 

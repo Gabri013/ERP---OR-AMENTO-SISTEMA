@@ -8,9 +8,60 @@ import {
 } from "../middleware/auth";
 import { auditLog } from "../middleware/audit";
 import { response } from "../utils/response";
+import { withCache, cacheDel } from "../lib/redis";
 
 const router: IRouter = Router();
 
+/**
+ * @swagger
+ * /api/dashboard/stats:
+ *   get:
+ *     summary: Get dashboard statistics
+ *     description: Retrieves comprehensive dashboard statistics including sales, revenue, OS metrics, and financial data
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalVendas:
+ *                       type: number
+ *                     totalOrcamentos:
+ *                       type: number
+ *                     totalOs:
+ *                       type: number
+ *                     totalClientes:
+ *                       type: number
+ *                     receitaMes:
+ *                       type: number
+ *                     crescimentoReceita:
+ *                       type: number
+ *                     osPendentes:
+ *                       type: number
+ *                     osEmProducao:
+ *                       type: number
+ *                     osConcluidas:
+ *                       type: number
+ *                     osAtrasadas:
+ *                       type: number
+ *                     taxaConversao:
+ *                       type: number
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
+ */
 router.get(
   "/dashboard/stats",
   requireAuth,
@@ -21,138 +72,140 @@ router.get(
   }),
   async (req, res): Promise<void> => {
     const currentUser = (req as any).currentUser;
-    const isVendedor = currentUser.tipo === "vendedor";
+    const cacheKey = `dashboard:stats:${currentUser.id}:${currentUser.tipo}`;
 
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
+    const stats = await withCache(cacheKey, 300, async () => {
+      const isVendedor = currentUser.tipo === "vendedor";
 
-    const startOfLastMonth = new Date(startOfMonth);
-    startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1);
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
 
-    // Vendas + receita
-    const allVendas = await db.venda.findMany();
-    let ownVendas = allVendas;
-    if (isVendedor) {
-      ownVendas = allVendas.filter((v) => v.usuarioId === currentUser.id);
-    }
-    const totalVendas = ownVendas.length;
-    const ownThisMonth = ownVendas.filter((v) => v.createdAt >= startOfMonth);
-    const receitaMes = ownThisMonth.reduce(
-      (acc, v) => acc + Number(v.valorTotal),
-      0,
-    );
+      const startOfLastMonth = new Date(startOfMonth);
+      startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1);
 
-    // Receita do mês anterior para comparação
-    const ownLastMonth = ownVendas.filter(
-      (v) => v.createdAt >= startOfLastMonth && v.createdAt < startOfMonth,
-    );
-    const receitaMesAnterior = ownLastMonth.reduce(
-      (acc, v) => acc + Number(v.valorTotal),
-      0,
-    );
-    const crescimentoReceita =
-      receitaMesAnterior > 0
-        ? ((receitaMes - receitaMesAnterior) / receitaMesAnterior) * 100
-        : 0;
-
-    const totalOrcamentos = await db.orcamento.count();
-    const totalOs = await db.ordemServico.count();
-    const totalClientes = await db.cliente.count();
-
-    // Métricas de OS
-    const osPendentes = await db.ordemServico.count({
-      where: { status: "pendente" },
-    });
-    const osEmProducao = await db.ordemServico.count({
-      where: { status: "em_producao" },
-    });
-    const osConcluidas = await db.ordemServico.count({
-      where: { status: "concluida" },
-    });
-
-    // OS atrasadas (dataTermino < hoje e status não concluida/cancelada)
-    const hoje = new Date();
-    const osAtrasadas = await db.ordemServico.count({
-      where: {
-        status: { in: ["pendente", "em_projeto", "em_revisao", "em_producao"] },
-        dataTermino: { lt: hoje },
-      },
-    });
-
-    // Conversão de orçamentos
-    const orcamentosConvertidos = await db.orcamento.count({
-      where: { status: "convertido" },
-    });
-    const taxaConversao =
-      totalOrcamentos > 0 ? (orcamentosConvertidos / totalOrcamentos) * 100 : 0;
-
-    // Financeiro (apenas para roles financeiro)
-    const canSeeFinanceiro = FINANCEIRO_ROLES.includes(currentUser.tipo);
-    let contasReceberPendentes = 0;
-    let contasReceberValor = 0;
-    let contasReceberAtrasadas = 0;
-    let valorRecebidoMes = 0;
-
-    if (canSeeFinanceiro) {
-      const cr = await db.contaReceber.aggregate({
-        _count: { id: true },
-        _sum: { valorLiquido: true },
-        where: { status: "PENDENTE" },
-      });
-      contasReceberPendentes = cr._count.id || 0;
-      contasReceberValor = Number(cr._sum.valorLiquido || 0);
-
-      // Contas a receber atrasadas
-      const crAtrasadas = await db.contaReceber.aggregate({
-        _count: { id: true },
-        where: {
-          status: "PENDENTE",
-          dataVencimento: { lt: hoje },
-        },
-      });
-      contasReceberAtrasadas = crAtrasadas._count.id || 0;
-
-      // Valor recebido no mês
-      const pagamentosMes = await db.pagamento.findMany({
-        where: {
-          createdAt: { gte: startOfMonth },
-        },
-      });
-      valorRecebidoMes = pagamentosMes.reduce(
-        (acc, p) => acc + Number(p.valorPago),
+      // Vendas + receita
+      const allVendas = await db.venda.findMany();
+      let ownVendas = allVendas;
+      if (isVendedor) {
+        ownVendas = allVendas.filter((v) => v.usuarioId === currentUser.id);
+      }
+      const totalVendas = ownVendas.length;
+      const ownThisMonth = ownVendas.filter((v) => v.createdAt >= startOfMonth);
+      const receitaMes = ownThisMonth.reduce(
+        (acc, v) => acc + Number(v.valorTotal),
         0,
       );
-    }
 
-    // Ranking de vendedores (apenas para gerentes/master)
-    const canSeeRanking = ["master", "gerente"].includes(currentUser.tipo);
-    let rankingVendedores = [];
-    if (canSeeRanking) {
-      const vendasPorUsuario = await db.venda.groupBy({
-        by: ["usuarioId"],
-        _count: { id: true },
-        _sum: { valorTotal: true },
-        orderBy: { _sum: { valorTotal: "desc" } },
-        take: 5,
+      // Receita do mês anterior para comparação
+      const ownLastMonth = ownVendas.filter(
+        (v) => v.createdAt >= startOfLastMonth && v.createdAt < startOfMonth,
+      );
+      const receitaMesAnterior = ownLastMonth.reduce(
+        (acc, v) => acc + Number(v.valorTotal),
+        0,
+      );
+      const crescimentoReceita =
+        receitaMesAnterior > 0
+          ? ((receitaMes - receitaMesAnterior) / receitaMesAnterior) * 100
+          : 0;
+
+      const totalOrcamentos = await db.orcamento.count();
+      const totalOs = await db.ordemServico.count();
+      const totalClientes = await db.cliente.count();
+
+      // Métricas de OS
+      const osPendentes = await db.ordemServico.count({
+        where: { status: "pendente" },
+      });
+      const osEmProducao = await db.ordemServico.count({
+        where: { status: "em_producao" },
+      });
+      const osConcluidas = await db.ordemServico.count({
+        where: { status: "concluida" },
       });
 
-      for (const venda of vendasPorUsuario) {
-        const usuario = await db.usuario.findUnique({
-          where: { id: venda.usuarioId },
+      // OS atrasadas (dataTermino < hoje e status não concluida/cancelada)
+      const hoje = new Date();
+      const osAtrasadas = await db.ordemServico.count({
+        where: {
+          status: { in: ["pendente", "em_projeto", "em_revisao", "em_producao"] },
+          dataTermino: { lt: hoje },
+        },
+      });
+
+      // Conversão de orçamentos
+      const orcamentosConvertidos = await db.orcamento.count({
+        where: { status: "convertido" },
+      });
+      const taxaConversao =
+        totalOrcamentos > 0 ? (orcamentosConvertidos / totalOrcamentos) * 100 : 0;
+
+      // Financeiro (apenas para roles financeiro)
+      const canSeeFinanceiro = FINANCEIRO_ROLES.includes(currentUser.tipo);
+      let contasReceberPendentes = 0;
+      let contasReceberValor = 0;
+      let contasReceberAtrasadas = 0;
+      let valorRecebidoMes = 0;
+
+      if (canSeeFinanceiro) {
+        const cr = await db.contaReceber.aggregate({
+          _count: { id: true },
+          _sum: { valorLiquido: true },
+          where: { status: "PENDENTE" },
         });
-        if (usuario) {
-          rankingVendedores.push({
-            nome: usuario.nome,
-            totalVendas: venda._count.id,
-            valorTotal: Number(venda._sum.valorTotal || 0),
+        contasReceberPendentes = cr._count.id || 0;
+        contasReceberValor = Number(cr._sum.valorLiquido || 0);
+
+        // Contas a receber atrasadas
+        const crAtrasadas = await db.contaReceber.aggregate({
+          _count: { id: true },
+          where: {
+            status: "PENDENTE",
+            dataVencimento: { lt: hoje },
+          },
+        });
+        contasReceberAtrasadas = crAtrasadas._count.id || 0;
+
+        // Valor recebido no mês
+        const pagamentosMes = await db.pagamento.findMany({
+          where: {
+            createdAt: { gte: startOfMonth },
+          },
+        });
+        valorRecebidoMes = pagamentosMes.reduce(
+          (acc, p) => acc + Number(p.valorPago),
+          0,
+        );
+      }
+
+      // Ranking de vendedores (apenas para gerentes/master)
+      const canSeeRanking = ["master", "gerente"].includes(currentUser.tipo);
+      let rankingVendedores = [];
+      if (canSeeRanking) {
+        const vendasPorUsuario = await db.venda.groupBy({
+          by: ["usuarioId"],
+          _count: { id: true },
+          _sum: { valorTotal: true },
+          orderBy: { _sum: { valorTotal: "desc" } },
+          take: 5,
+        });
+
+        for (const venda of vendasPorUsuario) {
+          const usuario = await db.usuario.findUnique({
+            where: { id: venda.usuarioId },
           });
+          if (usuario) {
+            rankingVendedores.push({
+              nome: usuario.nome,
+              totalVendas: venda._count.id,
+              valorTotal: Number(venda._sum.valorTotal || 0),
+            });
+          }
         }
       }
-    }
 
-    res.json(
-      response.success({
+      return {
         totalVendas,
         totalOrcamentos,
         totalOs,
@@ -173,8 +226,10 @@ router.get(
           : null,
         valorRecebidoMes: canSeeFinanceiro ? valorRecebidoMes : null,
         rankingVendedores: canSeeRanking ? rankingVendedores : null,
-      }),
-    );
+      };
+    });
+
+    res.json(response.success(stats));
   },
 );
 
@@ -187,22 +242,27 @@ router.get(
     table: "OS",
   }),
   async (_req, res): Promise<void> => {
-    const statuses = [
-      "pendente",
-      "em_projeto",
-      "em_revisao",
-      "em_producao",
-      "concluida",
-      "cancelada",
-    ] as const;
-    const result = await Promise.all(
-      statuses.map(async (status) => {
-        const count = await db.ordemServico.count({
-          where: { status: status as any },
-        });
-        return { status, count };
-      }),
-    );
+    const cacheKey = "dashboard:os-por-status";
+    
+    const result = await withCache(cacheKey, 600, async () => {
+      const statuses = [
+        "pendente",
+        "em_projeto",
+        "em_revisao",
+        "em_producao",
+        "concluida",
+        "cancelada",
+      ] as const;
+      return await Promise.all(
+        statuses.map(async (status) => {
+          const count = await db.ordemServico.count({
+            where: { status: status as any },
+          });
+          return { status, count };
+        }),
+      );
+    });
+    
     res.json(response.success(result));
   },
 );
@@ -217,48 +277,53 @@ router.get(
   }),
   async (req, res): Promise<void> => {
     const currentUser = (req as any).currentUser;
+    const cacheKey = `dashboard:vendas-recentes:${currentUser.id}:${currentUser.tipo}`;
 
-    const rows = await db.venda.findMany({
-      include: { cliente: true },
-      orderBy: { createdAt: "desc" },
-      take: 20,
+    const result = await withCache(cacheKey, 180, async () => {
+      const rows = await db.venda.findMany({
+        include: { cliente: true },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      });
+
+      let mapped = rows.map((r) => ({
+        id: r.id,
+        numero: r.numero,
+        orcamentoId: r.orcamentoId,
+        clienteId: r.clienteId,
+        usuarioId: r.usuarioId,
+        dataVenda: r.dataVenda,
+        valorTotal: Number(r.valorTotal),
+        desconto: Number(r.desconto),
+        formaPagamento: r.formaPagamento,
+        numParcelas: r.numParcelas,
+        status: r.status,
+        observacoes: r.observacoes,
+        createdAt: r.createdAt.toISOString(),
+        cliente: r.cliente
+          ? {
+              id: r.cliente.id,
+              razaoSocial: r.cliente.razaoSocial,
+              nomeFantasia: r.cliente.nomeFantasia,
+              cnpjCpf: r.cliente.cnpjCpf,
+              cidade: r.cliente.cidade,
+              estado: r.cliente.estado,
+              telefone: r.cliente.telefone,
+              email: r.cliente.email,
+              observacoes: r.cliente.observacoes,
+              createdAt: r.cliente.createdAt.toISOString(),
+            }
+          : undefined,
+      }));
+
+      if (currentUser.tipo === "vendedor") {
+        mapped = mapped.filter((r) => r.usuarioId === currentUser.id);
+      }
+
+      return mapped.slice(0, 5);
     });
 
-    let result = rows.map((r) => ({
-      id: r.id,
-      numero: r.numero,
-      orcamentoId: r.orcamentoId,
-      clienteId: r.clienteId,
-      usuarioId: r.usuarioId,
-      dataVenda: r.dataVenda,
-      valorTotal: Number(r.valorTotal),
-      desconto: Number(r.desconto),
-      formaPagamento: r.formaPagamento,
-      numParcelas: r.numParcelas,
-      status: r.status,
-      observacoes: r.observacoes,
-      createdAt: r.createdAt.toISOString(),
-      cliente: r.cliente
-        ? {
-            id: r.cliente.id,
-            razaoSocial: r.cliente.razaoSocial,
-            nomeFantasia: r.cliente.nomeFantasia,
-            cnpjCpf: r.cliente.cnpjCpf,
-            cidade: r.cliente.cidade,
-            estado: r.cliente.estado,
-            telefone: r.cliente.telefone,
-            email: r.cliente.email,
-            observacoes: r.cliente.observacoes,
-            createdAt: r.cliente.createdAt.toISOString(),
-          }
-        : undefined,
-    }));
-
-    if (currentUser.tipo === "vendedor") {
-      result = result.filter((r) => r.usuarioId === currentUser.id);
-    }
-
-    res.json(response.success(result.slice(0, 5)));
+    res.json(response.success(result));
   },
 );
 
@@ -284,47 +349,49 @@ router.get(
       return;
     }
 
-    const rows = await db.ordemServico.findMany({
-      include: { cliente: true },
-      where: { status: "em_producao" },
-      orderBy: { dataTermino: "asc" },
-      take: 10,
+    const cacheKey = "dashboard:os-atrasadas";
+
+    const result = await withCache(cacheKey, 300, async () => {
+      const rows = await db.ordemServico.findMany({
+        include: { cliente: true },
+        where: { status: "em_producao" },
+        orderBy: { dataTermino: "asc" },
+        take: 10,
+      });
+
+      return rows.map((r) => ({
+        id: r.id,
+        numero: r.numero,
+        vendaId: r.vendaId,
+        clienteId: r.clienteId,
+        dataInicio: r.dataInicio,
+        dataTermino: r.dataTermino,
+        prioridade: r.prioridade,
+        status: r.status,
+        etapaAtual: r.etapaAtual,
+        observacoesGerais: r.observacoesGerais,
+        observacoesCortedobra: r.observacoesCortedobra,
+        observacoesSolda: r.observacoesSolda,
+        arquivoProjeto: r.arquivoProjeto,
+        createdAt: r.createdAt.toISOString(),
+        cliente: r.cliente
+          ? {
+              id: r.cliente.id,
+              razaoSocial: r.cliente.razaoSocial,
+              nomeFantasia: r.cliente.nomeFantasia,
+              cnpjCpf: r.cliente.cnpjCpf,
+              cidade: r.cliente.cidade,
+              estado: r.cliente.estado,
+              telefone: r.cliente.telefone,
+              email: r.cliente.email,
+              observacoes: r.cliente.observacoes,
+              createdAt: r.cliente.createdAt.toISOString(),
+            }
+          : undefined,
+      }));
     });
 
-    res.json(
-      response.success(
-        rows.map((r) => ({
-          id: r.id,
-          numero: r.numero,
-          vendaId: r.vendaId,
-          clienteId: r.clienteId,
-          dataInicio: r.dataInicio,
-          dataTermino: r.dataTermino,
-          prioridade: r.prioridade,
-          status: r.status,
-          etapaAtual: r.etapaAtual,
-          observacoesGerais: r.observacoesGerais,
-          observacoesCortedobra: r.observacoesCortedobra,
-          observacoesSolda: r.observacoesSolda,
-          arquivoProjeto: r.arquivoProjeto,
-          createdAt: r.createdAt.toISOString(),
-          cliente: r.cliente
-            ? {
-                id: r.cliente.id,
-                razaoSocial: r.cliente.razaoSocial,
-                nomeFantasia: r.cliente.nomeFantasia,
-                cnpjCpf: r.cliente.cnpjCpf,
-                cidade: r.cliente.cidade,
-                estado: r.cliente.estado,
-                telefone: r.cliente.telefone,
-                email: r.cliente.email,
-                observacoes: r.cliente.observacoes,
-                createdAt: r.cliente.createdAt.toISOString(),
-              }
-            : undefined,
-        })),
-      ),
-    );
+    res.json(response.success(result));
   },
 );
 

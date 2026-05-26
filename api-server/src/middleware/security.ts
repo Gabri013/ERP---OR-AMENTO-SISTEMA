@@ -1,48 +1,32 @@
 import type { Express } from "express";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
+import { generalLimiter, loginLimiter } from "./rateLimiter";
 
 export function applySecurityMiddlewares(app: Express) {
   app.use(
     helmet({
       crossOriginEmbedderPolicy: false,
-    }),
-  );
-
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 100,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: {
-        success: false,
-        data: null,
-        error: {
-          message: "Muitas requisições. Aguarde 15 minutos.",
-          code: "RATE_LIMITED",
-          details: null,
-        },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
       },
     }),
   );
 
-  app.use(
-    "/api/auth/login",
-    rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 10,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: {
-        success: false,
-        data: null,
-        error: {
-          message: "Muitas tentativas de login.",
-          code: "LOGIN_RATE_LIMITED",
-          details: null,
-        },
-      },
-    }),
-  );
+  // HTTPS enforcement in production
+  if (process.env.NODE_ENV === "production") {
+    app.use((req, res, next) => {
+      if (req.header("x-forwarded-proto") !== "https") {
+        return res.redirect(301, `https://${req.header("host")}${req.url}`);
+      }
+      next();
+    });
+  }
+
+  // Apply Redis-backed rate limiting globally
+  app.use(generalLimiter);
+
+  // Stricter rate limiting for login endpoint
+  app.use("/api/auth/login", loginLimiter);
 }

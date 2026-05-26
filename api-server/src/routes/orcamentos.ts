@@ -14,6 +14,7 @@ import { auditLog } from "../middleware/audit";
 import { canTransitionOrcamento } from "../lib/stateMachine";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
+import { validateBody, validateParams } from "../middleware/validateZod";
 
 const router: IRouter = Router();
 
@@ -98,17 +99,10 @@ router.post(
   "/orcamentos",
   requireAuth,
   requireRoles(SALES_ROLES),
+  validateBody(CreateOrcamentoBody),
   async (req, res): Promise<void> => {
-    const parsed = CreateOrcamentoBody.safeParse(req.body);
-    if (!parsed.success) {
-      res
-        .status(400)
-        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
-      return;
-    }
-
     const userId = (req as any).currentUser?.id ?? 1;
-    const { itens, ...orcData } = parsed.data as any;
+    const { itens, ...orcData } = req.body as any;
     const numero = await getNextOrcamentoNum();
 
     const valorTotal = itens.reduce(
@@ -223,6 +217,8 @@ router.patch(
   "/orcamentos/:id",
   requireAuth,
   requireRoles(SALES_ROLES),
+  validateParams(UpdateOrcamentoParams),
+  validateBody(UpdateOrcamentoBody),
   auditLog({
     action: "update",
     module: "orcamentos",
@@ -235,15 +231,7 @@ router.patch(
       return;
     }
 
-    const parsed = UpdateOrcamentoBody.safeParse(req.body);
-    if (!parsed.success) {
-      res
-        .status(400)
-        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
-      return;
-    }
-
-    const data: any = { ...parsed.data };
+    const data: any = { ...req.body };
     if (data.desconto !== undefined) data.desconto = Number(data.desconto);
 
     if (data.status) {

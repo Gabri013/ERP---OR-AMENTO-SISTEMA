@@ -135,7 +135,7 @@ model VendaItem {
 model OrdemServico {
   id                    Int                 @id @default(autoincrement())
   numero                String              @unique
-  vendaId               Int
+  vendaId               Int?
   clienteId             Int
   dataInicio            DateTime
   dataTermino           DateTime?
@@ -152,7 +152,7 @@ model OrdemServico {
   historico             OSHistoricoStatus[]
   observacoes           OSObservacao[]
   cliente               Cliente             @relation(fields: [clienteId], references: [id])
-  venda                 Venda               @relation(fields: [vendaId], references: [id])
+  venda                 Venda?              @relation(fields: [vendaId], references: [id])
 }
 
 model OSObservacao {

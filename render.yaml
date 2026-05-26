@@ -4,28 +4,24 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: cd api-server && npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+    buildCommand: cd api-server && npm install && npm run build
     startCommand: cd api-server && npm start
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: DATABASE_URL
-        sync: false
+        value: postgresql://neondb_owner:npg_R8MfSTaCjQA7@ep-nameless-smoke-aqassije-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - key: DIRECT_URL
-        sync: false
+        value: postgresql://neondb_owner:npg_R8MfSTaCjQA7@ep-nameless-smoke-aqassije.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require
       - key: JWT_SECRET
-        sync: false
+        value: erp-cozinca-prod-jwt-2026-f8k2m9x7p4w1n6q3v0y5r8j1h4b7e0t3
       - key: JWT_EXPIRES_IN
         value: 15m
       - key: REFRESH_TOKEN_EXPIRES_IN
         value: 7d
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
       - key: FRONTEND_URL
         value: https://erp-orcamento-sistema.vercel.app
       - key: CORS_ORIGIN
         value: https://erp-orcamento-sistema.vercel.app
-      - key: REDIS_URL
-        sync: false
-      - key: REDIS_TOKEN
-        sync: false
-      - key: PORT
-        value: 3001

@@ -8,8 +8,16 @@ import {
   DeleteProdutoParams,
   ListProdutosQueryParams,
 } from "../schemas";
-import { requireAuth, requireRoles, ALL_ROLES, ADMIN_ROLES } from "../middleware/auth";
+import {
+  requireAuth,
+  requireRoles,
+  ALL_ROLES,
+  ADMIN_ROLES,
+} from "../middleware/auth";
 import { auditLog } from "../middleware/audit";
+import { validate } from "../middleware/validate";
+import { response } from "../utils/response";
+import { getPagination, buildMeta } from "../utils/pagination";
 
 const router: IRouter = Router();
 
@@ -20,103 +28,140 @@ function serializeProduto(r: any) {
     nome: r.nome,
     descricao: r.descricao,
     foto: r.foto,
-    valor: typeof r.valor === "object" && r.valor !== null ? Number(r.valor) : Number(r.valor),
+    valor:
+      typeof r.valor === "object" && r.valor !== null
+        ? Number(r.valor)
+        : Number(r.valor),
     estoque: r.estoque,
     status: r.status,
   };
 }
 
-router.get("/produtos", requireAuth, requireRoles(ALL_ROLES), auditLog({
-  action: "list",
-  module: "produtos",
-  table: "Produto"
-}), async (req, res): Promise<void> => {
-  const params = ListProdutosQueryParams.safeParse(req.query);
-  const q = params.success ? params.data.q : undefined;
+router.get(
+  "/produtos",
+  requireAuth,
+  requireRoles(ALL_ROLES),
+  auditLog({ action: "list", module: "produtos", table: "Produto" }),
+  async (req, res): Promise<void> => {
+    const params = ListProdutosQueryParams.safeParse(req.query);
+    const q = params.success ? params.data.q : undefined;
+    const { page, limit, skip } = getPagination(req);
 
-  let rows;
-  if (q) {
-    rows = await db.produto.findMany({
-      where: { nome: { contains: q, mode: "insensitive" } },
-      orderBy: { nome: "asc" },
+    const where = q
+      ? { nome: { contains: q, mode: "insensitive" as const } }
+      : {};
+
+    const [rows, total] = await Promise.all([
+      db.produto.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { nome: "asc" },
+      }),
+      db.produto.count({ where }),
+    ]);
+
+    res.json(
+      response.success(
+        rows.map(serializeProduto),
+        buildMeta(page, limit, total),
+      ),
+    );
+  },
+);
+
+router.post(
+  "/produtos",
+  requireAuth,
+  requireRoles(ADMIN_ROLES),
+  validate(CreateProdutoBody),
+  auditLog({ action: "create", module: "produtos", table: "Produto" }),
+  async (req, res): Promise<void> => {
+    const data: any = { ...req.body };
+    if (data.valor !== undefined) data.valor = String(data.valor);
+
+    const row = await db.produto.create({ data });
+    res.status(201).json(response.success(serializeProduto(row)));
+  },
+);
+
+router.get(
+  "/produtos/:id",
+  requireAuth,
+  requireRoles(ALL_ROLES),
+  auditLog({ action: "view", module: "produtos", table: "Produto" }),
+  async (req, res): Promise<void> => {
+    const p = GetProdutoParams.safeParse(req.params);
+    if (!p.success) {
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
+      return;
+    }
+
+    const row = await db.produto.findUnique({
+      where: { id: Number(p.data.id) },
     });
-  } else {
-    rows = await db.produto.findMany({ orderBy: { nome: "asc" } });
-  }
+    if (!row) {
+      res
+        .status(404)
+        .json(response.error("Produto não encontrado", "NOT_FOUND"));
+      return;
+    }
 
-  res.json(rows.map(serializeProduto));
-});
+    res.json(response.success(serializeProduto(row)));
+  },
+);
 
-router.post("/produtos", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
-  action: "create",
-  module: "produtos",
-  table: "Produto"
-}), async (req, res): Promise<void> => {
-  const parsed = CreateProdutoBody.safeParse(req.body);
-  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+router.patch(
+  "/produtos/:id",
+  requireAuth,
+  requireRoles(ADMIN_ROLES),
+  validate(UpdateProdutoBody),
+  auditLog({ action: "update", module: "produtos", table: "Produto" }),
+  async (req, res): Promise<void> => {
+    const p = UpdateProdutoParams.safeParse(req.params);
+    if (!p.success) {
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
+      return;
+    }
 
-  const data: any = { ...parsed.data };
-  if (data.valor !== undefined) data.valor = String(data.valor);
+    const data: any = { ...req.body };
+    if (data.valor !== undefined) data.valor = String(data.valor);
 
-  const row = await db.produto.create({ data });
-  res.status(201).json(serializeProduto(row));
-});
+    try {
+      const row = await db.produto.update({
+        where: { id: Number(p.data.id) },
+        data,
+      });
+      res.json(response.success(serializeProduto(row)));
+    } catch {
+      res
+        .status(404)
+        .json(response.error("Produto não encontrado", "NOT_FOUND"));
+    }
+  },
+);
 
-router.get("/produtos/:id", requireAuth, requireRoles(ALL_ROLES), auditLog({
-  action: "view",
-  module: "produtos",
-  table: "Produto"
-}), async (req, res): Promise<void> => {
-  const p = GetProdutoParams.safeParse(req.params);
-  if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
+router.delete(
+  "/produtos/:id",
+  requireAuth,
+  requireRoles(ADMIN_ROLES),
+  auditLog({ action: "delete", module: "produtos", table: "Produto" }),
+  async (req, res): Promise<void> => {
+    const p = DeleteProdutoParams.safeParse(req.params);
+    if (!p.success) {
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
+      return;
+    }
 
-  const id = Number(p.data.id);
-  const row = await db.produto.findUnique({ where: { id } });
-  if (!row) { res.status(404).json({ error: "Produto nÃ£o encontrado" }); return; }
-
-  res.json(serializeProduto(row));
-});
-
-router.patch("/produtos/:id", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
-  action: "update",
-  module: "produtos",
-  table: "Produto"
-}), async (req, res): Promise<void> => {
-  const p = UpdateProdutoParams.safeParse(req.params);
-  if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
-
-  const parsed = UpdateProdutoBody.safeParse(req.body);
-  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-
-  const data: any = { ...parsed.data };
-  if (data.valor !== undefined) data.valor = String(data.valor);
-
-  try {
-    const id = Number(p.data.id);
-    const row = await db.produto.update({ where: { id }, data });
-    res.json(serializeProduto(row));
-  } catch {
-    res.status(404).json({ error: "Produto nÃ£o encontrado" });
-  }
-});
-
-router.delete("/produtos/:id", requireAuth, requireRoles(ADMIN_ROLES), auditLog({
-  action: "delete",
-  module: "produtos",
-  table: "Produto"
-}), async (req, res): Promise<void> => {
-  const p = DeleteProdutoParams.safeParse(req.params);
-  if (!p.success) { res.status(400).json({ error: p.error.message }); return; }
-
-  try {
-    const id = Number(p.data.id);
-    await db.produto.delete({ where: { id } });
-    res.sendStatus(204);
-  } catch {
-    res.status(404).json({ error: "Produto nÃ£o encontrado" });
-  }
-});
+    try {
+      await db.produto.delete({ where: { id: Number(p.data.id) } });
+      res.sendStatus(204);
+    } catch {
+      res
+        .status(404)
+        .json(response.error("Produto não encontrado", "NOT_FOUND"));
+    }
+  },
+);
 
 export default router;
-
-

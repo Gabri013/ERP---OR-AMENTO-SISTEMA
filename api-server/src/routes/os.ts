@@ -20,6 +20,7 @@ import {
 import { auditLog } from "../middleware/audit";
 import { canTransitionEtapa, canTransitionOS } from "../lib/stateMachine";
 import { response } from "../utils/response";
+import { getPagination, buildMeta } from "../utils/pagination";
 
 const router: IRouter = Router();
 const ALL_ROLES = [...new Set([...SALES_ROLES, ...PRODUCTION_ROLES])];
@@ -89,54 +90,27 @@ router.get(
     const status = params.success
       ? (req.query.status as string | undefined)
       : undefined;
-    const currentUser = (req as any).currentUser;
 
-    const rows = await db.ordemServico.findMany({
-      include: { cliente: true },
-      orderBy: { createdAt: "desc" },
-    });
+    const { page, limit, skip } = getPagination(req);
+    const where: any = {};
+    if (status) where.status = status;
 
-    let result = rows.map((r) => ({
-      id: r.id,
-      numero: r.numero,
-      vendaId: r.vendaId,
-      clienteId: r.clienteId,
-      dataInicio: r.dataInicio,
-      dataTermino: r.dataTermino,
-      prioridade: r.prioridade,
-      status: r.status,
-      etapaAtual: r.etapaAtual,
-      observacoesGerais: r.observacoesGerais,
-      observacoesCortedobra: r.observacoesCortedobra,
-      observacoesSolda: r.observacoesSolda,
-      arquivoProjeto: r.arquivoProjeto,
-      createdAt:
-        r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
-      cliente: r.cliente
-        ? {
-            id: r.cliente.id,
-            razaoSocial: r.cliente.razaoSocial,
-            nomeFantasia: r.cliente.nomeFantasia,
-            cnpjCpf: r.cliente.cnpjCpf,
-            cidade: r.cliente.cidade,
-            estado: r.cliente.estado,
-            telefone: r.cliente.telefone,
-            email: r.cliente.email,
-            observacoes: r.cliente.observacoes,
-            createdAt:
-              r.cliente.createdAt instanceof Date
-                ? r.cliente.createdAt.toISOString()
-                : r.cliente.createdAt,
-          }
-        : undefined,
-    }));
-
-    if (currentUser.tipo === "vendedor") {
-      // vendedor filter logic (kept simple as original)
-    }
-
-    if (status) result = result.filter((r) => r.status === status);
-    res.json(result);
+    const [rows, total] = await Promise.all([
+      db.ordemServico.findMany({
+        where,
+        include: { cliente: true },
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      db.ordemServico.count({ where }),
+    ]);
+    res.json(
+      response.success(
+        rows.map((r) => serializeOS(r, r.cliente)),
+        buildMeta(page, limit, total),
+      ),
+    );
   },
 );
 
@@ -148,7 +122,7 @@ router.get(
   async (req, res): Promise<void> => {
     const p = GetOSParams.safeParse(req.params);
     if (!p.success) {
-      res.status(400).json({ error: p.error.message });
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
       return;
     }
 
@@ -159,15 +133,9 @@ router.get(
     });
 
     if (!os) {
-      res.status(404).json({ error: "OS nÃ£o encontrada" });
+      res.status(404).json(response.error("OS não encontrada", "NOT_FOUND"));
       return;
     }
-
-    const currentUser = (req as any).currentUser;
-    // TODO: add proper ownership check via venda.usuarioId or cliente when needed
-    // if (currentUser.tipo === "vendedor" && os.usuarioId && os.usuarioId !== currentUser.id) {
-    //   res.status(403).json({ error: "Sem permissÃ£o" }); return;
-    // }
 
     const observacoes = await db.oSObservacao.findMany({
       where: { osId },
@@ -184,57 +152,63 @@ router.get(
       where: { osId },
     });
 
-    res.json({
-      id: os.id,
-      numero: os.numero,
-      vendaId: os.vendaId,
-      clienteId: os.clienteId,
-      dataInicio: os.dataInicio,
-      dataTermino: os.dataTermino,
-      prioridade: os.prioridade,
-      status: os.status,
-      etapaAtual: os.etapaAtual,
-      observacoesGerais: os.observacoesGerais,
-      observacoesCortedobra: os.observacoesCortedobra,
-      observacoesSolda: os.observacoesSolda,
-      arquivoProjeto: os.arquivoProjeto,
-      createdAt:
-        os.createdAt instanceof Date
-          ? os.createdAt.toISOString()
-          : os.createdAt,
-      cliente: os.cliente
-        ? { id: os.cliente.id, razaoSocial: os.cliente.razaoSocial }
-        : undefined,
-      observacoes: observacoes.map((o) => ({
-        id: o.id,
-        tipoSetor: o.tipoSetor,
-        observacao: o.observacao,
+    res.json(
+      response.success({
+        id: os.id,
+        numero: os.numero,
+        vendaId: os.vendaId,
+        clienteId: os.clienteId,
+        dataInicio: os.dataInicio,
+        dataTermino: os.dataTermino,
+        prioridade: os.prioridade,
+        status: os.status,
+        etapaAtual: os.etapaAtual,
+        observacoesGerais: os.observacoesGerais,
+        observacoesCortedobra: os.observacoesCortedobra,
+        observacoesSolda: os.observacoesSolda,
+        arquivoProjeto: os.arquivoProjeto,
         createdAt:
-          o.createdAt instanceof Date ? o.createdAt.toISOString() : o.createdAt,
-        usuario: o.usuario
-          ? { id: o.usuario.id, nome: o.usuario.nome }
+          os.createdAt instanceof Date
+            ? os.createdAt.toISOString()
+            : os.createdAt,
+        cliente: os.cliente
+          ? { id: os.cliente.id, razaoSocial: os.cliente.razaoSocial }
           : undefined,
-      })),
-      historico: historico.map((h) => ({
-        id: h.id,
-        statusAnterior: h.statusAnterior,
-        statusNovo: h.statusNovo,
-        observacao: h.observacao,
-        createdAt:
-          h.createdAt instanceof Date ? h.createdAt.toISOString() : h.createdAt,
-      })),
-      etapas: etapas.map((e) => ({
-        id: e.id,
-        etapa: e.etapa,
-        status: e.status,
-        dataInicio:
-          e.dataInicio instanceof Date
-            ? e.dataInicio.toISOString()
-            : e.dataInicio,
-        dataFim:
-          e.dataFim instanceof Date ? e.dataFim.toISOString() : e.dataFim,
-      })),
-    });
+        observacoes: observacoes.map((o) => ({
+          id: o.id,
+          tipoSetor: o.tipoSetor,
+          observacao: o.observacao,
+          createdAt:
+            o.createdAt instanceof Date
+              ? o.createdAt.toISOString()
+              : o.createdAt,
+          usuario: o.usuario
+            ? { id: o.usuario.id, nome: o.usuario.nome }
+            : undefined,
+        })),
+        historico: historico.map((h) => ({
+          id: h.id,
+          statusAnterior: h.statusAnterior,
+          statusNovo: h.statusNovo,
+          observacao: h.observacao,
+          createdAt:
+            h.createdAt instanceof Date
+              ? h.createdAt.toISOString()
+              : h.createdAt,
+        })),
+        etapas: etapas.map((e) => ({
+          id: e.id,
+          etapa: e.etapa,
+          status: e.status,
+          dataInicio:
+            e.dataInicio instanceof Date
+              ? e.dataInicio.toISOString()
+              : e.dataInicio,
+          dataFim:
+            e.dataFim instanceof Date ? e.dataFim.toISOString() : e.dataFim,
+        })),
+      }),
+    );
   },
 );
 
@@ -246,13 +220,15 @@ router.patch(
   async (req, res): Promise<void> => {
     const p = UpdateOSParams.safeParse(req.params);
     if (!p.success) {
-      res.status(400).json({ error: p.error.message });
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
       return;
     }
 
     const parsed = UpdateOSBody.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.message });
+      res
+        .status(400)
+        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
       return;
     }
 
@@ -281,9 +257,9 @@ router.patch(
         where: { id: Number(p.data.id) },
         data: parsed.data as any,
       });
-      res.json(row);
+      res.json(response.success(row));
     } catch {
-      res.status(404).json({ error: "OS nÃ£o encontrada" });
+      res.status(404).json(response.error("OS não encontrada", "NOT_FOUND"));
     }
   },
 );
@@ -296,13 +272,15 @@ router.post(
   async (req, res): Promise<void> => {
     const p = AvancarEtapaOSParams.safeParse(req.params);
     if (!p.success) {
-      res.status(400).json({ error: p.error.message });
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
       return;
     }
 
     const body = AvancarEtapaOSBody.safeParse(req.body);
     if (!body.success) {
-      res.status(400).json({ error: body.error.message });
+      res
+        .status(400)
+        .json(response.error(body.error.message, "VALIDATION_ERROR"));
       return;
     }
 
@@ -349,7 +327,7 @@ router.post(
       })
       .catch(() => {});
 
-    // Cria se nÃ£o existir
+    // Cria se não existir
     const exists = await db.oSEtapaProducao.findFirst({
       where: { osId, etapa: etapaAtual as any },
     });
@@ -395,7 +373,7 @@ router.post(
       });
     }
 
-    res.json(updated);
+    res.json(response.success(updated));
   },
 );
 
@@ -407,13 +385,15 @@ router.post(
   async (req, res): Promise<void> => {
     const p = AddObservacaoOSParams.safeParse(req.params);
     if (!p.success) {
-      res.status(400).json({ error: p.error.message });
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
       return;
     }
 
     const body = AddObservacaoOSBody.safeParse(req.body);
     if (!body.success) {
-      res.status(400).json({ error: body.error.message });
+      res
+        .status(400)
+        .json(response.error(body.error.message, "VALIDATION_ERROR"));
       return;
     }
 
@@ -428,7 +408,7 @@ router.post(
       },
     });
 
-    res.status(201).json(obs);
+    res.status(201).json(response.success(obs));
   },
 );
 

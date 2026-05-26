@@ -1,13 +1,37 @@
 ﻿import type { RequestHandler } from "express";
 import { db } from "../lib/prisma";
 import { verifyUserToken } from "../lib/jwt";
+import { response } from "../utils/response";
 
-export const SECTOR_ROLES = ["corte","dobra","solda","refrigeracao","acabamento","finalizacao","montagem"];
-export const PRODUCTION_ROLES = ["master","gerente","producao","engenharia","dashboard_producao","projetista",...SECTOR_ROLES];
-export const SALES_ROLES = ["master","gerente","vendedor"];
-export const FINANCEIRO_ROLES = ["master","gerente","financeiro"];
-export const ADMIN_ROLES = ["master","gerente"];
-export const ALL_ROLES = Array.from(new Set([...SALES_ROLES,...PRODUCTION_ROLES,...FINANCEIRO_ROLES,"visualizador"]));
+export const SECTOR_ROLES = [
+  "corte",
+  "dobra",
+  "solda",
+  "refrigeracao",
+  "acabamento",
+  "finalizacao",
+  "montagem",
+];
+export const PRODUCTION_ROLES = [
+  "master",
+  "gerente",
+  "producao",
+  "engenharia",
+  "dashboard_producao",
+  "projetista",
+  ...SECTOR_ROLES,
+];
+export const SALES_ROLES = ["master", "gerente", "vendedor"];
+export const FINANCEIRO_ROLES = ["master", "gerente", "financeiro"];
+export const ADMIN_ROLES = ["master", "gerente"];
+export const ALL_ROLES = Array.from(
+  new Set([
+    ...SALES_ROLES,
+    ...PRODUCTION_ROLES,
+    ...FINANCEIRO_ROLES,
+    "visualizador",
+  ]),
+);
 
 async function getUserFromRequest(req: any) {
   try {
@@ -44,7 +68,7 @@ export const loadUser: RequestHandler = async (req, _res, next) => {
   try {
     let token: string | undefined;
     const auth = req.headers?.authorization;
-    
+
     if (auth?.startsWith("Bearer ")) {
       token = auth.substring(7);
     } else if (req.cookies?.token) {
@@ -63,9 +87,11 @@ export const loadUser: RequestHandler = async (req, _res, next) => {
     }
 
     // Try to get user from DB, but don't fail if DB is slow
-    const user = await db.usuario.findUnique({
-      where: { id: claims.sub },
-    }).catch(() => null);
+    const user = await db.usuario
+      .findUnique({
+        where: { id: claims.sub },
+      })
+      .catch(() => null);
 
     if (user && user.status === "ativo") {
       (req as any).currentUser = user;
@@ -76,7 +102,7 @@ export const loadUser: RequestHandler = async (req, _res, next) => {
         nome: claims.nome,
         email: claims.email,
         tipo: claims.tipo,
-        status: "ativo"
+        status: "ativo",
       };
     }
   } catch (err) {
@@ -87,7 +113,7 @@ export const loadUser: RequestHandler = async (req, _res, next) => {
 
 export const requireAuth: RequestHandler = (req, res, next) => {
   if (!(req as any).currentUser) {
-    res.status(401).json({ error: "NÃ£o autenticado" });
+    res.status(401).json(response.error("Não autenticado", "UNAUTHENTICATED"));
     return;
   }
   next();
@@ -96,9 +122,18 @@ export const requireAuth: RequestHandler = (req, res, next) => {
 export function requireRoles(roles: string[]): RequestHandler {
   return (req, res, next) => {
     const user = (req as any).currentUser;
-    if (!user) { res.status(401).json({ error: "NÃ£o autenticado" }); return; }
-    if (!roles.includes(user.tipo)) { res.status(403).json({ error: "Sem permissÃ£o para esta aÃ§Ã£o" }); return; }
+    if (!user) {
+      res
+        .status(401)
+        .json(response.error("Não autenticado", "UNAUTHENTICATED"));
+      return;
+    }
+    if (!roles.includes(user.tipo)) {
+      res
+        .status(403)
+        .json(response.error("Sem permissão para esta ação", "FORBIDDEN"));
+      return;
+    }
     next();
   };
 }
-

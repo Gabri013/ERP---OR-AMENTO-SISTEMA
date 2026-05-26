@@ -56,3 +56,4 @@ node_modules/.bin/
 
 # Prisma generated (regenerate on install)
 api-server/node_modules/.prisma/
+nul

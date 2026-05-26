@@ -9,6 +9,8 @@ import {
   GerarOsParaVendaParams,
 } from "../schemas";
 import { requireAuth, requireRoles, SALES_ROLES } from "../middleware/auth";
+import { response } from "../utils/response";
+import { getPagination, buildMeta } from "../utils/pagination";
 
 const router: IRouter = Router();
 
@@ -36,6 +38,7 @@ function serializeVenda(r: any, cliente?: any) {
     numParcelas: r.numParcelas,
     status: r.status,
     observacoes: r.observacoes,
+    observacoesVenda: r.observacoesVenda,
     createdAt: r.createdAt?.toISOString?.() ?? r.createdAt,
     cliente: cliente
       ? {
@@ -62,53 +65,29 @@ router.get(
     ListVendasQueryParams.safeParse(req.query);
     const status = req.query.status as string | undefined;
     const currentUser = (req as any).currentUser;
+    const isVendedor = currentUser.tipo === "vendedor";
 
-    const rows = await db.venda.findMany({
-      include: { cliente: true },
-      orderBy: { id: "desc" },
-    });
+    const { page, limit, skip } = getPagination(req);
+    const where: any = isVendedor ? { usuarioId: currentUser.id } : {};
+    if (status) where.status = status as any;
 
-    let result = rows.map((r) => ({
-      id: r.id,
-      numero: r.numero,
-      orcamentoId: r.orcamentoId,
-      clienteId: r.clienteId,
-      usuarioId: r.usuarioId,
-      dataVenda: r.dataVenda,
-      valorTotal: Number(r.valorTotal),
-      desconto: Number(r.desconto),
-      formaPagamento: r.formaPagamento,
-      numParcelas: r.numParcelas,
-      status: r.status,
-      observacoes: r.observacoes,
-      observacoesVenda: r.observacoesVenda,
-      createdAt:
-        r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
-      cliente: r.cliente
-        ? {
-            id: r.cliente.id,
-            razaoSocial: r.cliente.razaoSocial,
-            nomeFantasia: r.cliente.nomeFantasia,
-            cnpjCpf: r.cliente.cnpjCpf,
-            cidade: r.cliente.cidade,
-            estado: r.cliente.estado,
-            telefone: r.cliente.telefone,
-            email: r.cliente.email,
-            observacoes: r.cliente.observacoes,
-            createdAt:
-              r.cliente.createdAt instanceof Date
-                ? r.cliente.createdAt.toISOString()
-                : r.cliente.createdAt,
-          }
-        : undefined,
-    }));
+    const [rows, total] = await Promise.all([
+      db.venda.findMany({
+        where,
+        include: { cliente: true },
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      db.venda.count({ where }),
+    ]);
 
-    if (currentUser.tipo === "vendedor") {
-      result = result.filter((r) => r.usuarioId === currentUser.id);
-    }
-
-    if (status) result = result.filter((r) => r.status === status);
-    res.json(result);
+    res.json(
+      response.success(
+        rows.map((r) => serializeVenda(r, r.cliente)),
+        buildMeta(page, limit, total),
+      ),
+    );
   },
 );
 
@@ -119,7 +98,9 @@ router.post(
   async (req, res): Promise<void> => {
     const parsed = CreateVendaBody.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.message });
+      res
+        .status(400)
+        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
       return;
     }
 
@@ -188,41 +169,7 @@ router.post(
     const cliente = await db.cliente.findUnique({
       where: { id: venda.clienteId },
     });
-    res.status(201).json({
-      id: venda.id,
-      numero: venda.numero,
-      orcamentoId: venda.orcamentoId,
-      clienteId: venda.clienteId,
-      usuarioId: venda.usuarioId,
-      dataVenda: venda.dataVenda,
-      valorTotal: Number(venda.valorTotal),
-      desconto: Number(venda.desconto),
-      formaPagamento: venda.formaPagamento,
-      numParcelas: venda.numParcelas,
-      status: venda.status,
-      observacoes: venda.observacoes,
-      createdAt:
-        venda.createdAt instanceof Date
-          ? venda.createdAt.toISOString()
-          : venda.createdAt,
-      cliente: cliente
-        ? {
-            id: cliente.id,
-            razaoSocial: cliente.razaoSocial,
-            nomeFantasia: cliente.nomeFantasia,
-            cnpjCpf: cliente.cnpjCpf,
-            cidade: cliente.cidade,
-            estado: cliente.estado,
-            telefone: cliente.telefone,
-            email: cliente.email,
-            observacoes: cliente.observacoes,
-            createdAt:
-              cliente.createdAt instanceof Date
-                ? cliente.createdAt.toISOString()
-                : cliente.createdAt,
-          }
-        : undefined,
-    });
+    res.status(201).json(response.success(serializeVenda(venda, cliente)));
   },
 );
 
@@ -233,7 +180,7 @@ router.get(
   async (req, res): Promise<void> => {
     const p = GetVendaParams.safeParse(req.params);
     if (!p.success) {
-      res.status(400).json({ error: p.error.message });
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
       return;
     }
 
@@ -243,13 +190,15 @@ router.get(
     });
 
     if (!venda) {
-      res.status(404).json({ error: "Venda não encontrada" });
+      res.status(404).json(response.error("Venda não encontrada", "NOT_FOUND"));
       return;
     }
 
     const currentUser = (req as any).currentUser;
     if (currentUser.tipo === "vendedor" && venda.usuarioId !== currentUser.id) {
-      res.status(403).json({ error: "Sem permissão para esta venda" });
+      res
+        .status(403)
+        .json(response.error("Sem permissão para esta venda", "FORBIDDEN"));
       return;
     }
 
@@ -260,54 +209,24 @@ router.get(
       where: { vendaId: Number(p.data.id) },
     });
 
-    res.json({
-      id: venda.id,
-      numero: venda.numero,
-      orcamentoId: venda.orcamentoId,
-      clienteId: venda.clienteId,
-      usuarioId: venda.usuarioId,
-      dataVenda: venda.dataVenda,
-      valorTotal: Number(venda.valorTotal),
-      desconto: Number(venda.desconto),
-      formaPagamento: venda.formaPagamento,
-      numParcelas: venda.numParcelas,
-      status: venda.status,
-      observacoes: venda.observacoes,
-      createdAt:
-        venda.createdAt instanceof Date
-          ? venda.createdAt.toISOString()
-          : venda.createdAt,
-      cliente: venda.cliente
-        ? {
-            id: venda.cliente.id,
-            razaoSocial: venda.cliente.razaoSocial,
-            nomeFantasia: venda.cliente.nomeFantasia,
-            cnpjCpf: venda.cliente.cnpjCpf,
-            cidade: venda.cliente.cidade,
-            estado: venda.cliente.estado,
-            telefone: venda.cliente.telefone,
-            email: venda.cliente.email,
-            observacoes: venda.cliente.observacoes,
-            createdAt:
-              venda.cliente.createdAt instanceof Date
-                ? venda.cliente.createdAt.toISOString()
-                : venda.cliente.createdAt,
-          }
-        : undefined,
-      itens: itens.map((i) => ({
-        id: i.id,
-        produtoId: i.produtoId,
-        descricaoManual: i.descricaoManual,
-        quantidade: Number(i.quantidade),
-        valorUnitario: Number(i.valorUnitario),
-        valorTotal: Number(i.valorTotal),
-      })),
-      ordensServico: ordens.map((os) => ({
-        id: os.id,
-        numero: os.numero,
-        status: os.status,
-      })),
-    });
+    res.json(
+      response.success({
+        ...serializeVenda(venda, venda.cliente),
+        itens: itens.map((i) => ({
+          id: i.id,
+          produtoId: i.produtoId,
+          descricaoManual: i.descricaoManual,
+          quantidade: Number(i.quantidade),
+          valorUnitario: Number(i.valorUnitario),
+          valorTotal: Number(i.valorTotal),
+        })),
+        ordensServico: ordens.map((os) => ({
+          id: os.id,
+          numero: os.numero,
+          status: os.status,
+        })),
+      }),
+    );
   },
 );
 
@@ -318,13 +237,15 @@ router.patch(
   async (req, res): Promise<void> => {
     const p = UpdateVendaParams.safeParse(req.params);
     if (!p.success) {
-      res.status(400).json({ error: p.error.message });
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
       return;
     }
 
     const parsed = UpdateVendaBody.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.message });
+      res
+        .status(400)
+        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
       return;
     }
 
@@ -341,43 +262,9 @@ router.patch(
       const cliente = await db.cliente.findUnique({
         where: { id: row.clienteId },
       });
-      res.json({
-        id: row.id,
-        numero: row.numero,
-        orcamentoId: row.orcamentoId,
-        clienteId: row.clienteId,
-        usuarioId: row.usuarioId,
-        dataVenda: row.dataVenda,
-        valorTotal: Number(row.valorTotal),
-        desconto: Number(row.desconto),
-        formaPagamento: row.formaPagamento,
-        numParcelas: row.numParcelas,
-        status: row.status,
-        observacoes: row.observacoes,
-        createdAt:
-          row.createdAt instanceof Date
-            ? row.createdAt.toISOString()
-            : row.createdAt,
-        cliente: cliente
-          ? {
-              id: cliente.id,
-              razaoSocial: cliente.razaoSocial,
-              nomeFantasia: cliente.nomeFantasia,
-              cnpjCpf: cliente.cnpjCpf,
-              cidade: cliente.cidade,
-              estado: cliente.estado,
-              telefone: cliente.telefone,
-              email: cliente.email,
-              observacoes: cliente.observacoes,
-              createdAt:
-                cliente.createdAt instanceof Date
-                  ? cliente.createdAt.toISOString()
-                  : cliente.createdAt,
-            }
-          : undefined,
-      });
+      res.json(response.success(serializeVenda(row, cliente)));
     } catch {
-      res.status(404).json({ error: "Venda não encontrada" });
+      res.status(404).json(response.error("Venda não encontrada", "NOT_FOUND"));
     }
   },
 );
@@ -389,7 +276,7 @@ router.post(
   async (req, res): Promise<void> => {
     const p = GerarOsParaVendaParams.safeParse(req.params);
     if (!p.success) {
-      res.status(400).json({ error: p.error.message });
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
       return;
     }
 
@@ -397,7 +284,7 @@ router.post(
       where: { id: Number(p.data.id) },
     });
     if (!venda) {
-      res.status(404).json({ error: "Venda não encontrada" });
+      res.status(404).json(response.error("Venda não encontrada", "NOT_FOUND"));
       return;
     }
 
@@ -405,7 +292,9 @@ router.post(
       where: { vendaId: Number(p.data.id) },
     });
     if (existing.length > 0) {
-      res.status(400).json({ error: "OS já gerada para esta venda" });
+      res
+        .status(400)
+        .json(response.error("OS já gerada para esta venda", "ALREADY_EXISTS"));
       return;
     }
 
@@ -434,21 +323,23 @@ router.post(
       },
     });
 
-    res.status(201).json({
-      id: os.id,
-      numero: os.numero,
-      vendaId: os.vendaId,
-      clienteId: os.clienteId,
-      dataInicio: os.dataInicio,
-      dataTermino: os.dataTermino,
-      prioridade: os.prioridade,
-      status: os.status,
-      etapaAtual: os.etapaAtual,
-      createdAt:
-        os.createdAt instanceof Date
-          ? os.createdAt.toISOString()
-          : os.createdAt,
-    });
+    res.status(201).json(
+      response.success({
+        id: os.id,
+        numero: os.numero,
+        vendaId: os.vendaId,
+        clienteId: os.clienteId,
+        dataInicio: os.dataInicio,
+        dataTermino: os.dataTermino,
+        prioridade: os.prioridade,
+        status: os.status,
+        etapaAtual: os.etapaAtual,
+        createdAt:
+          os.createdAt instanceof Date
+            ? os.createdAt.toISOString()
+            : os.createdAt,
+      }),
+    );
   },
 );
 

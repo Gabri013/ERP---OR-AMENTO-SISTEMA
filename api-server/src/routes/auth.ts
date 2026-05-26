@@ -39,13 +39,13 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   });
 
   if (!user || user.status !== "ativo") {
-    res.status(401).json({ error: "Credenciais invÃ¡lidas" });
+    res.status(401).json({ error: "Credenciais inválidas" });
     return;
   }
 
   const valid = await bcrypt.compare(senha, user.senha);
   if (!valid) {
-    res.status(401).json({ error: "Credenciais invÃ¡lidas" });
+    res.status(401).json({ error: "Credenciais inválidas" });
     return;
   }
 

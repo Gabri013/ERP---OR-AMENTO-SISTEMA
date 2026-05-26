@@ -8,6 +8,8 @@ import {
   DeleteUsuarioParams,
 } from "../schemas";
 import { requireAuth, requireRoles } from "../middleware/auth";
+import { validate } from "../middleware/validate";
+import { response } from "../utils/response";
 
 const router: IRouter = Router();
 
@@ -30,7 +32,7 @@ router.get(
   requireRoles(["master"]),
   async (_req, res): Promise<void> => {
     const rows = await db.usuario.findMany({ orderBy: { nome: "asc" } });
-    res.json(rows.map(serializeUser));
+    res.json(response.success(rows.map(serializeUser)));
   },
 );
 
@@ -38,25 +40,14 @@ router.post(
   "/usuarios",
   requireAuth,
   requireRoles(["master"]),
+  validate(CreateUsuarioBody),
   async (req, res): Promise<void> => {
-    const parsed = CreateUsuarioBody.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.message });
-      return;
-    }
-
-    const hashedSenha = await bcrypt.hash(parsed.data.senha, 10);
+    const hashedSenha = await bcrypt.hash(req.body.senha, 10);
     const row = await db.usuario.create({
-      data: {
-        nome: parsed.data.nome!,
-        email: parsed.data.email!,
-        senha: hashedSenha,
-        tipo: parsed.data.tipo as any,
-        telefoneWhatsapp: parsed.data.telefoneWhatsapp,
-      },
+      data: { ...req.body, senha: hashedSenha },
     });
 
-    res.status(201).json(serializeUser(row));
+    res.status(201).json(response.success(serializeUser(row)));
   },
 );
 
@@ -64,20 +55,15 @@ router.patch(
   "/usuarios/:id",
   requireAuth,
   requireRoles(["master"]),
+  validate(UpdateUsuarioBody),
   async (req, res): Promise<void> => {
     const p = UpdateUsuarioParams.safeParse(req.params);
     if (!p.success) {
-      res.status(400).json({ error: p.error.message });
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
       return;
     }
 
-    const parsed = UpdateUsuarioBody.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.message });
-      return;
-    }
-
-    const data: any = { ...parsed.data };
+    const data: any = { ...req.body };
     if (data.senha) {
       data.senha = await bcrypt.hash(data.senha, 10);
     }
@@ -87,9 +73,11 @@ router.patch(
         where: { id: Number(p.data.id) },
         data,
       });
-      res.json(serializeUser(row));
+      res.json(response.success(serializeUser(row)));
     } catch {
-      res.status(404).json({ error: "UsuÃ¡rio nÃ£o encontrado" });
+      res
+        .status(404)
+        .json(response.error("Usuário não encontrado", "NOT_FOUND"));
     }
   },
 );
@@ -101,7 +89,7 @@ router.delete(
   async (req, res): Promise<void> => {
     const p = DeleteUsuarioParams.safeParse(req.params);
     if (!p.success) {
-      res.status(400).json({ error: p.error.message });
+      res.status(400).json(response.error(p.error.message, "VALIDATION_ERROR"));
       return;
     }
 
@@ -109,7 +97,9 @@ router.delete(
       await db.usuario.delete({ where: { id: Number(p.data.id) } });
       res.sendStatus(204);
     } catch {
-      res.status(404).json({ error: "UsuÃ¡rio nÃ£o encontrado" });
+      res
+        .status(404)
+        .json(response.error("Usuário não encontrado", "NOT_FOUND"));
     }
   },
 );

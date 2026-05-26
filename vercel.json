@@ -11,8 +11,11 @@
   ],
   "routes": [
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/sistema-os/$1"
+      "dest": "/sistema-os/index.html"
     }
   ]
 }

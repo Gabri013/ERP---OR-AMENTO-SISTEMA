@@ -1,12 +1,21 @@
-import { Suspense, useState, useRef, useCallback, useEffect } from "react";
-import { Canvas, useLoader, useFrame } from "@react-three/fiber";
+import {
+  Suspense,
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+} from "react";
+import { Canvas, useLoader, useThree, useFrame } from "@react-three/fiber";
 import {
   OrbitControls,
-  Center,
   Html,
   useProgress,
   useGLTF,
-  Grid,
+  Environment,
+  ContactShadows,
+  Bounds,
+  useBounds,
   GizmoHelper,
   GizmoViewport,
 } from "@react-three/drei";
@@ -20,62 +29,100 @@ import {
   RotateCcw,
   ZoomIn,
   ZoomOut,
-  Grid3x3,
-  Sun,
   Maximize2,
   Minimize2,
   Box,
   AlertTriangle,
   Download,
   Eye,
+  RefreshCw,
+  SunMedium,
+  Grid3x3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ─── Loaders ─────────────────────────────────────────────
+// ─── Format helpers ────────────────────────────────────
 
-function LoadingIndicator() {
-  const { progress, active } = useProgress();
-  if (!active) return null;
+function getFormat(url: string): string {
+  const clean = url.split("?")[0];
+  return clean.split(".").pop()?.toLowerCase() ?? "unknown";
+}
+
+// ─── Loading ───────────────────────────────────────────
+
+function Loader() {
+  const { progress } = useProgress();
   return (
     <Html center>
-      <div className="flex flex-col items-center gap-2 text-white select-none">
-        <div className="w-12 h-12 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        <span className="text-sm font-medium">Carregando modelo...</span>
-        <span className="text-xl font-bold tabular-nums">
-          {Math.round(progress)}%
-        </span>
+      <div className="flex flex-col items-center gap-3 text-white select-none pointer-events-none">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-2 border-white/10" />
+          <div
+            className="absolute inset-0 rounded-full border-2 border-t-blue-400 animate-spin"
+            style={{
+              borderColor: "transparent transparent transparent #4f8ef7",
+            }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xs font-bold tabular-nums">
+              {Math.round(progress)}%
+            </span>
+          </div>
+        </div>
+        <span className="text-xs text-white/70">Carregando modelo...</span>
       </div>
     </Html>
   );
 }
 
+// ─── Auto-fit camera to model bounds ──────────────────
+
+function AutoFitOnLoad() {
+  const bounds = useBounds();
+  useEffect(() => {
+    // Wait one frame so geometry is fully loaded
+    const id = requestAnimationFrame(() => {
+      bounds.refresh().fit();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [bounds]);
+  return null;
+}
+
+// ─── Models ────────────────────────────────────────────
+
 function STLModel({
   url,
   wireframe,
   color,
+  envIntensity,
 }: {
   url: string;
   wireframe: boolean;
   color: string;
+  envIntensity: number;
 }) {
   const geometry = useLoader(STLLoader, url);
-  useEffect(() => {
-    geometry.computeVertexNormals();
-    geometry.center();
+
+  const processedGeometry = useMemo(() => {
+    const geo = geometry.clone();
+    geo.computeVertexNormals();
+    geo.center();
+    return geo;
   }, [geometry]);
 
   return (
-    <Center>
-      <mesh geometry={geometry} castShadow receiveShadow>
-        <meshStandardMaterial
-          color={color}
-          metalness={0.4}
-          roughness={0.5}
-          wireframe={wireframe}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-    </Center>
+    <mesh geometry={processedGeometry} castShadow receiveShadow>
+      <meshPhysicalMaterial
+        color={color}
+        metalness={0.6}
+        roughness={0.35}
+        reflectivity={0.5}
+        wireframe={wireframe}
+        side={THREE.DoubleSide}
+        envMapIntensity={envIntensity}
+      />
+    </mesh>
   );
 }
 
@@ -89,142 +136,59 @@ function OBJModel({
   color: string;
 }) {
   const obj = useLoader(OBJLoader, url);
-  useEffect(() => {
-    const box = new THREE.Box3().setFromObject(obj);
+
+  const scene = useMemo(() => {
+    const clone = obj.clone();
+    const box = new THREE.Box3().setFromObject(clone);
     const center = box.getCenter(new THREE.Vector3());
-    obj.position.sub(center);
-    obj.traverse((child) => {
+    clone.position.sub(center);
+    clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
-        if (child.material) {
-          const mat = Array.isArray(child.material)
-            ? child.material[0]
-            : child.material;
-          (mat as THREE.MeshStandardMaterial).color = new THREE.Color(color);
-          (mat as THREE.MeshStandardMaterial).wireframe = wireframe;
-          (mat as THREE.MeshStandardMaterial).metalness = 0.4;
-          (mat as THREE.MeshStandardMaterial).roughness = 0.5;
-        }
+        const mat = new THREE.MeshPhysicalMaterial({
+          color,
+          metalness: 0.5,
+          roughness: 0.4,
+          wireframe,
+        });
+        child.material = mat;
       }
     });
-  }, [obj, wireframe, color]);
-  return <primitive object={obj} />;
+    return clone;
+  }, [obj, color, wireframe]);
+
+  return <primitive object={scene} />;
 }
 
 function GLTFModel({ url }: { url: string }) {
   const { scene } = useGLTF(url);
-  useEffect(() => {
-    const box = new THREE.Box3().setFromObject(scene);
+
+  const cloned = useMemo(() => {
+    const c = scene.clone();
+    const box = new THREE.Box3().setFromObject(c);
     const center = box.getCenter(new THREE.Vector3());
-    scene.position.sub(center);
-    scene.traverse((child) => {
+    c.position.sub(center);
+    c.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
       }
     });
+    return c;
   }, [scene]);
-  return <primitive object={scene} />;
+
+  return <primitive object={cloned} />;
 }
 
-function AutoRotate({ enabled }: { enabled: boolean }) {
-  useFrame((state, delta) => {
-    if (!enabled) return;
-    state.camera.position.applyAxisAngle(
-      new THREE.Vector3(0, 1, 0),
-      delta * 0.3,
-    );
-    state.camera.lookAt(0, 0, 0);
-  });
-  return null;
-}
-
-// ─── Format detection ────────────────────────────────────
-
-function getFormat(
-  url: string,
-): "stl" | "obj" | "gltf" | "glb" | "step" | "dxf" | "unknown" {
-  const ext = url.split("?")[0].split(".").pop()?.toLowerCase() ?? "";
-  if (ext === "stl") return "stl";
-  if (ext === "obj") return "obj";
-  if (ext === "gltf") return "gltf";
-  if (ext === "glb") return "glb";
-  if (ext === "step" || ext === "stp") return "step";
-  if (ext === "dxf") return "dxf";
-  return "unknown";
-}
-
-const FORMAT_COLORS: Record<string, string> = {
-  stl: "#4f8ef7",
-  obj: "#34d997",
-  gltf: "#9b7ff4",
-  glb: "#9b7ff4",
-};
-
-// Suppress unused warning — kept for potential consumer use
-void FORMAT_COLORS;
-
-// ─── Unsupported format message ──────────────────────────
-
-function UnsupportedFormat({ format, url }: { format: string; url: string }) {
-  const messages: Record<string, string> = {
-    step: "Arquivos STEP/STP são CAD nativo e precisam ser convertidos para STL ou GLTF para visualização no browser. Use SolidWorks, Fusion 360 ou FreeCAD para exportar.",
-    dxf: "Arquivos DXF são principalmente 2D. Para visualização 3D, exporte como STL ou OBJ do AutoCAD.",
-    unknown: "Formato não reconhecido. Suportados: STL, OBJ, GLTF, GLB.",
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">
-      <AlertTriangle className="h-12 w-12 text-yellow-400" />
-      <div>
-        <p className="font-semibold text-white text-lg mb-2">
-          Formato{" "}
-          <span className="font-mono uppercase text-yellow-400">.{format}</span>{" "}
-          não suportado para visualização
-        </p>
-        <p className="text-sm text-white/60 max-w-md">
-          {messages[format] ?? messages.unknown}
-        </p>
-      </div>
-      <div className="flex gap-2 flex-wrap justify-center">
-        <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-          ✓ STL
-        </Badge>
-        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-          ✓ OBJ
-        </Badge>
-        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-          ✓ GLTF / GLB
-        </Badge>
-        <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
-          ✗ STEP
-        </Badge>
-        <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
-          ✗ DXF
-        </Badge>
-      </div>
-      <a href={url} target="_blank" rel="noopener noreferrer" download>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 text-white border-white/30 hover:bg-white/10"
-        >
-          <Download className="h-4 w-4" />
-          Baixar arquivo original
-        </Button>
-      </a>
-    </div>
-  );
-}
-
-// ─── 3D Scene ─────────────────────────────────────────────
+// ─── Scene ────────────────────────────────────────────
 
 function Scene({
   url,
   format,
   wireframe,
   showGrid,
+  showShadow,
   color,
   autoRotate,
 }: {
@@ -232,45 +196,95 @@ function Scene({
   format: string;
   wireframe: boolean;
   showGrid: boolean;
+  showShadow: boolean;
   color: string;
   autoRotate: boolean;
 }) {
+  const { invalidate } = useThree();
+  const orbitRef = useRef<any>(null);
+
+  // Auto-rotate via orbit controls
+  useEffect(() => {
+    if (orbitRef.current) {
+      orbitRef.current.autoRotate = autoRotate;
+      orbitRef.current.autoRotateSpeed = 1.5;
+    }
+  }, [autoRotate]);
+
+  useFrame(() => {
+    if (autoRotate) invalidate();
+  });
+
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1.2} castShadow />
-      <directionalLight position={[-10, -5, -5]} intensity={0.4} />
-      <pointLight position={[0, 10, 0]} intensity={0.8} />
+      {/* Lighting */}
+      <ambientLight intensity={0.4} />
+      <directionalLight
+        position={[10, 15, 10]}
+        intensity={1.5}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0001}
+      />
+      <directionalLight position={[-8, 8, -5]} intensity={0.6} />
+      <directionalLight position={[0, -5, 0]} intensity={0.2} />
+      <pointLight position={[0, 20, 0]} intensity={0.4} />
 
-      <Suspense fallback={<LoadingIndicator />}>
-        {format === "stl" && (
-          <STLModel url={url} wireframe={wireframe} color={color} />
-        )}
-        {format === "obj" && (
-          <OBJModel url={url} wireframe={wireframe} color={color} />
-        )}
-        {(format === "gltf" || format === "glb") && <GLTFModel url={url} />}
-      </Suspense>
+      {/* Environment for reflections */}
+      <Environment preset="studio" />
 
-      {showGrid && (
-        <Grid
-          position={[0, -1.5, 0]}
-          args={[20, 20]}
-          cellSize={0.5}
-          cellThickness={0.5}
-          cellColor="#444"
-          sectionSize={2}
-          sectionThickness={1}
-          sectionColor="#666"
-          fadeDistance={20}
-          fadeStrength={1}
-          followCamera={false}
+      {/* Model wrapped in Bounds for auto-fit */}
+      <Bounds fit clip damping={6} margin={1.2}>
+        <AutoFitOnLoad />
+        <Suspense fallback={<Loader />}>
+          {format === "stl" && (
+            <STLModel
+              url={url}
+              wireframe={wireframe}
+              color={color}
+              envIntensity={0.8}
+            />
+          )}
+          {format === "obj" && (
+            <OBJModel url={url} wireframe={wireframe} color={color} />
+          )}
+          {(format === "gltf" || format === "glb") && <GLTFModel url={url} />}
+        </Suspense>
+      </Bounds>
+
+      {/* Ground shadow */}
+      {showShadow && !wireframe && (
+        <ContactShadows
+          position={[0, -2, 0]}
+          opacity={0.4}
+          scale={20}
+          blur={2}
+          far={5}
         />
       )}
 
-      <AutoRotate enabled={autoRotate} />
+      {/* Grid */}
+      {showGrid && (
+        <gridHelper args={[40, 40, "#333", "#222"]} position={[0, -2.5, 0]} />
+      )}
 
-      <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
+      {/* Orbit controls */}
+      <OrbitControls
+        ref={orbitRef}
+        makeDefault
+        enableDamping
+        dampingFactor={0.08}
+        minDistance={0.001}
+        maxDistance={Infinity}
+        enablePan
+        panSpeed={1.2}
+        rotateSpeed={0.7}
+        zoomSpeed={1.8}
+        onChange={() => invalidate()}
+      />
+
+      {/* Gizmo */}
+      <GizmoHelper alignment="bottom-right" margin={[56, 56]}>
         <GizmoViewport
           axisColors={["#e05555", "#34d997", "#4f8ef7"]}
           labelColor="white"
@@ -280,27 +294,116 @@ function Scene({
   );
 }
 
-// ─── Main Viewer ─────────────────────────────────────────
+// ─── Unsupported format ────────────────────────────────
+
+function UnsupportedFormat({ format, url }: { format: string; url: string }) {
+  const msgs: Record<string, string> = {
+    step: "Arquivo STEP/STP é formato CAD nativo. No SolidWorks: Arquivo → Salvar Como → STL ou OBJ para visualizar aqui.",
+    dxf: "DXF é formato 2D. Para visualização 3D, exporte como STL ou OBJ.",
+    dwg: "DWG é formato AutoCAD binário. Exporte como STL ou OBJ para visualizar.",
+    iges: "IGES é formato CAD. Exporte como STL no SolidWorks para visualizar.",
+  };
+  return (
+    <div className="flex flex-col items-center justify-center h-full gap-5 p-8 text-center">
+      <AlertTriangle className="h-14 w-14 text-yellow-400 opacity-80" />
+      <div className="space-y-2 max-w-sm">
+        <p className="font-semibold text-white text-base">
+          <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-yellow-400 uppercase">
+            .{format}
+          </span>{" "}
+          não suportado para visualização
+        </p>
+        <p className="text-sm text-white/50 leading-relaxed">
+          {msgs[format] ?? "Suportados: STL, OBJ, GLTF, GLB"}
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2 justify-center">
+        {["STL ✓", "OBJ ✓", "GLTF ✓", "GLB ✓"].map((f) => (
+          <Badge
+            key={f}
+            className="bg-green-500/15 text-green-400 border-green-500/20 font-mono"
+          >
+            {f}
+          </Badge>
+        ))}
+        {["STEP ✗", "DXF ✗", "DWG ✗"].map((f) => (
+          <Badge
+            key={f}
+            className="bg-red-500/15 text-red-400 border-red-500/20 font-mono"
+          >
+            {f}
+          </Badge>
+        ))}
+      </div>
+      <p className="text-xs text-white/30">
+        SolidWorks: Arquivo → Salvar Como → STL (resolução: baixa para
+        visualização)
+      </p>
+      <a href={url} target="_blank" rel="noopener noreferrer" download>
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-2 border-white/20 text-white/70 hover:text-white hover:bg-white/10"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Baixar arquivo original
+        </Button>
+      </a>
+    </div>
+  );
+}
+
+// ─── Palette ───────────────────────────────────────────
+
+const PALETTE = [
+  { color: "#4f8ef7", name: "Azul" },
+  { color: "#e8e8e8", name: "Prata" },
+  { color: "#34d997", name: "Verde" },
+  { color: "#f0a030", name: "Laranja" },
+  { color: "#9b7ff4", name: "Roxo" },
+  { color: "#e05555", name: "Vermelho" },
+  { color: "#f4c261", name: "Dourado" },
+  { color: "#26c9b8", name: "Teal" },
+];
+
+// ─── Toolbar button ────────────────────────────────────
+
+function TB({
+  onClick,
+  title,
+  active,
+  children,
+}: {
+  onClick?: () => void;
+  title: string;
+  active?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className={cn(
+        "flex items-center justify-center w-8 h-8 rounded-lg text-white/60 hover:text-white transition-all",
+        active
+          ? "bg-blue-500/25 text-blue-300 ring-1 ring-blue-500/40"
+          : "hover:bg-white/10",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ─── Main component ────────────────────────────────────
 
 export interface Viewer3DProps {
   url: string;
   nome?: string;
-  /** Override format detection — pass the file tipo from DB (stl, obj, gltf, etc.) */
   format?: string;
   className?: string;
   height?: string | number;
 }
-
-const MODEL_COLORS = [
-  "#4f8ef7",
-  "#34d997",
-  "#9b7ff4",
-  "#f0a030",
-  "#e05555",
-  "#26c9b8",
-  "#f4a261",
-  "#e76f51",
-];
 
 export function Viewer3D({
   url,
@@ -309,41 +412,32 @@ export function Viewer3D({
   className,
   height = 500,
 }: Viewer3DProps) {
-  // Prefer explicit format prop (when file is served from DB without extension in URL)
   const format = formatProp?.toLowerCase() ?? getFormat(url);
   const isSupported = ["stl", "obj", "gltf", "glb"].includes(format);
 
-  const [contextLost, setContextLost] = useState(false);
   const [wireframe, setWireframe] = useState(false);
-  const [showGrid, setShowGrid] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
+  const [showShadow, setShowShadow] = useState(true);
   const [autoRotate, setAutoRotate] = useState(false);
   const [colorIdx, setColorIdx] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
-  const orbitRef = useRef<OrbitControlsImpl>(null);
+  const [contextLost, setContextLost] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const resetCamera = useCallback(() => {
-    if (orbitRef.current) {
-      orbitRef.current.reset();
-    }
-  }, []);
-
-  const handleZoom = useCallback((factor: number) => {
-    if (orbitRef.current) {
-      const camera = orbitRef.current.object as THREE.PerspectiveCamera;
-      camera.position.multiplyScalar(factor);
-      camera.updateProjectionMatrix();
-    }
-  }, []);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement && containerRef.current) {
-      containerRef.current.requestFullscreen?.();
-      setFullscreen(true);
+      containerRef.current
+        .requestFullscreen?.()
+        .then(() => setFullscreen(true));
     } else {
-      document.exitFullscreen?.();
-      setFullscreen(false);
+      document.exitFullscreen?.().then(() => setFullscreen(false));
     }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
   }, []);
 
   const h = typeof height === "number" ? `${height}px` : height;
@@ -352,20 +446,22 @@ export function Viewer3D({
     <div
       ref={containerRef}
       className={cn(
-        "relative rounded-xl overflow-hidden bg-[#0e1117]",
+        "relative overflow-hidden rounded-xl select-none",
+        fullscreen ? "rounded-none" : "",
         className,
       )}
+      style={{ background: "#0a0c10" }}
     >
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-3 py-2 bg-gradient-to-b from-black/60 to-transparent">
-        <div className="flex items-center gap-2">
-          <Box className="h-4 w-4 text-blue-400" />
-          <span className="text-white text-sm font-medium truncate max-w-[200px]">
+      {/* ── Top bar ──────────────────────────────────── */}
+      <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-3 py-2.5 bg-gradient-to-b from-black/70 via-black/20 to-transparent pointer-events-none">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <Box className="h-4 w-4 text-blue-400 shrink-0" />
+          <span className="text-white text-sm font-medium truncate max-w-[260px] leading-tight">
             {nome ?? "Modelo 3D"}
           </span>
           <Badge
             className={cn(
-              "text-[10px] px-1.5 font-mono uppercase",
+              "text-[10px] px-1.5 font-mono uppercase shrink-0",
               isSupported
                 ? "bg-green-500/20 text-green-400 border-green-500/30"
                 : "bg-red-500/20 text-red-400 border-red-500/30",
@@ -374,150 +470,60 @@ export function Viewer3D({
             {format}
           </Badge>
         </div>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10"
-          onClick={toggleFullscreen}
-          title="Tela cheia"
-        >
-          {fullscreen ? (
-            <Minimize2 className="h-4 w-4" />
-          ) : (
-            <Maximize2 className="h-4 w-4" />
-          )}
-        </Button>
+        <div className="flex items-center gap-1 pointer-events-auto">
+          <TB
+            onClick={toggleFullscreen}
+            title={fullscreen ? "Sair da tela cheia" : "Tela cheia"}
+          >
+            {fullscreen ? (
+              <Minimize2 className="h-3.5 w-3.5" />
+            ) : (
+              <Maximize2 className="h-3.5 w-3.5" />
+            )}
+          </TB>
+          <a href={url} download title="Baixar arquivo">
+            <TB title="Baixar arquivo">
+              <Download className="h-3.5 w-3.5" />
+            </TB>
+          </a>
+        </div>
       </div>
 
-      {/* Controls toolbar */}
-      {isSupported && (
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center gap-1 px-3 py-2 bg-gradient-to-t from-black/70 to-transparent">
-          <Button
-            size="sm"
-            variant="ghost"
-            className={cn(
-              "h-7 px-2 text-xs gap-1",
-              wireframe
-                ? "text-blue-400 bg-blue-400/10"
-                : "text-white/70 hover:text-white",
-            )}
-            onClick={() => setWireframe(!wireframe)}
-            title="Wireframe"
-          >
-            <Eye className="h-3.5 w-3.5" />
-            Wire
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className={cn(
-              "h-7 px-2 text-xs gap-1",
-              showGrid ? "text-white/90" : "text-white/40",
-            )}
-            onClick={() => setShowGrid(!showGrid)}
-            title="Grade"
-          >
-            <Grid3x3 className="h-3.5 w-3.5" />
-            Grade
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className={cn(
-              "h-7 px-2 text-xs gap-1",
-              autoRotate
-                ? "text-purple-400 bg-purple-400/10"
-                : "text-white/70 hover:text-white",
-            )}
-            onClick={() => setAutoRotate(!autoRotate)}
-            title="Rotação automática"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            Auto
-          </Button>
-          <div className="w-px h-4 bg-white/20 mx-1" />
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-white/70 hover:text-white"
-            onClick={() => handleZoom(0.85)}
-            title="Zoom in"
-          >
-            <ZoomIn className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-white/70 hover:text-white"
-            onClick={() => handleZoom(1.15)}
-            title="Zoom out"
-          >
-            <ZoomOut className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-white/70 hover:text-white"
-            onClick={resetCamera}
-            title="Resetar câmera"
-          >
-            <Sun className="h-3.5 w-3.5" />
-          </Button>
-          <div className="w-px h-4 bg-white/20 mx-1" />
-          <div className="flex gap-1">
-            {MODEL_COLORS.slice(0, 5).map((c, i) => (
-              <button
-                key={c}
-                title={`Cor ${i + 1}`}
-                onClick={() => setColorIdx(i)}
-                className={cn(
-                  "w-4 h-4 rounded-full border transition-all",
-                  colorIdx === i
-                    ? "scale-125 border-white"
-                    : "border-transparent opacity-70 hover:opacity-100",
-                )}
-                style={{ backgroundColor: c }}
-              />
-            ))}
-          </div>
-          <div className="w-px h-4 bg-white/20 mx-1" />
-          <p className="text-white/40 text-[10px]">
-            Arrasta · Scroll · Clique direito
-          </p>
-        </div>
-      )}
-
-      {/* Canvas */}
+      {/* ── Canvas ───────────────────────────────────── */}
       <div style={{ height: h }}>
-        {isSupported && contextLost ? (
+        {contextLost ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-white/60">
-            <AlertTriangle className="h-8 w-8 text-yellow-400" />
+            <AlertTriangle className="h-10 w-10 text-yellow-400" />
             <p className="text-sm">Contexto WebGL perdido</p>
             <Button
               size="sm"
               variant="outline"
-              className="text-white border-white/30 hover:bg-white/10"
+              className="border-white/20 text-white/70 hover:text-white hover:bg-white/10"
               onClick={() => setContextLost(false)}
             >
-              Recarregar viewer
+              <RefreshCw className="h-3.5 w-3.5 mr-1" />
+              Recarregar
             </Button>
           </div>
         ) : isSupported ? (
           <Canvas
-            camera={{ position: [3, 2, 5], fov: 50 }}
+            frameloop="demand"
+            camera={{ fov: 45, near: 0.001, far: 50000, position: [5, 3, 8] }}
+            gl={{
+              antialias: true,
+              alpha: false,
+              powerPreference: "high-performance",
+              logarithmicDepthBuffer: true,
+            }}
+            dpr={[1, 1.5]}
             shadows
-            gl={{ antialias: true, alpha: false }}
-            style={{ background: "#0e1117" }}
+            style={{ background: "#0a0c10" }}
             onCreated={({ gl }) => {
-              gl.domElement.addEventListener(
-                "webglcontextlost",
-                () => setContextLost(true),
-                false,
+              gl.domElement.addEventListener("webglcontextlost", () =>
+                setContextLost(true),
               );
-              gl.domElement.addEventListener(
-                "webglcontextrestored",
-                () => setContextLost(false),
-                false,
+              gl.domElement.addEventListener("webglcontextrestored", () =>
+                setContextLost(false),
               );
             }}
           >
@@ -526,31 +532,82 @@ export function Viewer3D({
               format={format}
               wireframe={wireframe}
               showGrid={showGrid}
-              color={MODEL_COLORS[colorIdx]}
+              showShadow={showShadow}
+              color={PALETTE[colorIdx].color}
               autoRotate={autoRotate}
-            />
-            <OrbitControls
-              ref={orbitRef}
-              makeDefault
-              enableDamping
-              dampingFactor={0.05}
-              minDistance={0.5}
-              maxDistance={100}
-              enablePan
-              panSpeed={1.5}
-              rotateSpeed={0.8}
-              zoomSpeed={1.2}
             />
           </Canvas>
         ) : (
           <div
-            style={{ height: h }}
             className="flex items-center justify-center"
+            style={{ height: h }}
           >
             <UnsupportedFormat format={format} url={url} />
           </div>
         )}
       </div>
+
+      {/* ── Bottom toolbar ───────────────────────────── */}
+      {isSupported && !contextLost && (
+        <div className="absolute bottom-0 inset-x-0 z-10 flex items-center justify-between gap-2 px-3 py-2.5 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
+          {/* Controls */}
+          <div className="flex items-center gap-1">
+            <TB
+              onClick={() => setWireframe(!wireframe)}
+              title="Wireframe"
+              active={wireframe}
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </TB>
+            <TB
+              onClick={() => setShowShadow(!showShadow)}
+              title="Sombra"
+              active={showShadow}
+            >
+              <SunMedium className="h-3.5 w-3.5" />
+            </TB>
+            <TB
+              onClick={() => setShowGrid(!showGrid)}
+              title="Grade"
+              active={showGrid}
+            >
+              <Grid3x3 className="h-3.5 w-3.5" />
+            </TB>
+            <TB
+              onClick={() => setAutoRotate(!autoRotate)}
+              title="Rotação automática"
+              active={autoRotate}
+            >
+              <RotateCcw
+                className={cn("h-3.5 w-3.5", autoRotate && "animate-spin")}
+              />
+            </TB>
+          </div>
+
+          {/* Color palette */}
+          <div className="flex items-center gap-1.5">
+            {PALETTE.map((p, i) => (
+              <button
+                key={p.color}
+                title={p.name}
+                onClick={() => setColorIdx(i)}
+                className={cn(
+                  "rounded-full transition-all duration-150 border",
+                  colorIdx === i
+                    ? "w-5 h-5 scale-110 border-white shadow-lg"
+                    : "w-4 h-4 border-transparent opacity-60 hover:opacity-100 hover:scale-110",
+                )}
+                style={{ backgroundColor: p.color }}
+              />
+            ))}
+          </div>
+
+          {/* Hint */}
+          <p className="text-white/25 text-[10px] hidden sm:block shrink-0">
+            ↙ arrastar · scroll · direito=pan
+          </p>
+        </div>
+      )}
     </div>
   );
 }

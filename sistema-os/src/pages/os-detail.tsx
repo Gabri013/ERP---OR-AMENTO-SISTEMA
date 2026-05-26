@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ChevronRight, MessageSquare, Printer } from "lucide-react";
 import { ChecklistPanel } from "@/components/ChecklistPanel";
-import { AnexosPanel } from "@/components/AnexosPanel";
+import { AnexosPorItem } from "@/components/AnexosPorItem";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -415,11 +415,15 @@ export default function OSDetailPage() {
         )}
 
         {os && (
-          <AnexosPanel
+          <AnexosPorItem
             osId={os.id}
-            canEdit={["master", "gerente", "engenharia", "producao"].includes(
-              user?.tipo ?? "",
-            )}
+            canEdit={[
+              "master",
+              "gerente",
+              "engenharia",
+              "producao",
+              "projetista",
+            ].includes(user?.tipo ?? "")}
           />
         )}
       </div>

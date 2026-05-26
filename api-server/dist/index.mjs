@@ -65447,16 +65447,26 @@ var GetOrcamentoParams = external_exports.object({ id: external_exports.string()
 var UpdateOrcamentoParams = external_exports.object({ id: external_exports.string() });
 var DeleteOrcamentoParams = external_exports.object({ id: external_exports.string() });
 var ConverterOrcamentoParams = external_exports.object({ id: external_exports.string() });
+var VendaItemBody = external_exports.object({
+  produtoId: external_exports.number().int().optional().nullable(),
+  descricaoManual: external_exports.string().optional().nullable(),
+  quantidade: external_exports.number().or(external_exports.string()).transform(Number),
+  valorUnitario: external_exports.number().or(external_exports.string()).transform(Number)
+});
 var CreateVendaBody = external_exports.object({
   clienteId: external_exports.number().or(external_exports.string()).transform(Number),
   orcamentoId: external_exports.number().optional(),
   dataVenda: external_exports.string().or(external_exports.date()),
-  valorTotal: external_exports.number().or(external_exports.string()).transform(Number),
+  valorTotal: external_exports.number().or(external_exports.string()).transform(Number).optional(),
+  desconto: external_exports.number().or(external_exports.string()).transform(Number).optional(),
   formaPagamento: external_exports.string().optional(),
   numParcelas: external_exports.number().optional(),
-  observacoes: external_exports.string().optional()
+  status: external_exports.string().optional(),
+  observacoes: external_exports.string().optional(),
+  observacoesVenda: external_exports.string().optional(),
+  itens: external_exports.array(VendaItemBody).min(1)
 });
-var UpdateVendaBody = CreateVendaBody.partial();
+var UpdateVendaBody = CreateVendaBody.omit({ itens: true }).partial();
 var ListVendasQueryParams = external_exports.object({
   q: external_exports.string().optional(),
   status: external_exports.string().optional()
@@ -69296,15 +69306,15 @@ var DEFAULT_CHECKLISTS = {
 };
 router12.get("/os/:id/checklist", requireAuth, requireRoles(ALL_ROLES), async (req, res) => {
   const osId = Number(req.params.id);
-  const nm3 = db.oSChecklist;
-  let items = await nm3.findMany({ where: { osId }, orderBy: { id: "asc" } });
+  const nm4 = db.oSChecklist;
+  let items = await nm4.findMany({ where: { osId }, orderBy: { id: "asc" } });
   if (items.length === 0) {
     const os = await db.ordemServico.findUnique({ where: { id: osId } });
     if (os) {
       const etapa = os.etapaAtual;
       const defaults = DEFAULT_CHECKLISTS[etapa] ?? [];
       if (defaults.length > 0) {
-        await nm3.createMany({
+        await nm4.createMany({
           data: defaults.map((item) => ({
             osId,
             etapa,
@@ -69313,7 +69323,7 @@ router12.get("/os/:id/checklist", requireAuth, requireRoles(ALL_ROLES), async (r
             obrigatorio: false
           }))
         });
-        items = await nm3.findMany({ where: { osId }, orderBy: { id: "asc" } });
+        items = await nm4.findMany({ where: { osId }, orderBy: { id: "asc" } });
       }
     }
   }
@@ -69326,8 +69336,8 @@ router12.post("/os/:id/checklist", requireAuth, requireRoles(PRODUCTION_ROLES), 
     res.status(400).json(response.error("etapa e item s\xE3o obrigat\xF3rios", "VALIDATION_ERROR"));
     return;
   }
-  const nm3 = db.oSChecklist;
-  const created = await nm3.create({
+  const nm4 = db.oSChecklist;
+  const created = await nm4.create({
     data: { osId, etapa, item, obrigatorio: obrigatorio ?? false }
   });
   res.status(201).json(response.success(created));
@@ -69336,8 +69346,8 @@ router12.patch("/os/:id/checklist/:checkId", requireAuth, requireRoles(PRODUCTIO
   const checkId = Number(req.params.checkId);
   const userId = req.currentUser?.id;
   const { concluido } = req.body;
-  const nm3 = db.oSChecklist;
-  const updated = await nm3.update({
+  const nm4 = db.oSChecklist;
+  const updated = await nm4.update({
     where: { id: checkId },
     data: {
       concluido: !!concluido,
@@ -69350,10 +69360,10 @@ router12.patch("/os/:id/checklist/:checkId", requireAuth, requireRoles(PRODUCTIO
 router12.post("/os/:id/checklist/inicializar", requireAuth, requireRoles(PRODUCTION_ROLES), async (req, res) => {
   const osId = Number(req.params.id);
   const { etapa } = req.body;
-  const nm3 = db.oSChecklist;
+  const nm4 = db.oSChecklist;
   const defaults = DEFAULT_CHECKLISTS[etapa ?? ""] ?? [];
   if (defaults.length > 0) {
-    await nm3.createMany({
+    await nm4.createMany({
       data: defaults.map((item) => ({
         osId,
         etapa,
@@ -69364,7 +69374,7 @@ router12.post("/os/:id/checklist/inicializar", requireAuth, requireRoles(PRODUCT
       skipDuplicates: true
     });
   }
-  const items = await nm3.findMany({ where: { osId, etapa }, orderBy: { id: "asc" } });
+  const items = await nm4.findMany({ where: { osId, etapa }, orderBy: { id: "asc" } });
   res.json(response.success(items));
 });
 var checklist_default = router12;
@@ -69372,48 +69382,151 @@ var checklist_default = router12;
 // src/routes/anexos.ts
 var import_express13 = __toESM(require_express2(), 1);
 var router13 = (0, import_express13.Router)();
-var TIPOS_VALIDOS = ["pdf", "dxf", "dwg", "imagem", "step", "manual", "foto", "outro"];
-router13.get("/os/:id/anexos", requireAuth, requireRoles(ALL_ROLES), async (req, res) => {
-  const osId = Number(req.params.id);
-  const nm3 = db.oSAnexo;
-  const items = await nm3.findMany({
-    where: { osId },
-    orderBy: { createdAt: "desc" }
-  });
-  res.json(response.success(items));
-});
-router13.post("/os/:id/anexos", requireAuth, requireRoles(PRODUCTION_ROLES), async (req, res) => {
-  const osId = Number(req.params.id);
-  const { nome, url, tipo, descricao } = req.body;
-  const userId = req.currentUser?.id;
-  if (!nome || !url) {
-    res.status(400).json(response.error("nome e url s\xE3o obrigat\xF3rios", "VALIDATION_ERROR"));
-    return;
-  }
-  const nm3 = db.oSAnexo;
-  const created = await nm3.create({
-    data: {
-      osId,
-      nome,
-      url,
-      tipo: TIPOS_VALIDOS.includes(tipo) ? tipo : "outro",
-      descricao: descricao ?? null,
-      usuarioId: userId
+var TIPOS_VALIDOS = [
+  "pdf",
+  "dxf",
+  "dwg",
+  "step",
+  "3d",
+  "bom",
+  "imagem",
+  "foto",
+  "manual",
+  "outro"
+];
+var nm2 = () => db.oSAnexo;
+router13.get(
+  "/os/:id/itens-com-anexos",
+  requireAuth,
+  requireRoles(ALL_ROLES),
+  async (req, res) => {
+    const osId = Number(req.params.id);
+    const os = await db.ordemServico.findUnique({
+      where: { id: osId },
+      select: { vendaId: true, numero: true }
+    });
+    if (!os?.vendaId) {
+      res.json(response.success([]));
+      return;
     }
-  });
-  res.status(201).json(response.success(created));
-});
-router13.delete("/os/:id/anexos/:anexoId", requireAuth, requireRoles(PRODUCTION_ROLES), async (req, res) => {
-  const anexoId = Number(req.params.anexoId);
-  const nm3 = db.oSAnexo;
-  const anexo = await nm3.findUnique({ where: { id: anexoId } });
-  if (!anexo) {
-    res.status(404).json(response.error("Anexo n\xE3o encontrado", "NOT_FOUND"));
-    return;
+    const itens = await db.vendaItem.findMany({
+      where: { vendaId: os.vendaId },
+      include: { produto: true },
+      orderBy: { id: "asc" }
+    });
+    const resultadoItens = await Promise.all(
+      itens.map(async (item) => {
+        const anexos = await nm2().findMany({
+          where: { vendaItemId: item.id },
+          orderBy: { tipo: "asc" }
+        });
+        return {
+          id: item.id,
+          produtoId: item.produtoId,
+          descricao: item.descricaoManual ?? item.produto?.nome ?? `Item #${item.id}`,
+          codigo: item.produto?.codigo ?? null,
+          quantidade: Number(item.quantidade),
+          valorUnitario: Number(item.valorUnitario),
+          produto: item.produto ? {
+            id: item.produto.id,
+            nome: item.produto.nome,
+            codigo: item.produto.codigo
+          } : null,
+          anexos: anexos.map((a) => ({
+            id: a.id,
+            nome: a.nome,
+            url: a.url,
+            tipo: a.tipo,
+            descricao: a.descricao,
+            createdAt: a.createdAt
+          }))
+        };
+      })
+    );
+    res.json(response.success(resultadoItens));
   }
-  await nm3.delete({ where: { id: anexoId } });
-  res.json(response.success({ ok: true }));
-});
+);
+router13.get(
+  "/os/:id/anexos",
+  requireAuth,
+  requireRoles(ALL_ROLES),
+  async (req, res) => {
+    const osId = Number(req.params.id);
+    const itemId = req.query.itemId ? Number(req.query.itemId) : void 0;
+    const where = { osId };
+    if (itemId) {
+      where.vendaItemId = itemId;
+    } else {
+      where.vendaItemId = null;
+    }
+    const items = await nm2().findMany({
+      where,
+      orderBy: [{ tipo: "asc" }, { createdAt: "desc" }]
+    });
+    res.json(response.success(items));
+  }
+);
+router13.post(
+  "/os/:id/anexos",
+  requireAuth,
+  requireRoles(PRODUCTION_ROLES),
+  async (req, res) => {
+    const osId = Number(req.params.id);
+    const { nome, url, tipo, descricao, vendaItemId } = req.body;
+    const userId = req.currentUser?.id;
+    if (!nome?.trim() || !url?.trim()) {
+      res.status(400).json(
+        response.error("nome e url s\xE3o obrigat\xF3rios", "VALIDATION_ERROR")
+      );
+      return;
+    }
+    if (vendaItemId) {
+      const os = await db.ordemServico.findUnique({
+        where: { id: osId },
+        select: { vendaId: true }
+      });
+      if (os?.vendaId) {
+        const itemExists = await db.vendaItem.findFirst({
+          where: { id: Number(vendaItemId), vendaId: os.vendaId }
+        });
+        if (!itemExists) {
+          res.status(400).json(
+            response.error("Item n\xE3o pertence a esta OS", "VALIDATION_ERROR")
+          );
+          return;
+        }
+      }
+    }
+    const created = await nm2().create({
+      data: {
+        osId,
+        vendaItemId: vendaItemId ? Number(vendaItemId) : null,
+        nome: nome.trim(),
+        url: url.trim(),
+        tipo: TIPOS_VALIDOS.includes(tipo) ? tipo : "outro",
+        descricao: descricao?.trim() ?? null,
+        usuarioId: userId
+      }
+    });
+    res.status(201).json(response.success(created));
+  }
+);
+router13.delete(
+  "/os/:id/anexos/:anexoId",
+  requireAuth,
+  requireRoles(PRODUCTION_ROLES),
+  async (req, res) => {
+    const anexoId = Number(req.params.anexoId);
+    const osId = Number(req.params.id);
+    const anexo = await nm2().findUnique({ where: { id: anexoId } });
+    if (!anexo || anexo.osId !== osId) {
+      res.status(404).json(response.error("Anexo n\xE3o encontrado", "NOT_FOUND"));
+      return;
+    }
+    await nm2().delete({ where: { id: anexoId } });
+    res.json(response.success({ ok: true }));
+  }
+);
 var anexos_default = router13;
 
 // src/routes/export.ts
@@ -71029,7 +71142,7 @@ function getIO() {
 }
 
 // src/services/alerts.service.ts
-var nm2 = db.notificacao;
+var nm3 = db.notificacao;
 async function checkOverdueOS() {
   try {
     const hoje = /* @__PURE__ */ new Date();
@@ -71049,7 +71162,7 @@ async function checkOverdueOS() {
       const titulo = `OS ${os.numero} atrasada`;
       const mensagem = `A OS ${os.numero} do cliente ${os.cliente?.razaoSocial ?? "\u2014"} est\xE1 atrasada. Prazo era ${os.dataTermino ? new Date(os.dataTermino).toLocaleDateString("pt-BR") : "\u2014"}.`;
       for (const gestor of gestores) {
-        const existente = await nm2.findFirst({
+        const existente = await nm3.findFirst({
           where: {
             usuarioId: gestor.id,
             titulo,
@@ -71057,7 +71170,7 @@ async function checkOverdueOS() {
           }
         });
         if (!existente) {
-          const notif = await nm2.create({
+          const notif = await nm3.create({
             data: { usuarioId: gestor.id, titulo, mensagem, tipo: "warning" }
           });
           io3?.to(`user:${gestor.id}`).emit("notificacao", {

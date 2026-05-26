@@ -84,17 +84,28 @@ export const DeleteOrcamentoParams = z.object({ id: z.string() });
 export const ConverterOrcamentoParams = z.object({ id: z.string() });
 
 // ==================== VENDAS ====================
+export const VendaItemBody = z.object({
+  produtoId: z.number().int().optional().nullable(),
+  descricaoManual: z.string().optional().nullable(),
+  quantidade: z.number().or(z.string()).transform(Number),
+  valorUnitario: z.number().or(z.string()).transform(Number),
+});
+
 export const CreateVendaBody = z.object({
   clienteId: z.number().or(z.string()).transform(Number),
   orcamentoId: z.number().optional(),
   dataVenda: z.string().or(z.date()),
-  valorTotal: z.number().or(z.string()).transform(Number),
+  valorTotal: z.number().or(z.string()).transform(Number).optional(),
+  desconto: z.number().or(z.string()).transform(Number).optional(),
   formaPagamento: z.string().optional(),
   numParcelas: z.number().optional(),
+  status: z.string().optional(),
   observacoes: z.string().optional(),
+  observacoesVenda: z.string().optional(),
+  itens: z.array(VendaItemBody).min(1),
 });
 
-export const UpdateVendaBody = CreateVendaBody.partial();
+export const UpdateVendaBody = CreateVendaBody.omit({ itens: true }).partial();
 
 export const ListVendasQueryParams = z.object({
   q: z.string().optional(),

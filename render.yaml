@@ -22,7 +22,7 @@ services:
       - key: FRONTEND_URL
         value: https://erp-orcamento-sistema.vercel.app
       - key: CORS_ORIGIN
-        sync: false
+        value: https://erp-orcamento-sistema.vercel.app
       - key: REDIS_URL
         sync: false
       - key: REDIS_TOKEN

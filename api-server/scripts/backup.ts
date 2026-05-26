@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import { execSync } from 'child_process';
 
 const BACKUP_DIR = path.join(process.cwd(), 'backups');
@@ -33,15 +33,15 @@ try {
 
   // Manter apenas últimos 7 backups
   const files = fs.readdirSync(BACKUP_DIR)
-    .filter(f => f.startsWith('backup-') && f.endsWith('.sql'))
-    .map(f => ({ 
+    .filter((f: string) => f.startsWith('backup-') && f.endsWith('.sql'))
+    .map((f: string) => ({ 
       file: f, 
       time: fs.statSync(path.join(BACKUP_DIR, f)).mtime.getTime() 
     }))
-    .sort((a, b) => b.time - a.time);
+    .sort((a: any, b: any) => b.time - a.time);
 
   if (files.length > 7) {
-    files.slice(7).forEach(({ file }) => {
+    files.slice(7).forEach(({ file }: { file: string }) => {
       fs.unlinkSync(path.join(BACKUP_DIR, file));
       console.log(`🗑️  Removido backup antigo: ${file}`);
     });

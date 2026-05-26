@@ -12,6 +12,7 @@ import { requireAuth, requireRoles, SALES_ROLES } from "../middleware/auth";
 import { auditLog } from "../middleware/audit";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
+import { validateBody, validateParams } from "../middleware/validateZod";
 
 const router: IRouter = Router();
 
@@ -96,17 +97,10 @@ router.post(
   "/vendas",
   requireAuth,
   requireRoles(SALES_ROLES),
+  validateBody(CreateVendaBody),
   async (req, res): Promise<void> => {
-    const parsed = CreateVendaBody.safeParse(req.body);
-    if (!parsed.success) {
-      res
-        .status(400)
-        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
-      return;
-    }
-
     const userId = (req as any).currentUser?.id ?? 1;
-    const { itens, ...vendaData } = parsed.data as any;
+    const { itens, ...vendaData } = req.body as any;
     const numero = await getNextVendaNum();
 
     const valorTotal = itens.reduce(
@@ -180,6 +174,7 @@ router.get(
   "/vendas/:id",
   requireAuth,
   requireRoles(SALES_ROLES),
+  validateParams(GetVendaParams),
   async (req, res): Promise<void> => {
     const p = GetVendaParams.safeParse(req.params);
     if (!p.success) {
@@ -239,6 +234,8 @@ router.patch(
   "/vendas/:id",
   requireAuth,
   requireRoles(SALES_ROLES),
+  validateParams(UpdateVendaParams),
+  validateBody(UpdateVendaBody),
   async (req, res): Promise<void> => {
     const p = UpdateVendaParams.safeParse(req.params);
     if (!p.success) {
@@ -246,15 +243,7 @@ router.patch(
       return;
     }
 
-    const parsed = UpdateVendaBody.safeParse(req.body);
-    if (!parsed.success) {
-      res
-        .status(400)
-        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
-      return;
-    }
-
-    const data: any = { ...parsed.data };
+    const data: any = { ...req.body };
     if (data.valorTotal !== undefined)
       data.valorTotal = Number(data.valorTotal);
     if (data.desconto !== undefined) data.desconto = Number(data.desconto);
@@ -278,6 +267,7 @@ router.post(
   "/vendas/:id/gerar-os",
   requireAuth,
   requireRoles(SALES_ROLES),
+  validateParams(GerarOsParaVendaParams),
   auditLog({ action: "create", module: "os", table: "OrdemServico" }),
   async (req, res): Promise<void> => {
     const p = GerarOsParaVendaParams.safeParse(req.params);

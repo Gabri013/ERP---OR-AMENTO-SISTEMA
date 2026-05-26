@@ -1,14 +1,8 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "sistema-os/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "sistema-os/dist"
-      }
-    }
-  ],
+  "buildCommand": "cd sistema-os && npm install && npm run build",
+  "outputDirectory": "sistema-os/dist",
+  "framework": null,
   "routes": [
     {
       "handle": "filesystem"

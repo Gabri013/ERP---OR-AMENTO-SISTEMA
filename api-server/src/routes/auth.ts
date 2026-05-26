@@ -9,6 +9,8 @@ import {
   verifyUserToken,
 } from "../lib/jwt";
 import { response } from "../utils/response";
+import { validateBody } from "../middleware/validateZod";
+import { z } from "zod";
 
 const router: IRouter = Router();
 
@@ -25,14 +27,8 @@ const refreshTokenModel = (db as any).refreshToken as {
  * Body: { email, senha }
  * Returns user profile + JWT token (replaces old session cookie)
  */
-router.post("/auth/login", async (req, res): Promise<void> => {
-  const parsed = LoginBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-
-  const { email, senha } = parsed.data;
+router.post("/auth/login", validateBody(LoginBody), async (req, res): Promise<void> => {
+  const { email, senha } = req.body;
 
   const user = await db.usuario.findUnique({
     where: { email },
@@ -89,10 +85,10 @@ router.post("/auth/login", async (req, res): Promise<void> => {
 /**
  * POST /api/auth/logout
  */
-router.post("/auth/logout", async (req, res): Promise<void> => {
+router.post("/auth/logout", validateBody(z.object({ refreshToken: z.string().optional() })), async (req, res): Promise<void> => {
   res.clearCookie("token", { path: "/" });
-  const refreshToken = req.body?.refreshToken;
-  if (typeof refreshToken === "string" && refreshToken) {
+  const { refreshToken } = req.body;
+  if (refreshToken) {
     await refreshTokenModel.deleteMany({ where: { token: refreshToken } });
   }
   res.json(response.success({ ok: true }));
@@ -144,17 +140,8 @@ router.get("/auth/me", async (req, res): Promise<void> => {
   );
 });
 
-router.post("/auth/refresh", async (req, res): Promise<void> => {
-  const refreshToken = req.body?.refreshToken;
-
-  if (!refreshToken || typeof refreshToken !== "string") {
-    res
-      .status(401)
-      .json(
-        response.error("Refresh token não fornecido", "REFRESH_TOKEN_MISSING"),
-      );
-    return;
-  }
+router.post("/auth/refresh", validateBody(z.object({ refreshToken: z.string() })), async (req, res): Promise<void> => {
+  const { refreshToken } = req.body;
 
   const claims = await verifyRefreshToken(refreshToken);
   if (!claims) {

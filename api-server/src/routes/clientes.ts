@@ -16,6 +16,7 @@ import {
 } from "../middleware/auth";
 import { auditLog } from "../middleware/audit";
 import { validate } from "../middleware/validate";
+import { validateBody, validateParams } from "../middleware/validateZod";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
 import { withCache, cacheDel } from "../lib/redis";
@@ -105,7 +106,7 @@ router.post(
   "/clientes",
   requireAuth,
   requireRoles(ADMIN_ROLES),
-  validate(CreateClienteBody),
+  validateBody(CreateClienteBody),
   auditLog({ action: "create", module: "clientes", table: "Cliente" }),
   async (req, res): Promise<void> => {
     const row = await db.cliente.create({ data: req.body });
@@ -143,7 +144,8 @@ router.patch(
   "/clientes/:id",
   requireAuth,
   requireRoles(ADMIN_ROLES),
-  validate(UpdateClienteBody),
+  validateParams(UpdateClienteParams),
+  validateBody(UpdateClienteBody),
   auditLog({ action: "update", module: "clientes", table: "Cliente" }),
   async (req, res): Promise<void> => {
     const p = UpdateClienteParams.safeParse(req.params);
@@ -171,6 +173,7 @@ router.delete(
   "/clientes/:id",
   requireAuth,
   requireRoles(ADMIN_ROLES),
+  validateParams(DeleteClienteParams),
   auditLog({ action: "delete", module: "clientes", table: "Cliente" }),
   async (req, res): Promise<void> => {
     const p = DeleteClienteParams.safeParse(req.params);

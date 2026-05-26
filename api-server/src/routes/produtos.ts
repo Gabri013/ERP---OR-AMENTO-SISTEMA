@@ -16,6 +16,7 @@ import {
 } from "../middleware/auth";
 import { auditLog } from "../middleware/audit";
 import { validate } from "../middleware/validate";
+import { validateBody, validateParams } from "../middleware/validateZod";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
 import { withCache, cacheDel } from "../lib/redis";
@@ -100,7 +101,7 @@ router.post(
   "/produtos",
   requireAuth,
   requireRoles(ADMIN_ROLES),
-  validate(CreateProdutoBody),
+  validateBody(CreateProdutoBody),
   auditLog({ action: "create", module: "produtos", table: "Produto" }),
   async (req, res): Promise<void> => {
     const data: any = { ...req.body };
@@ -143,7 +144,8 @@ router.patch(
   "/produtos/:id",
   requireAuth,
   requireRoles(ADMIN_ROLES),
-  validate(UpdateProdutoBody),
+  validateParams(UpdateProdutoParams),
+  validateBody(UpdateProdutoBody),
   auditLog({ action: "update", module: "produtos", table: "Produto" }),
   async (req, res): Promise<void> => {
     const p = UpdateProdutoParams.safeParse(req.params);

@@ -264,6 +264,9 @@ enum StatusConta {
   PENDENTE
   PAGO
   ATRASADO
+  CANCELADO
+  PARCIALMENTE_PAGO
+  RENEGOCIADO
 }
 
 enum Prioridade {

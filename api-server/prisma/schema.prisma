@@ -355,21 +355,22 @@ enum EtapaProducao {
 enum TipoUsuario {
   master
   gerente
+  gestor_vendas
   vendedor
-  producao
   financeiro
   engenharia
-  visualizador
-  // sector / production roles present in the database
-  projetista
-  dashboard_producao
+  producao
   corte
   dobra
   solda
+  montagem
+  visualizador
+  projetista
+  consultor
+  dashboard_producao
   refrigeracao
   acabamento
   finalizacao
-  montagem
 }
 
 model AuditLog {

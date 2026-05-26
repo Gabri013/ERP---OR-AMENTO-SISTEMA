@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
+import compression from "compression";
 import swaggerUi from 'swagger-ui-express';
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -39,6 +40,9 @@ app.use(
 
 applySecurityMiddlewares(app);
 
+// Gzip compression
+app.use(compression());
+
 app.use(
   pinoHttp({
     logger,
@@ -65,6 +69,14 @@ app.use(cookieParser());
 
 app.use(loadUser);
 app.use("/api", router);
+
+// Cache-Control headers for static assets
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api-docs') || req.path.endsWith('.js') || req.path.endsWith('.css')) {
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+  }
+  next();
+});
 
 // Swagger API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

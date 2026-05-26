@@ -75,7 +75,7 @@ router.get(
     const [rows, total] = await Promise.all([
       db.venda.findMany({
         where,
-        include: { cliente: true },
+        include: { cliente: true, ordensServico: { select: { id: true, numero: true } } },
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
@@ -85,7 +85,7 @@ router.get(
 
     res.json(
       response.success(
-        rows.map((r) => serializeVenda(r, r.cliente)),
+        rows.map((r) => ({ ...serializeVenda(r, r.cliente), ordensServico: (r as any).ordensServico ?? [] })),
         buildMeta(page, limit, total),
       ),
     );

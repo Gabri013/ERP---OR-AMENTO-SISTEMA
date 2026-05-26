@@ -14,6 +14,8 @@ import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
 import { validateBody, validateParams } from "../middleware/validateZod";
 import { sendVendaEmail, sendOSEmail } from "../lib/email";
+import { checkPermission } from "../middleware/checkPermission";
+import { getDataFilter } from "../utils/permissionFilters";
 
 const router: IRouter = Router();
 
@@ -63,15 +65,25 @@ function serializeVenda(r: any, cliente?: any) {
 router.get(
   "/vendas",
   requireAuth,
-  requireRoles(SALES_ROLES),
+  checkPermission('vendas', 'visualizar'),
   async (req, res): Promise<void> => {
     ListVendasQueryParams.safeParse(req.query);
     const status = req.query.status as string | undefined;
     const currentUser = (req as any).currentUser;
-    const isVendedor = currentUser.tipo === "vendedor";
 
     const { page, limit, skip } = getPagination(req);
-    const where: any = isVendedor ? { usuarioId: currentUser.id } : {};
+    
+    // Get permission-based filter
+    const permFilter = getDataFilter(
+      {
+        userId: currentUser.id,
+        userRole: currentUser.tipo,
+        setorId: currentUser.setorId,
+      },
+      'vendas'
+    );
+
+    const where: any = { ...permFilter };
     if (status) where.status = status as any;
 
     const [rows, total] = await Promise.all([
@@ -97,7 +109,7 @@ router.get(
 router.post(
   "/vendas",
   requireAuth,
-  requireRoles(SALES_ROLES),
+  checkPermission('vendas', 'criar'),
   validateBody(CreateVendaBody),
   async (req, res): Promise<void> => {
     const userId = (req as any).currentUser?.id ?? 1;
@@ -180,7 +192,7 @@ router.post(
 router.get(
   "/vendas/:id",
   requireAuth,
-  requireRoles(SALES_ROLES),
+  checkPermission('vendas', 'visualizar'),
   validateParams(GetVendaParams),
   async (req, res): Promise<void> => {
     const p = GetVendaParams.safeParse(req.params);
@@ -196,14 +208,6 @@ router.get(
 
     if (!venda) {
       res.status(404).json(response.error("Venda não encontrada", "NOT_FOUND"));
-      return;
-    }
-
-    const currentUser = (req as any).currentUser;
-    if (currentUser.tipo === "vendedor" && venda.usuarioId !== currentUser.id) {
-      res
-        .status(403)
-        .json(response.error("Sem permissão para esta venda", "FORBIDDEN"));
       return;
     }
 
@@ -273,7 +277,7 @@ router.patch(
 router.post(
   "/vendas/:id/gerar-os",
   requireAuth,
-  requireRoles(SALES_ROLES),
+  checkPermission('vendas', 'gerar_os'),
   validateParams(GerarOsParaVendaParams),
   auditLog({ action: "create", module: "os", table: "OrdemServico" }),
   async (req, res): Promise<void> => {

@@ -24,6 +24,8 @@ import { getPagination, buildMeta } from "../utils/pagination";
 import { validateBody, validateParams } from "../middleware/validateZod";
 import { generateOSPDF } from "../lib/pdf";
 import { sendOSEmail } from "../lib/email";
+import { checkPermission } from "../middleware/checkPermission";
+import { getDataFilter } from "../utils/permissionFilters";
 
 const router: IRouter = Router();
 const ALL_ROLES = [...new Set([...SALES_ROLES, ...PRODUCTION_ROLES])];
@@ -86,7 +88,7 @@ function serializeOS(r: any, cliente?: any) {
 router.get(
   "/os",
   requireAuth,
-  requireRoles(ALL_ROLES),
+  checkPermission('os', 'visualizar'),
   auditLog({ action: "list", module: "os", table: "OrdemServico" }),
   async (req, res): Promise<void> => {
     const params = ListOSQueryParams.safeParse(req.query);
@@ -94,9 +96,21 @@ router.get(
       ? (req.query.status as string | undefined)
       : undefined;
     const vendaId = req.query.vendaId ? Number(req.query.vendaId) : undefined;
+    const currentUser = (req as any).currentUser;
 
     const { page, limit, skip } = getPagination(req);
-    const where: any = {};
+    
+    // Get permission-based filter
+    const permFilter = getDataFilter(
+      {
+        userId: currentUser.id,
+        userRole: currentUser.tipo,
+        setorId: currentUser.setorId,
+      },
+      'os'
+    );
+
+    const where: any = { ...permFilter };
     if (status) where.status = status;
     if (vendaId) where.vendaId = vendaId;
 
@@ -122,7 +136,7 @@ router.get(
 router.get(
   "/os/:id",
   requireAuth,
-  requireRoles(ALL_ROLES),
+  checkPermission('os', 'visualizar'),
   auditLog({ action: "view", module: "os", table: "OrdemServico" }),
   async (req, res): Promise<void> => {
     const p = GetOSParams.safeParse(req.params);
@@ -290,7 +304,7 @@ router.patch(
 router.post(
   "/os/:id/avancar",
   requireAuth,
-  requireRoles(PRODUCTION_ROLES),
+  checkPermission('os', 'avancar_etapa'),
   validateParams(AvancarEtapaOSParams),
   validateBody(AvancarEtapaOSBody),
   auditLog({ action: "update", module: "os", table: "OrdemServico" }),
@@ -578,7 +592,7 @@ router.get(
 router.patch(
   "/os/:id/kanban",
   requireAuth,
-  requireRoles(PRODUCTION_ROLES),
+  checkPermission('os', 'editar'),
   async (req, res): Promise<void> => {
     const id = Number(req.params.id);
     const { status } = req.body;
@@ -619,7 +633,7 @@ router.patch(
 router.get(
   "/os/:id/pdf",
   requireAuth,
-  requireRoles(ALL_ROLES),
+  checkPermission('os', 'visualizar'),
   validateParams(GetOSParams),
   async (req, res): Promise<void> => {
     const p = GetOSParams.safeParse(req.params);

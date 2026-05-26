@@ -16,6 +16,8 @@ import {
 import { auditLog } from "../middleware/audit";
 import { response } from "../utils/response";
 import { validateBody, validateParams } from "../middleware/validateZod";
+import { checkPermission } from "../middleware/checkPermission";
+import { getDataFilter } from "../utils/permissionFilters";
 
 const router: IRouter = Router();
 
@@ -59,7 +61,7 @@ function serializeCR(r: any, cliente?: any) {
 router.get(
   "/financeiro/contas-receber",
   requireAuth,
-  requireRoles(FINANCEIRO_ROLES),
+  checkPermission('financeiro', 'visualizar'),
   auditLog({
     action: "list",
     module: "financeiro",
@@ -101,7 +103,7 @@ router.get(
 router.post(
   "/financeiro/contas-receber/:id/pagar",
   requireAuth,
-  requireRoles(FINANCEIRO_ROLES),
+  checkPermission('financeiro', 'fazer_pagamento'),
   validateParams(PagarContaReceberParams),
   validateBody(PagarContaReceberBody),
   auditLog({
@@ -149,7 +151,7 @@ router.post(
 router.get(
   "/financeiro/contas-pagar",
   requireAuth,
-  requireRoles(FINANCEIRO_ROLES),
+  checkPermission('financeiro', 'visualizar'),
   auditLog({
     action: "list",
     module: "financeiro",
@@ -188,7 +190,7 @@ router.get(
 router.post(
   "/financeiro/contas-pagar",
   requireAuth,
-  requireRoles(FINANCEIRO_ROLES),
+  checkPermission('financeiro', 'visualizar'),
   validateBody(CreateContaPagarBody),
   auditLog({
     action: "create",
@@ -229,7 +231,8 @@ router.post(
 router.post(
   "/financeiro/contas-pagar/:id/pagar",
   requireAuth,
-  requireRoles(FINANCEIRO_ROLES),
+  checkPermission('financeiro', 'fazer_pagamento'),
+  validateParams(PagarContaPagarParams),
   auditLog({
     action: "pagar",
     module: "financeiro",

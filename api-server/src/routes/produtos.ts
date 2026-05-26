@@ -177,6 +177,7 @@ router.delete(
   "/produtos/:id",
   requireAuth,
   requireRoles(ADMIN_ROLES),
+  validateParams(DeleteProdutoParams),
   auditLog({ action: "delete", module: "produtos", table: "Produto" }),
   async (req, res): Promise<void> => {
     const p = DeleteProdutoParams.safeParse(req.params);

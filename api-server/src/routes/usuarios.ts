@@ -104,6 +104,7 @@ router.delete(
   "/usuarios/:id",
   requireAuth,
   requireRoles(["master"]),
+  validateParams(DeleteUsuarioParams),
   async (req, res): Promise<void> => {
     const p = DeleteUsuarioParams.safeParse(req.params);
     if (!p.success) {

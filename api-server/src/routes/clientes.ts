@@ -43,7 +43,7 @@ function serializeCliente(r: any) {
 router.get(
   "/clientes",
   requireAuth,
-  requireRoles(ALL_ROLES),
+  checkPermission('clientes', 'visualizar'),
   auditLog({ action: "list", module: "clientes", table: "Cliente" }),
   async (req, res): Promise<void> => {
     const params = ListClientesQueryParams.safeParse(req.query);
@@ -105,7 +105,7 @@ router.get(
 router.post(
   "/clientes",
   requireAuth,
-  requireRoles(ADMIN_ROLES),
+  checkPermission('clientes', 'criar'),
   validateBody(CreateClienteBody),
   auditLog({ action: "create", module: "clientes", table: "Cliente" }),
   async (req, res): Promise<void> => {
@@ -119,7 +119,7 @@ router.post(
 router.get(
   "/clientes/:id",
   requireAuth,
-  requireRoles(ALL_ROLES),
+  checkPermission('clientes', 'visualizar'),
   auditLog({ action: "view", module: "clientes", table: "Cliente" }),
   async (req, res): Promise<void> => {
     const p = GetClienteParams.safeParse(req.params);
@@ -143,7 +143,7 @@ router.get(
 router.patch(
   "/clientes/:id",
   requireAuth,
-  requireRoles(ADMIN_ROLES),
+  checkPermission('clientes', 'editar'),
   validateParams(UpdateClienteParams),
   validateBody(UpdateClienteBody),
   auditLog({ action: "update", module: "clientes", table: "Cliente" }),
@@ -172,7 +172,7 @@ router.patch(
 router.delete(
   "/clientes/:id",
   requireAuth,
-  requireRoles(ADMIN_ROLES),
+  checkPermission('clientes', 'deletar'),
   validateParams(DeleteClienteParams),
   auditLog({ action: "delete", module: "clientes", table: "Cliente" }),
   async (req, res): Promise<void> => {

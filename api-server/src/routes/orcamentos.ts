@@ -17,6 +17,8 @@ import { getPagination, buildMeta } from "../utils/pagination";
 import { validateBody, validateParams } from "../middleware/validateZod";
 import { generateOrcamentoPDF } from "../lib/pdf";
 import { sendOrcamentoEmail } from "../lib/email";
+import { checkPermission } from "../middleware/checkPermission";
+import { getDataFilter } from "../utils/permissionFilters";
 
 const router: IRouter = Router();
 
@@ -67,15 +69,25 @@ function serializeOrc(r: any, cliente?: any) {
 router.get(
   "/orcamentos",
   requireAuth,
-  requireRoles(SALES_ROLES),
+  checkPermission('orcamentos', 'visualizar'),
   async (req, res): Promise<void> => {
     const params = ListOrcamentosQueryParams.safeParse(req.query);
     const status = params.success ? params.data.status : undefined;
     const currentUser = (req as any).currentUser;
-    const isVendedor = currentUser.tipo === "vendedor";
 
     const { page, limit, skip } = getPagination(req);
-    const where: any = isVendedor ? { usuarioId: currentUser.id } : {};
+    
+    // Get permission-based filter
+    const permFilter = getDataFilter(
+      {
+        userId: currentUser.id,
+        userRole: currentUser.tipo,
+        setorId: currentUser.setorId,
+      },
+      'orcamentos'
+    );
+
+    const where: any = { ...permFilter };
     if (status) where.status = status as any;
 
     const [rows, total] = await Promise.all([
@@ -100,7 +112,7 @@ router.get(
 router.post(
   "/orcamentos",
   requireAuth,
-  requireRoles(SALES_ROLES),
+  checkPermission('orcamentos', 'criar'),
   validateBody(CreateOrcamentoBody),
   async (req, res): Promise<void> => {
     const userId = (req as any).currentUser?.id ?? 1;
@@ -156,7 +168,8 @@ router.post(
 router.get(
   "/orcamentos/:id",
   requireAuth,
-  requireRoles(SALES_ROLES),
+  checkPermission('orcamentos', 'visualizar'),
+  validateParams(GetOrcamentoParams),
   auditLog({
     action: "view",
     module: "orcamentos",
@@ -182,49 +195,14 @@ router.get(
       return;
     }
 
-    const currentUser = (req as any).currentUser;
-    if (currentUser.tipo === "vendedor" && orc.usuarioId !== currentUser.id) {
-      res
-        .status(403)
-        .json(response.error("Sem permissão para este orçamento", "FORBIDDEN"));
-      return;
-    }
-
-    const itens = await db.orcamentoItem.findMany({
-      where: { orcamentoId: id },
-      include: { produto: true },
-    });
-
-    const serializedOrc = serializeOrc(orc, orc.cliente);
-    const serializedItens = itens.map((i) => ({
-      id: i.id,
-      produtoId: i.produtoId,
-      descricaoManual: i.descricaoManual,
-      quantidade: Number(i.quantidade),
-      valorUnitario: Number(i.valorUnitario),
-      valorTotal: Number(i.valorTotal),
-      produto: i.produto
-        ? {
-            id: i.produto.id,
-            codigo: i.produto.codigo,
-            nome: i.produto.nome,
-            descricao: i.produto.descricao,
-            foto: i.produto.foto,
-            valor: Number(i.produto.valor),
-            estoque: i.produto.estoque,
-            status: i.produto.status,
-          }
-        : undefined,
-    }));
-
-    res.json(response.success({ ...serializedOrc, itens: serializedItens }));
+    res.json(response.success(serializeOrc(orc, orc.cliente)));
   },
 );
 
 router.patch(
   "/orcamentos/:id",
   requireAuth,
-  requireRoles(SALES_ROLES),
+  checkPermission('orcamentos', 'editar'),
   validateParams(UpdateOrcamentoParams),
   validateBody(UpdateOrcamentoBody),
   auditLog({
@@ -277,7 +255,8 @@ router.patch(
 router.delete(
   "/orcamentos/:id",
   requireAuth,
-  requireRoles(["master", "gerente"]),
+  checkPermission('orcamentos', 'deletar'),
+  validateParams(DeleteOrcamentoParams),
   auditLog({
     action: "delete",
     module: "orcamentos",
@@ -305,7 +284,7 @@ router.delete(
 router.post(
   "/orcamentos/:id/converter",
   requireAuth,
-  requireRoles(SALES_ROLES),
+  checkPermission('orcamentos', 'converter'),
   validateParams(ConverterOrcamentoParams),
   auditLog({
     action: "converter",
@@ -432,7 +411,7 @@ router.post(
 router.get(
   "/orcamentos/:id/pdf",
   requireAuth,
-  requireRoles(SALES_ROLES),
+  checkPermission('orcamentos', 'visualizar'),
   validateParams(GetOrcamentoParams),
   async (req, res): Promise<void> => {
     const p = GetOrcamentoParams.safeParse(req.params);

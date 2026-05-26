@@ -416,6 +416,296 @@ export const rolePermissions: Record<TipoUsuario, PermissionConfig> = {
       financeiro: true,
     },
   },
+
+  // Para outros setores (corte, dobra, solda, etc)
+  corte: {
+    clientes: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+    },
+    orcamentos: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+      converter: false,
+      relatorios: false,
+    },
+    vendas: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+      gerar_os: false,
+      relatorios: false,
+    },
+    os: {
+      criar: false,
+      editar: 'own_etapa',
+      deletar: false,
+      visualizar: 'own_etapa',
+      avancar_etapa: true,
+      relatorios: false,
+    },
+    financeiro: {
+      visualizar: false,
+      fazer_pagamento: false,
+      relatorios: false,
+    },
+    usuarios: {
+      criar: false,
+      editar: false,
+      deletar: false,
+    },
+    dashboards: {
+      producao: 'own_etapa',
+      vendas: false,
+      financeiro: false,
+    },
+  },
+
+  dobra: {
+    clientes: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+    },
+    orcamentos: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+      converter: false,
+      relatorios: false,
+    },
+    vendas: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+      gerar_os: false,
+      relatorios: false,
+    },
+    os: {
+      criar: false,
+      editar: 'own_etapa',
+      deletar: false,
+      visualizar: 'own_etapa',
+      avancar_etapa: true,
+      relatorios: false,
+    },
+    financeiro: {
+      visualizar: false,
+      fazer_pagamento: false,
+      relatorios: false,
+    },
+    usuarios: {
+      criar: false,
+      editar: false,
+      deletar: false,
+    },
+    dashboards: {
+      producao: 'own_etapa',
+      vendas: false,
+      financeiro: false,
+    },
+  },
+
+  solda: {
+    clientes: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+    },
+    orcamentos: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+      converter: false,
+      relatorios: false,
+    },
+    vendas: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+      gerar_os: false,
+      relatorios: false,
+    },
+    os: {
+      criar: false,
+      editar: 'own_etapa',
+      deletar: false,
+      visualizar: 'own_etapa',
+      avancar_etapa: true,
+      relatorios: false,
+    },
+    financeiro: {
+      visualizar: false,
+      fazer_pagamento: false,
+      relatorios: false,
+    },
+    usuarios: {
+      criar: false,
+      editar: false,
+      deletar: false,
+    },
+    dashboards: {
+      producao: 'own_etapa',
+      vendas: false,
+      financeiro: false,
+    },
+  },
+
+  montagem: {
+    clientes: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+    },
+    orcamentos: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+      converter: false,
+      relatorios: false,
+    },
+    vendas: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+      gerar_os: false,
+      relatorios: false,
+    },
+    os: {
+      criar: false,
+      editar: 'own_etapa',
+      deletar: false,
+      visualizar: 'own_etapa',
+      avancar_etapa: true,
+      relatorios: false,
+    },
+    financeiro: {
+      visualizar: false,
+      fazer_pagamento: false,
+      relatorios: false,
+    },
+    usuarios: {
+      criar: false,
+      editar: false,
+      deletar: false,
+    },
+    dashboards: {
+      producao: 'own_etapa',
+      vendas: false,
+      financeiro: false,
+    },
+  },
+
+  visualizador: {
+    clientes: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'all',
+    },
+    orcamentos: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'all',
+      converter: false,
+      relatorios: true,
+    },
+    vendas: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'all',
+      gerar_os: false,
+      relatorios: true,
+    },
+    os: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'all',
+      avancar_etapa: false,
+      relatorios: true,
+    },
+    financeiro: {
+      visualizar: 'all',
+      fazer_pagamento: false,
+      relatorios: true,
+    },
+    usuarios: {
+      criar: false,
+      editar: false,
+      deletar: false,
+    },
+    dashboards: {
+      executivo: true,
+      vendas: true,
+      producao: true,
+      financeiro: true,
+    },
+  },
+
+  projetista: {
+    clientes: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+    },
+    orcamentos: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+      converter: false,
+      relatorios: false,
+    },
+    vendas: {
+      criar: false,
+      editar: false,
+      deletar: false,
+      visualizar: 'linked',
+      gerar_os: false,
+      relatorios: false,
+    },
+    os: {
+      criar: false,
+      editar: 'own_etapa',
+      deletar: false,
+      visualizar: 'own_etapa',
+      avancar_etapa: true,
+      relatorios: false,
+    },
+    financeiro: {
+      visualizar: false,
+      fazer_pagamento: false,
+      relatorios: false,
+    },
+    usuarios: {
+      criar: false,
+      editar: false,
+      deletar: false,
+    },
+    dashboards: {
+      producao: 'own_etapa',
+      vendas: false,
+      financeiro: false,
+    },
+  },
 };
 
 /**

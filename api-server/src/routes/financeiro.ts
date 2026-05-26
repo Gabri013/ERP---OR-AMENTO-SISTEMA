@@ -68,14 +68,31 @@ router.get(
     const params = ListContasReceberQueryParams.safeParse(req.query);
     const status = params.success ? params.data.status : undefined;
 
-    const rows = await db.contaReceber.findMany({
-      include: { cliente: true },
-      orderBy: { dataVencimento: "desc" },
-    });
+    // Usa raw query para evitar falhas de enum se houver valores customizados no banco
+    const rawRows = (await (db as any).$queryRawUnsafe(
+      `SELECT cr.*, c.id as c_id, c."razaoSocial", c."nomeFantasia", c."cnpjCpf",
+              c.cidade, c.estado, c.telefone, c.email, c.observacoes, c."createdAt" as c_created
+         FROM "ContaReceber" cr
+         LEFT JOIN "Cliente" c ON c.id = cr."clienteId"
+         ORDER BY cr."dataVencimento" DESC`,
+    )) as any[];
 
-    let result = rows.map((r) => serializeCR(r, r.cliente));
+    let result = rawRows.map((r: any) =>
+      serializeCR(r, {
+        id: r.c_id,
+        razaoSocial: r.razaoSocial,
+        nomeFantasia: r.nomeFantasia,
+        cnpjCpf: r.cnpjCpf,
+        cidade: r.cidade,
+        estado: r.estado,
+        telefone: r.telefone,
+        email: r.email,
+        observacoes: r.observacoes,
+        createdAt: r.c_created,
+      }),
+    );
 
-    if (status) result = result.filter((r) => r.status === status);
+    if (status) result = result.filter((r: any) => r.status === status);
     res.json(response.success(result));
   },
 );

@@ -18,24 +18,32 @@ function serializeUser(r: any) {
     id: r.id,
     nome: r.nome,
     email: r.email,
-    tipo: r.tipo,
+    tipo: typeof r.tipo === "string" ? r.tipo : String(r.tipo ?? ""),
     status: r.status,
-    telefoneWhatsapp: r.telefoneWhatsapp,
+    telefoneWhatsapp: r.telefoneWhatsapp ?? null,
     createdAt:
-      r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+      r.createdAt instanceof Date
+        ? r.createdAt.toISOString()
+        : (r.createdAt ?? null),
   };
 }
 
+// GET /usuarios
+// Usa $queryRawUnsafe para evitar falha de deserialização do enum TipoUsuario
+// quando existem valores no banco que não constam na definição Prisma (ex: 'montagem')
 router.get(
   "/usuarios",
   requireAuth,
   requireRoles(["master"]),
   async (_req, res): Promise<void> => {
-    const rows = await db.usuario.findMany({ orderBy: { nome: "asc" } });
+    const rows = (await (db as any).$queryRawUnsafe(
+      `SELECT id, nome, email, tipo::text AS tipo, status, "telefoneWhatsapp", "createdAt" FROM "Usuario" ORDER BY nome ASC`,
+    )) as any[];
     res.json(response.success(rows.map(serializeUser)));
   },
 );
 
+// POST /usuarios
 router.post(
   "/usuarios",
   requireAuth,
@@ -44,18 +52,24 @@ router.post(
   async (req, res): Promise<void> => {
     const hashedSenha = await bcrypt.hash(req.body.senha, 10);
     const row = await db.usuario.create({
-      data: { ...req.body, senha: hashedSenha },
+      data: {
+        nome: req.body.nome,
+        email: req.body.email,
+        senha: hashedSenha,
+        tipo: req.body.tipo as any,
+        status: req.body.status ?? "ativo",
+        telefoneWhatsapp: req.body.telefoneWhatsapp ?? null,
+      },
     });
-
     res.status(201).json(response.success(serializeUser(row)));
   },
 );
 
+// PATCH /usuarios/:id
 router.patch(
   "/usuarios/:id",
   requireAuth,
   requireRoles(["master"]),
-  validate(UpdateUsuarioBody),
   async (req, res): Promise<void> => {
     const p = UpdateUsuarioParams.safeParse(req.params);
     if (!p.success) {
@@ -63,7 +77,15 @@ router.patch(
       return;
     }
 
-    const data: any = { ...req.body };
+    const parsed = UpdateUsuarioBody.safeParse(req.body);
+    if (!parsed.success) {
+      res
+        .status(400)
+        .json(response.error(parsed.error.message, "VALIDATION_ERROR"));
+      return;
+    }
+
+    const data: any = { ...parsed.data };
     if (data.senha) {
       data.senha = await bcrypt.hash(data.senha, 10);
     }
@@ -82,6 +104,7 @@ router.patch(
   },
 );
 
+// DELETE /usuarios/:id
 router.delete(
   "/usuarios/:id",
   requireAuth,

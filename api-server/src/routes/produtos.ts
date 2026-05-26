@@ -18,6 +18,7 @@ import { auditLog } from "../middleware/audit";
 import { validate } from "../middleware/validate";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
+import { withCache, cacheDel } from "../lib/redis";
 
 const router: IRouter = Router();
 
@@ -47,9 +48,34 @@ router.get(
     const q = params.success ? params.data.q : undefined;
     const { page, limit, skip } = getPagination(req);
 
-    const where = q
-      ? { nome: { contains: q, mode: "insensitive" as const } }
-      : {};
+    // Don't cache searches, only full list
+    if (!q) {
+      const cacheKey = "produtos:all";
+      const cached = await withCache(cacheKey, 600, async () => {
+        const [rows, total] = await Promise.all([
+          db.produto.findMany({
+            skip,
+            take: limit,
+            orderBy: { nome: "asc" },
+          }),
+          db.produto.count(),
+        ]);
+        return { rows: rows.map(serializeProduto), total };
+      });
+
+      res.json(
+        response.success(
+          cached.rows,
+          buildMeta(page, limit, cached.total),
+        ),
+      );
+      return;
+    }
+
+    // Search queries are not cached
+    const where = {
+      nome: { contains: q, mode: "insensitive" as const },
+    };
 
     const [rows, total] = await Promise.all([
       db.produto.findMany({
@@ -81,6 +107,8 @@ router.post(
     if (data.valor !== undefined) data.valor = String(data.valor);
 
     const row = await db.produto.create({ data });
+    // Invalidate cache
+    await cacheDel("produtos:all");
     res.status(201).json(response.success(serializeProduto(row)));
   },
 );
@@ -132,6 +160,8 @@ router.patch(
         where: { id: Number(p.data.id) },
         data,
       });
+      // Invalidate cache
+      await cacheDel("produtos:all");
       res.json(response.success(serializeProduto(row)));
     } catch {
       res
@@ -155,6 +185,8 @@ router.delete(
 
     try {
       await db.produto.delete({ where: { id: Number(p.data.id) } });
+      // Invalidate cache
+      await cacheDel("produtos:all");
       res.sendStatus(204);
     } catch {
       res

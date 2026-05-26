@@ -1,6 +1,6 @@
 let redisClient: any = null;
 
-function getRedisClient() {
+export function getRedisClient() {
   if (!process.env.REDIS_URL || !process.env.REDIS_TOKEN) return null;
   if (redisClient) return redisClient;
 

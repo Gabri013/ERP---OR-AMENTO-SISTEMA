@@ -18,6 +18,7 @@ import { auditLog } from "../middleware/audit";
 import { validate } from "../middleware/validate";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
+import { withCache, cacheDel } from "../lib/redis";
 
 const router: IRouter = Router();
 
@@ -48,15 +49,38 @@ router.get(
     const q = params.success ? params.data.q : undefined;
     const { page, limit, skip } = getPagination(req);
 
-    const where = q
-      ? {
-          OR: [
-            { razaoSocial: { contains: q, mode: "insensitive" as const } },
-            { nomeFantasia: { contains: q, mode: "insensitive" as const } },
-            { cnpjCpf: { contains: q, mode: "insensitive" as const } },
-          ],
-        }
-      : {};
+    // Don't cache searches, only full list
+    if (!q) {
+      const cacheKey = "clientes:all";
+      const cached = await withCache(cacheKey, 300, async () => {
+        const [rows, total] = await Promise.all([
+          db.cliente.findMany({
+            skip,
+            take: limit,
+            orderBy: { razaoSocial: "asc" },
+          }),
+          db.cliente.count(),
+        ]);
+        return { rows: rows.map(serializeCliente), total };
+      });
+
+      res.json(
+        response.success(
+          cached.rows,
+          buildMeta(page, limit, cached.total),
+        ),
+      );
+      return;
+    }
+
+    // Search queries are not cached
+    const where = {
+      OR: [
+        { razaoSocial: { contains: q, mode: "insensitive" as const } },
+        { nomeFantasia: { contains: q, mode: "insensitive" as const } },
+        { cnpjCpf: { contains: q, mode: "insensitive" as const } },
+      ],
+    };
 
     const [rows, total] = await Promise.all([
       db.cliente.findMany({
@@ -85,6 +109,8 @@ router.post(
   auditLog({ action: "create", module: "clientes", table: "Cliente" }),
   async (req, res): Promise<void> => {
     const row = await db.cliente.create({ data: req.body });
+    // Invalidate cache
+    await cacheDel("clientes:all");
     res.status(201).json(response.success(serializeCliente(row)));
   },
 );
@@ -130,6 +156,8 @@ router.patch(
         where: { id: Number(p.data.id) },
         data: req.body,
       });
+      // Invalidate cache
+      await cacheDel("clientes:all");
       res.json(response.success(serializeCliente(row)));
     } catch {
       res
@@ -152,6 +180,8 @@ router.delete(
     }
     try {
       await db.cliente.delete({ where: { id: Number(p.data.id) } });
+      // Invalidate cache
+      await cacheDel("clientes:all");
       res.sendStatus(204);
     } catch {
       res

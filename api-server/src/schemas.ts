@@ -27,14 +27,16 @@ export const ListClientesQueryParams = z.object({
 });
 
 export const CreateClienteBody = z.object({
-  razaoSocial: z.string().min(1),
+  razaoSocial: z.string().min(3, "Razão social deve ter pelo menos 3 caracteres"),
   nomeFantasia: z.string().optional(),
-  cnpjCpf: z.string().min(1).optional(),
+  cnpjCpf: z.string()
+    .regex(/^[\d./-]+$/, "CNPJ/CPF deve conter apenas números, pontos, traços e barras")
+    .optional(),
   endereco: z.string().optional(),
   cidade: z.string().optional(),
-  estado: z.string().optional(),
+  estado: z.string().length(2, "Estado deve ter 2 caracteres").optional(),
   telefone: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.string().email("Email inválido").optional(),
   observacoes: z.string().optional(),
 });
 
@@ -47,11 +49,18 @@ export const DeleteClienteParams = z.object({ id: z.string() });
 // ==================== PRODUTOS ====================
 export const CreateProdutoBody = z.object({
   codigo: z.string().optional(),
-  nome: z.string(),
+  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   descricao: z.string().optional(),
-  valor: z.number().or(z.string()).transform(Number),
-  estoque: z.number().optional(),
-  status: z.string().optional(),
+  valor: z.number()
+    .or(z.string())
+    .transform(Number)
+    .refine((val) => val > 0, "Valor deve ser positivo"),
+  estoque: z.number()
+    .or(z.string())
+    .transform(Number)
+    .refine((val) => val >= 0, "Estoque não pode ser negativo")
+    .optional(),
+  status: z.enum(["ativo", "inativo"]).optional(),
 });
 
 export const UpdateProdutoBody = CreateProdutoBody.partial();
@@ -62,14 +71,40 @@ export const UpdateProdutoParams = z.object({ id: z.string() });
 export const DeleteProdutoParams = z.object({ id: z.string() });
 
 // ==================== ORÇAMENTOS ====================
+export const OrcamentoItemSchema = z.object({
+  produtoId: z.number().int().positive().optional(),
+  descricaoManual: z.string().optional(),
+  quantidade: z.number()
+    .or(z.string())
+    .transform(Number)
+    .refine((val) => val > 0, "Quantidade deve ser maior que 0"),
+  valorUnitario: z.number()
+    .or(z.string())
+    .transform(Number)
+    .refine((val) => val > 0, "Valor unitário deve ser positivo"),
+  valorTotal: z.number()
+    .or(z.string())
+    .transform(Number)
+    .refine((val) => val > 0, "Valor total deve ser positivo"),
+});
+
 export const CreateOrcamentoBody = z.object({
-  clienteId: z.number().or(z.string()).transform(Number),
+  clienteId: z.number()
+    .or(z.string())
+    .transform(Number)
+    .refine((val) => val > 0, "Cliente ID deve ser positivo"),
   dataOrcamento: z.string().or(z.date()),
   validade: z.string().optional(),
-  valorTotal: z.number().or(z.string()).transform(Number),
-  desconto: z.number().optional(),
+  valorTotal: z.number()
+    .or(z.string())
+    .transform(Number)
+    .refine((val) => val > 0, "Valor total deve ser positivo"),
+  desconto: z.number()
+    .min(0, "Desconto não pode ser negativo")
+    .max(100, "Desconto não pode exceder 100%")
+    .optional(),
   observacoes: z.string().optional(),
-  itens: z.array(z.any()).optional(),
+  itens: z.array(OrcamentoItemSchema).min(1, "Orçamento deve ter pelo menos 1 item"),
 });
 
 export const UpdateOrcamentoBody = CreateOrcamentoBody.partial();

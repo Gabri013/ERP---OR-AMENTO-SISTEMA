@@ -2,6 +2,51 @@
 
 Sistema ERP completo para gestão de orçamentos, ordens de serviço e financeiro.
 
+## 📝 Changelog - 27/05/2026
+
+### Correções Completas e Testes 100%
+
+**Correções de Testes Unitários:**
+- ✅ Todos os 45 testes unitários passando (100%)
+- ✅ Corrigidos erros de TypeScript em múltiplos arquivos
+- ✅ Removido arquivo de exemplo com erros (orcamentos-example.ts)
+- ✅ Corrigidos imports em arquivos de teste
+- ✅ Corrigido middleware de permissões (checkPermission)
+- ✅ Corrigido rateLimiter middleware (keyGenerator)
+- ✅ Corrigido validateZod middleware
+- ✅ Instalado @types/jest para testes
+- ✅ Adicionado jest ao tsconfig types
+
+**Correções de Mocks e Setup:**
+- ✅ Configurados mocks de Redis (safeWithCache, safeCacheDel)
+- ✅ Configurados mocks de Prisma para todos os modelos
+- ✅ Configurados mocks de bcrypt para múltiplos usuários
+- ✅ Configurados mocks de JWT para diferentes tokens
+- ✅ Adicionado usuário financeiro aos mocks para testar permissões
+
+**Correções de Rotas:**
+- ✅ Substituídas chamadas de Redis por funções no-op seguras
+- ✅ Corrigidas rotas de produtos (cache)
+- ✅ Corrigidas rotas de clientes (cache)
+- ✅ Corrigido checkPermission para usar req.currentUser
+
+**Refatoração:**
+- ✅ Criado arquivo compartilhado utils/cache.ts (removido código duplicado)
+- ✅ Validado schema do Prisma (sem erros)
+
+**Deploy:**
+- ✅ Movido swagger-ui-express e swagger-jsdoc para dependencies
+- ✅ Corrigido erro de build no Render
+
+**Testes Específicos:**
+- ✅ Health endpoints (2/2 passando)
+- ✅ Auth endpoints (16/16 passando)
+- ✅ Produtos endpoints (13/13 passando)
+- ✅ Clientes endpoints (13/13 passando)
+- ✅ RateLimiter middleware (1/1 passando)
+
+---
+
 ## Stack
 
 | Camada | Serviço |
@@ -190,11 +235,16 @@ cd api-server
 npm test
 ```
 
+**Status atual: 45/45 testes passando (100%)**
+
 Os testes cobrem:
-- Autenticação (login, logout, refresh, me)
-- Rotas críticas (clientes, produtos)
-- Validação de dados
-- Autorização e permissões
+- ✅ Autenticação (login, logout, refresh, me) - 16 testes
+- ✅ Rotas de clientes (CRUD completo) - 13 testes
+- ✅ Rotas de produtos (CRUD completo) - 13 testes
+- ✅ Health checks - 2 testes
+- ✅ Rate Limiter - 1 teste
+- ✅ Validação de dados
+- ✅ Autorização e permissões (testado com role financeiro)
 
 ---
 

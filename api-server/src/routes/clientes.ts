@@ -19,7 +19,9 @@ import { validate } from "../middleware/validate";
 import { validateBody, validateParams } from "../middleware/validateZod";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
-import { withCache, cacheDel } from "../lib/redis";
+import { safeWithCache, safeCacheDel } from "../utils/cache";
+import { checkPermission } from "../middleware/checkPermission";
+import { getDataFilter } from "../utils/permissionFilters";
 
 const router: IRouter = Router();
 
@@ -53,7 +55,7 @@ router.get(
     // Don't cache searches, only full list
     if (!q) {
       const cacheKey = "clientes:all";
-      const cached = await withCache(cacheKey, 300, async () => {
+      const cached = await safeWithCache(cacheKey, 300, async () => {
         const [rows, total] = await Promise.all([
           db.cliente.findMany({
             skip,
@@ -111,7 +113,7 @@ router.post(
   async (req, res): Promise<void> => {
     const row = await db.cliente.create({ data: req.body });
     // Invalidate cache
-    await cacheDel("clientes:all");
+    await safeCacheDel("clientes:all");
     res.status(201).json(response.success(serializeCliente(row)));
   },
 );
@@ -159,7 +161,7 @@ router.patch(
         data: req.body,
       });
       // Invalidate cache
-      await cacheDel("clientes:all");
+      await safeCacheDel("clientes:all");
       res.json(response.success(serializeCliente(row)));
     } catch {
       res
@@ -184,7 +186,7 @@ router.delete(
     try {
       await db.cliente.delete({ where: { id: Number(p.data.id) } });
       // Invalidate cache
-      await cacheDel("clientes:all");
+      await safeCacheDel("clientes:all");
       res.sendStatus(204);
     } catch {
       res

@@ -5,6 +5,7 @@ import pinoHttp from "pino-http";
 import compression from "compression";
 import swaggerUi from 'swagger-ui-express';
 import router from "./routes";
+import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
 import { loadUser } from "./middleware/auth";
 import { applySecurityMiddlewares } from "./middleware/security";
@@ -68,6 +69,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(loadUser);
+
+// Mount health routes at root level (no /api prefix)
+app.use(healthRouter);
+
+// Mount all other routes with /api prefix
 app.use("/api", router);
 
 // Cache-Control headers for static assets

@@ -104,7 +104,9 @@ export const validate = async <T>(data: any, schema: ZodSchema): Promise<T | nul
     return await schema.parseAsync(data);
   } catch (error) {
     if (error instanceof ZodError) {
-      logger.warn('Validação falhou', { errors: error.errors });
+      logger.warn({ msg: 'Validação falhou', errors: error.errors });
+    } else {
+      logger.warn({ msg: 'Validação falhou', error });
     }
     return null;
   }

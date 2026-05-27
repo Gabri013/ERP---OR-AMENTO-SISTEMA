@@ -6,14 +6,8 @@ import { z } from "zod";
 
 // ==================== AUTH ====================
 export const LoginBody = z.object({
-  email: z
-    .any()
-    .transform((val) => String(val))
-    .pipe(z.string().email()),
-  senha: z
-    .any()
-    .transform((val) => String(val))
-    .pipe(z.string().min(6)),
+  email: z.string().email("Email inválido"),
+  senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
 export const LoginResponse = z.object({

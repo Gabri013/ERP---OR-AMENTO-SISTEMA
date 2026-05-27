@@ -149,7 +149,8 @@ describe('Authentication Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
-      expect(response.body.data).toHaveProperty('token');
+      expect(response.body.data).toHaveProperty('accessToken');
+      expect(response.body.data).toHaveProperty('refreshToken');
     });
 
     it('should return 401 with invalid refresh token', async () => {

@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { TipoUsuario } from '@prisma/client';
 import { hasPermission, getPermissionLevel, PermissionLevel } from '../lib/permissions';
 import { logger } from '../lib/logger';
+
+type TipoUsuario = 'master' | 'gerente' | 'vendedor' | 'financeiro';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -22,7 +23,8 @@ export interface AuthRequest extends Request {
  */
 export const checkPermission = (module: string, action: string) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user) {
+    const user = (req as any).currentUser;
+    if (!user) {
       logger.warn({
         msg: 'Acesso sem autenticação',
         path: req.path,
@@ -32,13 +34,13 @@ export const checkPermission = (module: string, action: string) => {
       return res.status(401).json({ error: 'Não autenticado' });
     }
 
-    const userRole = req.user.tipo;
+    const userRole = user.tipo;
     const hasAccess = hasPermission(userRole, module, action);
 
     if (!hasAccess) {
       logger.warn({
         msg: 'Acesso negado - permissão insuficiente',
-        userId: req.user.id,
+        userId: user.id,
         userRole,
         module,
         action,
@@ -62,7 +64,7 @@ export const checkPermission = (module: string, action: string) => {
 
     logger.debug({
       msg: 'Permissão verificada com sucesso',
-      userId: req.user.id,
+      userId: user.id,
       userRole,
       module,
       action,
@@ -86,11 +88,12 @@ export const checkAnyPermission = (
   permissions: [string, string][]
 ) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user) {
+    const user = (req as any).currentUser;
+    if (!user) {
       return res.status(401).json({ error: 'Não autenticado' });
     }
 
-    const userRole = req.user.tipo;
+    const userRole = user.tipo;
     const hasAnyAccess = permissions.some(([module, action]) =>
       hasPermission(userRole, module, action)
     );
@@ -98,7 +101,7 @@ export const checkAnyPermission = (
     if (!hasAnyAccess) {
       logger.warn({
         msg: 'Acesso negado - nenhuma permissão atende',
-        userId: req.user.id,
+        userId: user.id,
         userRole,
         requiredPermissions: permissions,
         path: req.path,
@@ -128,11 +131,12 @@ export const checkAllPermissions = (
   permissions: [string, string][]
 ) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user) {
+    const user = (req as any).currentUser;
+    if (!user) {
       return res.status(401).json({ error: 'Não autenticado' });
     }
 
-    const userRole = req.user.tipo;
+    const userRole = user.tipo;
     const hasAllAccess = permissions.every(([module, action]) =>
       hasPermission(userRole, module, action)
     );
@@ -140,7 +144,7 @@ export const checkAllPermissions = (
     if (!hasAllAccess) {
       logger.warn({
         msg: 'Acesso negado - não atende todas as permissões',
-        userId: req.user.id,
+        userId: user.id,
         userRole,
         requiredPermissions: permissions,
         path: req.path,
@@ -165,17 +169,18 @@ export const checkAllPermissions = (
  */
 export const checkRole = (allowedRoles: TipoUsuario[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user) {
+    const user = (req as any).currentUser;
+    if (!user) {
       return res.status(401).json({ error: 'Não autenticado' });
     }
 
-    const isAllowed = allowedRoles.includes(req.user.tipo);
+    const isAllowed = allowedRoles.includes(user.tipo);
 
     if (!isAllowed) {
       logger.warn({
         msg: 'Acesso negado - role não permitido',
-        userId: req.user.id,
-        userRole: req.user.tipo,
+        userId: user.id,
+        userRole: user.tipo,
         allowedRoles,
         path: req.path,
       });

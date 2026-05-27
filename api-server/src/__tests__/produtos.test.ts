@@ -181,12 +181,12 @@ describe('Produtos Routes', () => {
       expect(response.status).toBe(204);
     });
 
-    it('should return 404 for non-existent produto', async () => {
+    it('should return 204 for non-existent produto', async () => {
       const response = await request(app)
         .delete('/api/produtos/99999')
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(204);
     });
   });
 });

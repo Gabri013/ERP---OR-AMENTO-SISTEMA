@@ -19,7 +19,7 @@ import { validate } from "../middleware/validate";
 import { validateBody, validateParams } from "../middleware/validateZod";
 import { response } from "../utils/response";
 import { getPagination, buildMeta } from "../utils/pagination";
-import { withCache, cacheDel } from "../lib/redis";
+import { safeWithCache, safeCacheDel } from "../utils/cache";
 
 const router: IRouter = Router();
 
@@ -52,7 +52,7 @@ router.get(
     // Don't cache searches, only full list
     if (!q) {
       const cacheKey = "produtos:all";
-      const cached = await withCache(cacheKey, 600, async () => {
+      const cached = await safeWithCache(cacheKey, 600, async () => {
         const [rows, total] = await Promise.all([
           db.produto.findMany({
             skip,
@@ -109,7 +109,7 @@ router.post(
 
     const row = await db.produto.create({ data });
     // Invalidate cache
-    await cacheDel("produtos:all");
+    await safeCacheDel("produtos:all");
     res.status(201).json(response.success(serializeProduto(row)));
   },
 );
@@ -163,7 +163,7 @@ router.patch(
         data,
       });
       // Invalidate cache
-      await cacheDel("produtos:all");
+      await safeCacheDel("produtos:all");
       res.json(response.success(serializeProduto(row)));
     } catch {
       res
@@ -189,7 +189,7 @@ router.delete(
     try {
       await db.produto.delete({ where: { id: Number(p.data.id) } });
       // Invalidate cache
-      await cacheDel("produtos:all");
+      await safeCacheDel("produtos:all");
       res.sendStatus(204);
     } catch {
       res

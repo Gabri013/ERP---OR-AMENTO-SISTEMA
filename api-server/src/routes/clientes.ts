@@ -59,11 +59,12 @@ router.get(
       const cached = await safeWithCache(cacheKey, 300, async () => {
         const [rows, total] = await Promise.all([
           db.cliente.findMany({
+            where: { ativo: true },
             skip,
             take: limit,
             orderBy: { razaoSocial: "asc" },
           }),
-          db.cliente.count(),
+          db.cliente.count({ where: { ativo: true } }),
         ]);
         return { rows: rows.map(serializeCliente), total };
       });
@@ -79,10 +80,15 @@ router.get(
 
     // Search queries are not cached
     const where = {
-      OR: [
-        { razaoSocial: { contains: q, mode: "insensitive" as const } },
-        { nomeFantasia: { contains: q, mode: "insensitive" as const } },
-        { cnpjCpf: { contains: q, mode: "insensitive" as const } },
+      AND: [
+        { ativo: true },
+        {
+          OR: [
+            { razaoSocial: { contains: q, mode: "insensitive" as const } },
+            { nomeFantasia: { contains: q, mode: "insensitive" as const } },
+            { cnpjCpf: { contains: q, mode: "insensitive" as const } },
+          ],
+        },
       ],
     };
 
@@ -185,25 +191,16 @@ router.delete(
       return;
     }
     try {
-      await db.cliente.delete({ where: { id: Number(p.data.id) } });
+      await db.cliente.update({
+        where: { id: Number(p.data.id) },
+        data: { ativo: false },
+      });
       // Invalidate cache
       await safeCacheDel("clientes:all");
       res.status(204).send();
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        // P2003: Foreign key constraint failed
-        if (e.code === "P2003") {
-          res
-            .status(409)
-            .json(
-              response.error(
-                "Este cliente não pode ser excluído pois possui registros associados (orçamentos, vendas, etc).",
-                "CONFLICT",
-              ),
-            );
-          return;
-        }
-        // P2025: Record to delete does not exist.
+        // P2025: Record to update does not exist.
         if (e.code === "P2025") {
           res
             .status(404)

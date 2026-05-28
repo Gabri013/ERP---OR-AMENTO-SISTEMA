@@ -39,7 +39,7 @@ router.get(
   requireRoles(["master"]),
   async (_req, res): Promise<void> => {
     const rows = (await (db as any).$queryRawUnsafe(
-      `SELECT id, nome, email, tipo::text AS tipo, status, "telefoneWhatsapp", "createdAt" FROM "Usuario" ORDER BY nome ASC`,
+      `SELECT id, nome, email, tipo::text AS tipo, status, "telefoneWhatsapp", "createdAt" FROM "Usuario" WHERE ativo = true ORDER BY nome ASC`,
     )) as any[];
     res.json(response.success(rows.map(serializeUser)));
   },
@@ -114,23 +114,14 @@ router.delete(
     }
 
     try {
-      await db.usuario.delete({ where: { id: Number(p.data.id) } });
+      await db.usuario.update({
+        where: { id: Number(p.data.id) },
+        data: { ativo: false },
+      });
       res.status(204).send();
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        // P2003: Foreign key constraint failed
-        if (e.code === "P2003") {
-          res
-            .status(409)
-            .json(
-              response.error(
-                "Este usuário não pode ser excluído pois possui registros associados (orçamentos, vendas, etc).",
-                "CONFLICT",
-              ),
-            );
-          return;
-        }
-        // P2025: Record to delete does not exist.
+        // P2025: Record to update does not exist.
         if (e.code === "P2025") {
           res
             .status(404)

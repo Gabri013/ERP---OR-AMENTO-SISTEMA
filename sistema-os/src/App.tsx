@@ -25,6 +25,7 @@ import OSPrintPage from "@/pages/os-print";
 import KanbanProducaoPage from "@/pages/kanban-producao";
 import KanbanComercialPage from "@/pages/kanban-comercial";
 import EngenhariaPage from "@/pages/engenharia";
+import EnterpriseModulePage from "@/pages/enterprise-module";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,7 +47,7 @@ function Router() {
       </Route>
       <Route path="/orcamentos">
         <AuthGuard>
-          <OrcamentosPage />
+          <EnterpriseModulePage moduleKey="orcamentos" />
         </AuthGuard>
       </Route>
       <Route path="/orcamentos/novo">
@@ -61,7 +62,7 @@ function Router() {
       </Route>
       <Route path="/vendas">
         <AuthGuard>
-          <VendasPage />
+          <EnterpriseModulePage moduleKey="vendas" />
         </AuthGuard>
       </Route>
       <Route path="/vendas/nova">
@@ -86,7 +87,7 @@ function Router() {
       </Route>
       <Route path="/financeiro">
         <AuthGuard>
-          <FinanceiroPage />
+          <EnterpriseModulePage moduleKey="financeiro" />
         </AuthGuard>
       </Route>
       <Route path="/financeiro/contas-receber">
@@ -127,7 +128,72 @@ function Router() {
       </Route>
       <Route path="/engenharia">
         <AuthGuard>
-          <EngenhariaPage />
+          <EnterpriseModulePage moduleKey="engenharia" />
+        </AuthGuard>
+      </Route>
+      <Route path="/comercial">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="comercial" />
+        </AuthGuard>
+      </Route>
+      <Route path="/estrutura-produto">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="estrutura-produto" />
+        </AuthGuard>
+      </Route>
+      <Route path="/producao">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="producao" />
+        </AuthGuard>
+      </Route>
+      <Route path="/pcp">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="pcp" />
+        </AuthGuard>
+      </Route>
+      <Route path="/fluxo-producao">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="fluxo-producao" />
+        </AuthGuard>
+      </Route>
+      <Route path="/estoque">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="estoque" />
+        </AuthGuard>
+      </Route>
+      <Route path="/compras">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="compras" />
+        </AuthGuard>
+      </Route>
+      <Route path="/rh">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="rh" />
+        </AuthGuard>
+      </Route>
+      <Route path="/qualidade">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="qualidade" />
+        </AuthGuard>
+      </Route>
+      <Route path="/assistencia-tecnica">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="assistencia-tecnica" />
+        </AuthGuard>
+      </Route>
+      <Route path="/etiquetas">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="etiquetas" />
+        </AuthGuard>
+      </Route>
+      <Route path="/configuracoes">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="configuracoes" />
+        </AuthGuard>
+      </Route>
+      <Route path="/usuarios-permissoes">
+        <AuthGuard>
+          <EnterpriseModulePage moduleKey="usuarios-permissoes" />
         </AuthGuard>
       </Route>
       <Route component={NotFound} />

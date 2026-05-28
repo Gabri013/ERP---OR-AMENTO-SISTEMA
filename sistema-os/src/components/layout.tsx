@@ -1,319 +1,139 @@
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
+import type React from "react";
+import { useMemo, useState } from "react";
 import {
-  LayoutDashboard,
-  FileText,
-  ShoppingCart,
-  ClipboardList,
-  DollarSign,
-  Users,
-  Package,
-  UserCog,
-  LogOut,
+  Bell,
+  Building2,
   ChevronDown,
-  Menu,
-  Wrench,
-  Scissors,
-  Flame,
-  Snowflake,
-  Hammer,
-  Wind,
-  Check,
-  Box,
-  Eye,
   Factory,
-  TrendingUp,
+  LogOut,
+  Menu,
+  Search,
+  ShieldCheck,
 } from "lucide-react";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import { industrialModules } from "@/modules/industrial/modules";
 import { cn } from "@/lib/utils";
-
-type NavChild = { href: string; label: string; roles?: string[] };
-type NavLeaf = { href: string; icon: any; label: string; roles?: string[] };
-type NavGroup = {
-  label: string;
-  icon: any;
-  children: NavChild[];
-  roles?: string[];
-};
-type NavItem = NavLeaf | NavGroup;
-
-const ALL_NAV: NavItem[] = [
-  // Dashboard — everyone
-  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-
-  // ====== COMERCIAL ======
-  {
-    label: "Comercial",
-    icon: TrendingUp,
-    roles: ["master", "gerente", "vendedor"],
-    children: [
-      { href: "/orcamentos", label: "Orçamentos" },
-      { href: "/vendas", label: "Vendas" },
-      { href: "/kanban-comercial", label: "Pipeline (Kanban)" },
-      { href: "/cadastros/clientes", label: "Clientes" },
-    ],
-  },
-
-  // ====== PRODUÇÃO ======
-  {
-    label: "Produção",
-    icon: Factory,
-    roles: [
-      "master",
-      "gerente",
-      "producao",
-      "engenharia",
-      "projetista",
-      "dashboard_producao",
-      "corte",
-      "dobra",
-      "solda",
-      "refrigeracao",
-      "acabamento",
-      "finalizacao",
-      "montagem",
-    ],
-    children: [
-      { href: "/os", label: "Ordens de Serviço" },
-      { href: "/kanban-producao", label: "Kanban Produção" },
-    ],
-  },
-
-  // ====== ENGENHARIA ======
-  {
-    href: "/engenharia",
-    icon: Wrench,
-    label: "Engenharia",
-    roles: ["master", "gerente", "engenharia", "projetista"],
-  },
-
-  // ====== FINANCEIRO ======
-  {
-    label: "Financeiro",
-    icon: DollarSign,
-    roles: ["master", "gerente", "financeiro"],
-    children: [
-      { href: "/financeiro", label: "Visão Geral" },
-      { href: "/financeiro/contas-receber", label: "Contas a Receber" },
-      { href: "/financeiro/contas-pagar", label: "Contas a Pagar" },
-    ],
-  },
-
-  // ====== CADASTROS ======
-  {
-    label: "Cadastros",
-    icon: Package,
-    roles: ["master", "gerente"],
-    children: [
-      { href: "/cadastros/clientes", label: "Clientes" },
-      { href: "/cadastros/produtos", label: "Produtos" },
-      { href: "/cadastros/usuarios", label: "Usuários", roles: ["master"] },
-    ],
-  },
-];
-
-const SECTOR_ICONS: Record<string, any> = {
-  corte: Scissors,
-  dobra: Wind,
-  solda: Flame,
-  refrigeracao: Snowflake,
-  acabamento: Hammer,
-  finalizacao: Check,
-  montagem: Box,
-  dashboard_producao: Eye,
-};
-
-function canSeeItem(item: NavItem, tipo: string): boolean {
-  if (!("roles" in item) || !item.roles) return true;
-  return item.roles.includes(tipo);
-}
-
-interface NavItemProps {
-  item: NavItem;
-  location: string;
-  tipo: string;
-  onNavigate?: () => void;
-}
-
-function NavItemView({ item, location, tipo, onNavigate }: NavItemProps) {
-  const [open, setOpen] = useState(false);
-
-  if ("children" in item && item.children) {
-    const visibleChildren = item.children.filter(
-      (c) =>
-        !("roles" in c) || !(c as any).roles || (c as any).roles.includes(tipo),
-    );
-    if (!visibleChildren.length) return null;
-    const isActive = visibleChildren.some((c) => location.startsWith(c.href));
-    const Icon = item.icon;
-    return (
-      <div>
-        <button
-          onClick={() => setOpen(!open)}
-          className={cn(
-            "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-            isActive
-              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
-          )}
-        >
-          <Icon className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left">{item.label}</span>
-          <ChevronDown
-            className={cn("h-3 w-3 transition-transform", open && "rotate-180")}
-          />
-        </button>
-        {open && (
-          <div className="ml-7 mt-1 space-y-1">
-            {visibleChildren.map((child) => (
-              <Link
-                key={child.href}
-                href={child.href}
-                onClick={onNavigate}
-                className={cn(
-                  "block px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
-                  location === child.href
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
-                )}
-              >
-                {child.label}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  const leaf = item as NavLeaf;
-  const isActive = location === leaf.href;
-  const Icon = leaf.icon;
-  return (
-    <Link
-      href={leaf.href}
-      onClick={onNavigate}
-      className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-        isActive
-          ? "bg-sidebar-primary text-sidebar-primary-foreground"
-          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
-      )}
-    >
-      <Icon className="h-4 w-4 shrink-0" />
-      <span>{leaf.label}</span>
-    </Link>
-  );
-}
 
 interface LayoutProps {
   children: React.ReactNode;
 }
+
+const groupOrder = [
+  "Gestao",
+  "Receita",
+  "Industrial",
+  "Fabrica",
+  "Suprimentos",
+  "Administrativo",
+  "Pos-venda",
+  "Sistema",
+];
 
 export function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const roleLabels: Record<string, string> = {
-    master: "Master",
-    vendedor: "Vendedor",
-    projetista: "Projetista",
-    gerente: "Gerente de Produção",
-    producao: "Produção",
-    corte: "Setor de Corte",
-    dobra: "Setor de Dobra",
-    solda: "Setor de Solda",
-    refrigeracao: "Setor de Refrigeração",
-    acabamento: "Setor de Acabamento",
-    finalizacao: "Setor de Finalização",
-    montagem: "Setor de Montagem",
-    dashboard_producao: "Painel Produção",
-  };
+  const groupedModules = useMemo(() => {
+    return groupOrder
+      .map((group) => ({
+        group,
+        items: industrialModules.filter((item) => item.group === group),
+      }))
+      .filter((entry) => entry.items.length > 0);
+  }, []);
 
-  const tipo = user?.tipo ?? "";
-
-  // Build the navigation items visible to this user
-  const visibleNav = ALL_NAV.filter((item) => canSeeItem(item, tipo))
-    .map((item) => {
-      if ("children" in item && item.children) {
-        const visibleChildren = item.children.filter(
-          (c) =>
-            !("roles" in c) ||
-            !(c as any).roles ||
-            (c as any).roles.includes(tipo),
-        );
-        return { ...item, children: visibleChildren };
-      }
-      return item;
-    })
-    .filter((item) => {
-      if ("children" in item && item.children) return item.children.length > 0;
-      return true;
-    });
-
-  // For sector users, show a sector badge
-  const SectorIcon = SECTOR_ICONS[tipo];
+  const currentModule =
+    industrialModules
+      .filter((item) => location === item.href || location.startsWith(`${item.href}/`))
+      .sort((a, b) => b.href.length - a.href.length)[0] ?? industrialModules[0];
+  const CurrentModuleIcon = currentModule.icon;
 
   const Sidebar = ({ onNavigate }: { onNavigate?: () => void }) => (
-    <div className="flex flex-col h-full bg-sidebar">
-      <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border/30">
-        <div className="bg-sidebar-primary rounded-md p-1.5">
-          <Wrench className="h-5 w-5 text-sidebar-primary-foreground" />
+    <div className="flex h-full flex-col bg-[#0B1F33] text-white">
+      <div className="border-b border-white/10 px-4 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#003D7A] ring-1 ring-white/10">
+            <Factory className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-black tracking-normal">COZINCA ERP</p>
+            <p className="text-[11px] font-medium uppercase text-blue-100/70">Industrial Enterprise</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sidebar-foreground font-bold text-sm leading-tight">
-            Sistema OS
-          </p>
-          <p className="text-sidebar-foreground/50 text-xs">
-            Gestão Industrial
-          </p>
+        <div className="mt-4 grid grid-cols-3 gap-2 rounded-[8px] border border-white/10 bg-white/[0.04] p-2">
+          <div>
+            <p className="text-[10px] text-blue-100/60">O.S.</p>
+            <p className="text-sm font-bold">95</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-blue-100/60">SLA</p>
+            <p className="text-sm font-bold">91%</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-blue-100/60">Turno</p>
+            <p className="text-sm font-bold">A</p>
+          </div>
         </div>
       </div>
 
-      {SectorIcon && (
-        <div className="mx-3 mt-3 flex items-center gap-2 px-3 py-2 rounded-md bg-sidebar-accent/30 border border-sidebar-border/20">
-          <SectorIcon className="h-4 w-4 text-sidebar-primary shrink-0" />
-          <span className="text-sidebar-foreground text-xs font-medium">
-            {roleLabels[tipo]}
-          </span>
-        </div>
-      )}
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+        {groupedModules.map((entry) => (
+          <div key={entry.group}>
+            <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-normal text-blue-100/50">
+              {entry.group}
+            </p>
+            <div className="space-y-1">
+              {entry.items.map((item) => {
+                const Icon = item.icon;
+                const active =
+                  location === item.href ||
+                  (item.href !== "/" && location.startsWith(`${item.href}/`));
 
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {visibleNav.map((item, i) => (
-          <NavItemView
-            key={i}
-            item={item}
-            location={location}
-            tipo={tipo}
-            onNavigate={onNavigate}
-          />
+                return (
+                  <Link
+                    key={item.key}
+                    href={item.href}
+                    onClick={onNavigate}
+                    className={cn(
+                      "group flex items-center gap-3 rounded-[6px] px-3 py-2 text-sm font-semibold transition-colors",
+                      active
+                        ? "bg-[#003D7A] text-white shadow-sm"
+                        : "text-blue-50/75 hover:bg-white/10 hover:text-white",
+                    )}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 truncate">{item.title}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         ))}
       </nav>
 
-      <div className="px-3 py-4 border-t border-sidebar-border/30">
-        <div className="flex items-center gap-2 px-3 py-2 mb-2">
-          <div className="bg-sidebar-primary/20 rounded-full w-7 h-7 flex items-center justify-center">
-            <span className="text-sidebar-primary text-xs font-bold">
-              {user?.nome?.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sidebar-foreground text-xs font-medium truncate">
-              {user?.nome}
-            </p>
-            <p className="text-sidebar-foreground/50 text-xs truncate">
-              {roleLabels[tipo] ?? tipo}
-            </p>
+      <div className="border-t border-white/10 p-3">
+        <div className="mb-3 rounded-[8px] border border-white/10 bg-white/[0.04] p-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E0E9FF] text-xs font-black text-[#003D7A]">
+              {(user?.nome ?? "U").charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-bold">{user?.nome ?? "Usuario ERP"}</p>
+              <p className="truncate text-[11px] text-blue-100/60">
+                {user?.tipo ?? "operacao"} - permissoes ativas
+              </p>
+            </div>
           </div>
         </div>
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 gap-2"
           onClick={logout}
+          className="w-full justify-start rounded-[6px] text-blue-50/75 hover:bg-white/10 hover:text-white"
         >
           <LogOut className="h-4 w-4" />
           Sair
@@ -323,39 +143,90 @@ export function Layout({ children }: LayoutProps) {
   );
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <aside className="hidden lg:flex lg:flex-col w-60 shrink-0 border-r border-border">
+    <div className="flex h-screen overflow-hidden bg-[#F9FAFB] text-slate-950">
+      <aside className="hidden w-[280px] shrink-0 border-r border-slate-200 lg:flex lg:flex-col">
         <Sidebar />
       </aside>
 
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div
-            className="fixed inset-0 bg-black/50"
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          <button
+            aria-label="Fechar menu"
+            className="fixed inset-0 bg-slate-950/55"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="relative w-60 flex flex-col">
+          <aside className="relative w-[280px]">
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMobileOpen(true)}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <Wrench className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-sm">Sistema OS</span>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="shrink-0 border-b border-slate-200 bg-white">
+          <div className="flex h-16 items-center justify-between gap-3 px-4 lg:px-6">
+            <div className="flex min-w-0 items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={() => setMobileOpen(true)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              <div
+                className="hidden h-9 w-9 items-center justify-center rounded-[6px] border lg:flex"
+                style={{
+                  color: currentModule.accent,
+                  backgroundColor: `${currentModule.accent}12`,
+                  borderColor: `${currentModule.accent}24`,
+                }}
+              >
+                <CurrentModuleIcon className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1 className="truncate text-base font-black text-slate-950 lg:text-lg">
+                    {currentModule.title}
+                  </h1>
+                  <ChevronDown className="hidden h-4 w-4 text-slate-400 lg:block" />
+                </div>
+                <p className="hidden truncate text-xs text-slate-500 md:block">
+                  {currentModule.description}
+                </p>
+              </div>
+            </div>
+
+            <div className="hidden flex-1 justify-center px-6 xl:flex">
+              <div className="relative w-full max-w-xl">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  className="h-9 rounded-[6px] border-slate-200 bg-slate-50 pl-9 text-sm"
+                  placeholder="Buscar O.S., cliente, produto, lote, boleto ou desenho..."
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="hidden items-center gap-2 rounded-[6px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 md:flex">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                Tempo real
+              </div>
+              <Button variant="outline" size="icon" className="rounded-[6px]">
+                <Bell className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" className="hidden rounded-[6px] md:inline-flex">
+                <ShieldCheck className="h-4 w-4" />
+                Auditoria
+              </Button>
+              <Button size="sm" className="rounded-[6px] bg-[#003D7A] hover:bg-[#002B52]">
+                <Building2 className="h-4 w-4" />
+                Matriz
+              </Button>
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="min-h-0 flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );

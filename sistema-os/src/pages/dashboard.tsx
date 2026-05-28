@@ -1,445 +1,287 @@
-import { Layout } from "@/components/layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton, SkeletonCard } from "@/components/Skeleton";
-import { useAuth } from "@/contexts/AuthContext";
 import {
-  useGetDashboardStats,
-  useGetOsPorStatus,
-  useGetOsAtrasadas,
-  useGetVendasRecentes,
-} from "@workspace/api-client-react";
+  AlertTriangle,
+  BadgeDollarSign,
+  CalendarClock,
+  ClipboardList,
+  Clock3,
+  Cog,
+  Factory,
+  FileBadge,
+  Gauge,
+  PackageCheck,
+  RotateCcw,
+  TrendingUp,
+} from "lucide-react";
 import {
-  BarChart,
+  Area,
+  AreaChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
-import {
-  TrendingUp,
-  Package,
-  FileText,
-  ClipboardList,
-  DollarSign,
-  AlertTriangle,
-  Clock,
-  CheckCircle,
-  Users,
-  ArrowUpRight,
-  ArrowDownRight,
-} from "lucide-react";
-import { StatusBadge } from "@/components/StatusBadge";
+import { motion } from "framer-motion";
+import { Layout } from "@/components/layout";
+import { KpiMetricCard } from "@/components/industrial/KpiMetricCard";
+import { ProductionKanban } from "@/components/industrial/ProductionKanban";
+import { StatusPill } from "@/components/industrial/StatusPill";
+import { IndustrialDataTable } from "@/components/industrial/IndustrialDataTable";
+import { useIndustrialDashboard } from "@/hooks/useIndustrial";
 
-function formatCurrency(v: number | null) {
-  if (v === null || v === undefined) return "—";
+const flowIcons = [FileBadge, BadgeDollarSign, ClipboardList, Cog, CalendarClock, Factory, PackageCheck];
+
+function formatCurrency(value: number) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
-  }).format(v);
-}
-
-interface KpiCardProps {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  subtitle?: string;
-  trend?: number | null;
-  color?: string;
-}
-
-function KpiCard({
-  title,
-  value,
-  icon,
-  subtitle,
-  trend,
-  color = "text-primary",
-}: KpiCardProps) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <div className={color}>{icon}</div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {subtitle && (
-          <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
-        )}
-        {trend !== null && trend !== undefined && (
-          <p
-            className={`text-xs mt-1 flex items-center gap-1 ${trend >= 0 ? "text-green-500" : "text-red-500"}`}
-          >
-            {trend >= 0 ? (
-              <ArrowUpRight className="h-3 w-3" />
-            ) : (
-              <ArrowDownRight className="h-3 w-3" />
-            )}
-            {Math.abs(trend)}% vs mês anterior
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-  const tipo = user?.tipo ?? "";
+  const { data, isLoading, isError } = useIndustrialDashboard();
 
-  const { data: stats, isLoading: statsLoading } = useGetDashboardStats();
-  const { data: osPorStatus, isLoading: osStatusLoading } = useGetOsPorStatus();
-  const { data: osAtrasadas } = useGetOsAtrasadas();
-  const { data: vendasRecentes } = useGetVendasRecentes();
-
-  const isGestao = ["master", "gerente"].includes(tipo);
-  const isFinanceiro = tipo === "financeiro";
-  const isVendedor = tipo === "vendedor";
-  const isProducao = [
-    "producao",
-    "engenharia",
-    "dashboard_producao",
-    "corte",
-    "dobra",
-    "solda",
-    "refrigeracao",
-    "acabamento",
-    "finalizacao",
-    "montagem",
-    "projetista",
-  ].includes(tipo);
-
-  if (statsLoading) {
-    return (
-      <Layout>
-        <div className="p-6 space-y-6">
-          <Skeleton className="h-7 w-48" />
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  const s = stats ?? {};
+  const sectors = data?.sectors ?? [];
+  const operators = data?.operatorRanking ?? [];
+  const orders = data?.serviceOrders ?? [];
+  const weeklyProduction = data?.weeklyProduction ?? [];
+  const cashflow = data?.cashflow ?? [];
+  const recentRows = data?.recentRows ?? [];
+  const slaData = [
+    { name: "No prazo", value: data?.sla?.onTime ?? 0, color: "#15803D" },
+    { name: "Atencao", value: data?.sla?.attention ?? 0, color: "#EA580C" },
+    { name: "Atrasado", value: data?.sla?.late ?? 0, color: "#DC2626" },
+  ];
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {isGestao
-              ? "Dashboard Gerencial"
-              : isFinanceiro
-                ? "Dashboard Financeiro"
-                : isVendedor
-                  ? "Meu Painel"
-                  : isProducao
-                    ? "Painel de Produção"
-                    : "Dashboard"}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Bem-vindo, {user?.nome}
-          </p>
-        </div>
+      <div className="space-y-6 p-4 lg:p-6">
+        <section className="rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase text-[#003D7A]">Operacao industrial em tempo real</p>
+              <h2 className="mt-1 text-2xl font-black text-slate-950">ERP Cozinca Industrial Enterprise</h2>
+              <p className="mt-1 max-w-3xl text-sm text-slate-500">
+                Todos os indicadores abaixo são lidos do PostgreSQL via API industrial.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-[6px] border border-slate-200 px-4 py-3">
+                <p className="text-[11px] text-slate-500">Status</p>
+                <p className="font-black text-slate-950">{isLoading ? "Lendo" : isError ? "Erro" : "Online"}</p>
+              </div>
+              <div className="rounded-[6px] border border-slate-200 px-4 py-3">
+                <p className="text-[11px] text-slate-500">Setores</p>
+                <p className="font-black text-slate-950">{sectors.length}</p>
+              </div>
+              <div className="rounded-[6px] border border-slate-200 px-4 py-3">
+                <p className="text-[11px] text-slate-500">O.S.</p>
+                <p className="font-black text-emerald-600">{orders.length}</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        {/* KPIs - Gestão */}
-        {isGestao && (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCard
-              title="Faturamento Mês"
-              value={formatCurrency(s.receitaMes)}
-              icon={<DollarSign className="h-4 w-4" />}
-              trend={s.crescimentoReceita}
-              color="text-green-500"
-            />
-            <KpiCard
-              title="Total Vendas"
-              value={s.totalVendas ?? 0}
-              icon={<TrendingUp className="h-4 w-4" />}
-              subtitle={`${s.totalOrcamentos ?? 0} orçamentos`}
-            />
-            <KpiCard
-              title="OS em Produção"
-              value={s.osEmProducao ?? 0}
-              icon={<Clock className="h-4 w-4" />}
-              subtitle={`${s.osPendentes ?? 0} pendentes`}
-              color="text-blue-500"
-            />
-            <KpiCard
-              title="OS Atrasadas"
-              value={s.osAtrasadas ?? 0}
-              icon={<AlertTriangle className="h-4 w-4" />}
-              subtitle="Requerem atenção"
-              color={s.osAtrasadas > 0 ? "text-red-500" : "text-green-500"}
-            />
+        {isError && (
+          <div className="rounded-[8px] border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+            Nao foi possivel consultar a API industrial. Nenhum dado local foi usado.
           </div>
         )}
 
-        {/* KPIs secundários - Gestão */}
-        {isGestao && (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCard
-              title="Clientes"
-              value={s.totalClientes ?? 0}
-              icon={<Users className="h-4 w-4" />}
-            />
-            <KpiCard
-              title="Contas a Receber"
-              value={formatCurrency(s.contasReceberValor)}
-              icon={<DollarSign className="h-4 w-4" />}
-              subtitle={`${s.contasReceberPendentes ?? 0} pendentes`}
-              color="text-orange-500"
-            />
-            <KpiCard
-              title="Recebido no Mês"
-              value={formatCurrency(s.valorRecebidoMes)}
-              icon={<CheckCircle className="h-4 w-4" />}
-              color="text-green-500"
-            />
-            <KpiCard
-              title="Taxa Conversão"
-              value={`${s.taxaConversao ?? 0}%`}
-              icon={<FileText className="h-4 w-4" />}
-              subtitle="Orçamentos → Vendas"
-            />
-          </div>
-        )}
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <KpiMetricCard title="O.S. em andamento" value={String(data?.osInProgress ?? 0)} detail="carteira industrial ativa" icon={Factory} />
+          <KpiMetricCard title="Producao do dia" value={`${data?.productionToday ?? 0} apont.`} detail="apontamentos sincronizados" icon={PackageCheck} accent="#15803D" />
+          <KpiMetricCard title="Gargalos" value={data?.bottlenecks?.[0]?.sector ?? "0"} detail="setor com maior carga" icon={AlertTriangle} accent="#EA580C" />
+          <KpiMetricCard title="Tempo medio" value={`${data?.averageTimeMinutes ?? 0}m`} detail="por operacao apontada" icon={Clock3} accent="#0E7490" />
+          <KpiMetricCard title="Faturamento" value={formatCurrency(data?.revenue ?? 0)} detail="vendas no banco" icon={BadgeDollarSign} accent="#15803D" />
+        </section>
 
-        {/* KPIs - Financeiro */}
-        {isFinanceiro && !isGestao && (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            <KpiCard
-              title="Faturamento Mês"
-              value={formatCurrency(s.receitaMes)}
-              icon={<DollarSign className="h-4 w-4" />}
-              trend={s.crescimentoReceita}
-              color="text-green-500"
-            />
-            <KpiCard
-              title="Contas a Receber"
-              value={formatCurrency(s.contasReceberValor)}
-              icon={<DollarSign className="h-4 w-4" />}
-              subtitle={`${s.contasReceberPendentes ?? 0} pendentes • ${s.contasReceberAtrasadas ?? 0} atrasadas`}
-              color="text-orange-500"
-            />
-            <KpiCard
-              title="Recebido no Mês"
-              value={formatCurrency(s.valorRecebidoMes)}
-              icon={<CheckCircle className="h-4 w-4" />}
-              color="text-green-500"
-            />
+        <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr_0.8fr]">
+          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-950">Producao semanal</h3>
+                <p className="text-xs text-slate-500">Apontamentos reais dos ultimos 7 dias.</p>
+              </div>
+              <StatusPill tone="ok">Banco de dados</StatusPill>
+            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={weeklyProduction}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey="planejado" fill="#E0E9FF" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="produzido" fill="#003D7A" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="retrabalho" fill="#EA580C" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        )}
 
-        {/* KPIs - Vendedor */}
-        {isVendedor && (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            <KpiCard
-              title="Minhas Vendas"
-              value={s.totalVendas ?? 0}
-              icon={<TrendingUp className="h-4 w-4" />}
-              subtitle={formatCurrency(s.receitaMes)}
-              color="text-green-500"
-            />
-            <KpiCard
-              title="Meus Orçamentos"
-              value={s.totalOrcamentos ?? 0}
-              icon={<FileText className="h-4 w-4" />}
-              subtitle={`${s.taxaConversao ?? 0}% convertidos`}
-            />
-            <KpiCard
-              title="Total Clientes"
-              value={s.totalClientes ?? 0}
-              icon={<Users className="h-4 w-4" />}
-            />
+          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4">
+              <h3 className="text-sm font-bold text-slate-950">Faturamento e custo</h3>
+              <p className="text-xs text-slate-500">Agrupado pelas vendas gravadas.</p>
+            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={cashflow}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Area type="monotone" dataKey="receita" stroke="#003D7A" fill="#E0E9FF" strokeWidth={2} />
+                <Area type="monotone" dataKey="custo" stroke="#94A3B8" fill="transparent" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-        )}
 
-        {/* KPIs - Produção */}
-        {isProducao && (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCard
-              title="OS em Produção"
-              value={s.osEmProducao ?? 0}
-              icon={<Clock className="h-4 w-4" />}
-              color="text-blue-500"
-            />
-            <KpiCard
-              title="OS Pendentes"
-              value={s.osPendentes ?? 0}
-              icon={<Package className="h-4 w-4" />}
-              color="text-yellow-500"
-            />
-            <KpiCard
-              title="OS Concluídas"
-              value={s.osConcluidas ?? 0}
-              icon={<CheckCircle className="h-4 w-4" />}
-              color="text-green-500"
-            />
-            <KpiCard
-              title="OS Atrasadas"
-              value={s.osAtrasadas ?? 0}
-              icon={<AlertTriangle className="h-4 w-4" />}
-              color={s.osAtrasadas > 0 ? "text-red-500" : "text-green-500"}
-            />
+          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4">
+              <h3 className="text-sm font-bold text-slate-950">SLA de entrega</h3>
+              <p className="text-xs text-slate-500">Calculado pelas datas das O.S.</p>
+            </div>
+            <ResponsiveContainer width="100%" height={210}>
+              <PieChart>
+                <Pie data={slaData} innerRadius={58} outerRadius={86} paddingAngle={4} dataKey="value">
+                  {slaData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="space-y-2">
+              {slaData.map((item) => (
+                <div key={item.name} className="flex items-center justify-between text-xs">
+                  <span className="inline-flex items-center gap-2 text-slate-600">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                    {item.name}
+                  </span>
+                  <span className="font-bold text-slate-950">{item.value}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+        </section>
 
-        {/* Charts */}
-        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-          {!isFinanceiro && osPorStatus && !osStatusLoading && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">
-                  OS por Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart
-                    data={osPorStatus}
-                    margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="stroke-border"
-                    />
-                    <XAxis
-                      dataKey="status"
-                      tick={{ fontSize: 10 }}
-                      className="text-muted-foreground"
-                    />
-                    <YAxis tick={{ fontSize: 10 }} />
-                    <Tooltip
-                      contentStyle={{
-                        background: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "12px",
+        <section className="grid gap-4 xl:grid-cols-[1fr_380px]">
+          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-950">Carga de setores fabris</h3>
+                <p className="text-xs text-slate-500">Capacidade e carga gravadas em `CapacidadeSetor`.</p>
+              </div>
+              <Gauge className="h-5 w-5 text-[#003D7A]" />
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {sectors.map((sector: any) => (
+                <motion.div key={sector.sector} whileHover={{ y: -2 }} className="rounded-[6px] border border-slate-200 p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-slate-950">{sector.sector}</p>
+                    <StatusPill tone={sector.status}>{sector.status}</StatusPill>
+                  </div>
+                  <div className="mt-3 h-2 rounded-full bg-slate-100">
+                    <div
+                      className="h-2 rounded-full"
+                      style={{
+                        width: `${Math.min(sector.capacity, 120)}%`,
+                        backgroundColor: sector.capacity > 100 ? "#EA580C" : "#003D7A",
                       }}
                     />
-                    <Bar
-                      dataKey="count"
-                      fill="hsl(var(--primary))"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <span className="text-slate-500">Carga: <b className="text-slate-900">{sector.plannedMinutes}m</b></span>
+                    <span className="text-slate-500">Cap.: <b className="text-slate-900">{sector.availableMinutes}m</b></span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
 
-          {(isGestao || isFinanceiro) && s.rankingVendedores && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">
-                  Top Vendedores
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {s.rankingVendedores.slice(0, 5).map((v: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-muted-foreground w-4">
-                          {i + 1}
-                        </span>
-                        <span className="text-sm font-medium">{v.nome}</span>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-green-500">
-                          {formatCurrency(v.valorTotal)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {v.totalVendas} vendas
-                        </p>
-                      </div>
+          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-950">Ranking operadores</h3>
+                <p className="text-xs text-slate-500">Apontamentos reais do dia.</p>
+              </div>
+              <TrendingUp className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div className="space-y-3">
+              {operators.length === 0 && <p className="text-sm text-slate-500">Sem apontamentos no banco hoje.</p>}
+              {operators.map((operator: any, index: number) => (
+                <div key={operator.name} className="flex items-center justify-between rounded-[6px] border border-slate-100 p-3">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#E0E9FF] text-xs font-black text-[#003D7A]">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold text-slate-950">{operator.name}</p>
+                      <p className="text-xs text-slate-500">{operator.sector} - {operator.appointments} apont.</p>
                     </div>
-                  ))}
+                  </div>
+                  <p className="text-sm font-black text-emerald-600">{operator.minutes}m</p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ))}
+            </div>
+          </div>
+        </section>
 
-          {!isFinanceiro && osAtrasadas && osAtrasadas.length > 0 && (
-            <Card className="col-span-full">
-              <CardHeader>
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                  OS em Produção / Atenção
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {osAtrasadas.slice(0, 5).map((os: any) => (
-                    <div
-                      key={os.id}
-                      className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{os.numero}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {os.cliente?.razaoSocial ?? "—"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <StatusBadge status={os.etapaAtual ?? os.status} />
-                        <span className="text-xs text-muted-foreground">
-                          {os.dataTermino
-                            ? new Date(os.dataTermino).toLocaleDateString(
-                                "pt-BR",
-                              )
-                            : "—"}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+        <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-950">Fluxo fabril completo</h3>
+              <p className="text-xs text-slate-500">Contagens vindas das tabelas de orçamento, venda, O.S., PCP e etiquetas.</p>
+            </div>
+            <RotateCcw className="h-5 w-5 text-[#003D7A]" />
+          </div>
+          <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-7">
+            {(data?.flow ?? []).map((step: any, index: number) => {
+              const Icon = flowIcons[index] ?? Factory;
+              return (
+                <div key={step.label} className="relative rounded-[6px] border border-slate-200 p-3">
+                  <div className="flex items-center justify-between">
+                    <Icon className="h-5 w-5 text-[#003D7A]" />
+                    <span className="text-xs font-black text-slate-400">0{index + 1}</span>
+                  </div>
+                  <p className="mt-3 text-sm font-bold text-slate-950">{step.label}</p>
+                  <p className="mt-1 text-xs text-slate-500">{step.count} registros ativos</p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              );
+            })}
+          </div>
+        </section>
 
-          {isVendedor && vendasRecentes && (
-            <Card className="col-span-full">
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">
-                  Vendas Recentes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {vendasRecentes.slice(0, 5).map((v: any) => (
-                    <div
-                      key={v.id}
-                      className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{v.numero}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {v.cliente?.razaoSocial ?? "—"}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold">
-                          {formatCurrency(v.valorTotal)}
-                        </p>
-                        <StatusBadge status={v.status} />
-                      </div>
-                    </div>
-                  ))}
+        <ProductionKanban orders={orders} />
+
+        <section className="grid gap-4 xl:grid-cols-[1fr_420px]">
+          <IndustrialDataTable title="Ordens, requisicoes e alertas recentes" rows={recentRows} />
+          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-950">Rastreabilidade critica</h3>
+            <p className="text-xs text-slate-500">O.S. lidas do banco com setor atual e status.</p>
+            <div className="mt-4 space-y-3">
+              {orders.slice(0, 4).map((order: any) => (
+                <div key={order.id} className="rounded-[6px] border border-slate-200 p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-black text-[#003D7A]">{order.number}</p>
+                    <StatusPill tone={order.priority}>{order.priority}</StatusPill>
+                  </div>
+                  <p className="mt-1 text-xs font-semibold text-slate-900">{order.product}</p>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                    <span className="text-slate-500">Setor: <b className="text-slate-900">{order.currentSector}</b></span>
+                    <span className="text-slate-500">Status: <b className="text-slate-900">{order.status}</b></span>
+                    <span className="text-slate-500">Prog.: <b className="text-slate-900">{order.progress}%</b></span>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </div>
     </Layout>
   );

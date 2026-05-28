@@ -12,6 +12,7 @@ import notificacoesRouter from "./notificacoes";
 import checklistRouter from "./checklist";
 import anexosRouter from "./anexos";
 import exportRouter from "./export";
+import industrialRouter from "./industrial";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(notificacoesRouter);
 router.use(checklistRouter);
 router.use(anexosRouter);
 router.use(exportRouter);
+router.use(industrialRouter);
 
 export default router;

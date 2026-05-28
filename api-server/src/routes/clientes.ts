@@ -22,6 +22,7 @@ import { getPagination, buildMeta } from "../utils/pagination";
 import { safeWithCache, safeCacheDel } from "../utils/cache";
 import { checkPermission } from "../middleware/checkPermission";
 import { getDataFilter } from "../utils/permissionFilters";
+import { Prisma } from "@prisma/client";
 
 const router: IRouter = Router();
 
@@ -187,11 +188,38 @@ router.delete(
       await db.cliente.delete({ where: { id: Number(p.data.id) } });
       // Invalidate cache
       await safeCacheDel("clientes:all");
-      res.sendStatus(204);
-    } catch {
+      res.status(204).send();
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        // P2003: Foreign key constraint failed
+        if (e.code === "P2003") {
+          res
+            .status(409)
+            .json(
+              response.error(
+                "Este cliente não pode ser excluído pois possui registros associados (orçamentos, vendas, etc).",
+                "CONFLICT",
+              ),
+            );
+          return;
+        }
+        // P2025: Record to delete does not exist.
+        if (e.code === "P2025") {
+          res
+            .status(404)
+            .json(response.error("Cliente não encontrado.", "NOT_FOUND"));
+          return;
+        }
+      }
+      // Erro genérico
       res
-        .status(404)
-        .json(response.error("Cliente não encontrado", "NOT_FOUND"));
+        .status(500)
+        .json(
+          response.error(
+            "Ocorreu um erro inesperado ao excluir o cliente.",
+            "INTERNAL_SERVER_ERROR",
+          ),
+        );
     }
   },
 );

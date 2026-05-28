@@ -1,6 +1,5 @@
 ﻿import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
-import { Prisma } from "@prisma/client";
 import { db } from "../lib/prisma";
 import {
   CreateUsuarioBody,
@@ -39,7 +38,7 @@ router.get(
   requireRoles(["master"]),
   async (_req, res): Promise<void> => {
     const rows = (await (db as any).$queryRawUnsafe(
-      `SELECT id, nome, email, tipo::text AS tipo, status, "telefoneWhatsapp", "createdAt" FROM "Usuario" WHERE ativo = true ORDER BY nome ASC`,
+      `SELECT id, nome, email, tipo::text AS tipo, status, "telefoneWhatsapp", "createdAt" FROM "Usuario" ORDER BY nome ASC`,
     )) as any[];
     res.json(response.success(rows.map(serializeUser)));
   },
@@ -114,30 +113,12 @@ router.delete(
     }
 
     try {
-      await db.usuario.update({
-        where: { id: Number(p.data.id) },
-        data: { ativo: false },
-      });
-      res.status(204).send();
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        // P2025: Record to update does not exist.
-        if (e.code === "P2025") {
-          res
-            .status(404)
-            .json(response.error("Usuário não encontrado.", "NOT_FOUND"));
-          return;
-        }
-      }
-      // Erro genérico
+      await db.usuario.delete({ where: { id: Number(p.data.id) } });
+      res.sendStatus(204);
+    } catch {
       res
-        .status(500)
-        .json(
-          response.error(
-            "Ocorreu um erro inesperado ao excluir o usuário.",
-            "INTERNAL_SERVER_ERROR",
-          ),
-        );
+        .status(404)
+        .json(response.error("Usuário não encontrado", "NOT_FOUND"));
     }
   },
 );

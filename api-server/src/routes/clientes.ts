@@ -22,7 +22,6 @@ import { getPagination, buildMeta } from "../utils/pagination";
 import { safeWithCache, safeCacheDel } from "../utils/cache";
 import { checkPermission } from "../middleware/checkPermission";
 import { getDataFilter } from "../utils/permissionFilters";
-import { Prisma } from "@prisma/client";
 
 const router: IRouter = Router();
 
@@ -59,12 +58,11 @@ router.get(
       const cached = await safeWithCache(cacheKey, 300, async () => {
         const [rows, total] = await Promise.all([
           db.cliente.findMany({
-            where: { ativo: true },
             skip,
             take: limit,
             orderBy: { razaoSocial: "asc" },
           }),
-          db.cliente.count({ where: { ativo: true } }),
+          db.cliente.count(),
         ]);
         return { rows: rows.map(serializeCliente), total };
       });
@@ -80,15 +78,10 @@ router.get(
 
     // Search queries are not cached
     const where = {
-      AND: [
-        { ativo: true },
-        {
-          OR: [
-            { razaoSocial: { contains: q, mode: "insensitive" as const } },
-            { nomeFantasia: { contains: q, mode: "insensitive" as const } },
-            { cnpjCpf: { contains: q, mode: "insensitive" as const } },
-          ],
-        },
+      OR: [
+        { razaoSocial: { contains: q, mode: "insensitive" as const } },
+        { nomeFantasia: { contains: q, mode: "insensitive" as const } },
+        { cnpjCpf: { contains: q, mode: "insensitive" as const } },
       ],
     };
 
@@ -191,32 +184,14 @@ router.delete(
       return;
     }
     try {
-      await db.cliente.update({
-        where: { id: Number(p.data.id) },
-        data: { ativo: false },
-      });
+      await db.cliente.delete({ where: { id: Number(p.data.id) } });
       // Invalidate cache
       await safeCacheDel("clientes:all");
-      res.status(204).send();
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        // P2025: Record to update does not exist.
-        if (e.code === "P2025") {
-          res
-            .status(404)
-            .json(response.error("Cliente não encontrado.", "NOT_FOUND"));
-          return;
-        }
-      }
-      // Erro genérico
+      res.sendStatus(204);
+    } catch {
       res
-        .status(500)
-        .json(
-          response.error(
-            "Ocorreu um erro inesperado ao excluir o cliente.",
-            "INTERNAL_SERVER_ERROR",
-          ),
-        );
+        .status(404)
+        .json(response.error("Cliente não encontrado", "NOT_FOUND"));
     }
   },
 );

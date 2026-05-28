@@ -19,7 +19,6 @@ model Cliente {
   telefone      String?
   email         String?
   observacoes   String?
-  ativo         Boolean        @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   contasReceber ContaReceber[]
@@ -39,8 +38,7 @@ model Usuario {
   tipo             TipoUsuario         @default(vendedor)
   setorId          Int?
   setor            Setor?              @relation(fields: [setorId], references: [id])
-  status           String              @default("ativo") // Legacy, usar `ativo`
-  ativo            Boolean             @default(true)
+  status           String              @default("ativo")
   telefoneWhatsapp String?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt

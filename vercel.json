@@ -1,12 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "sistema-os/package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
-    }
-  ],
+  "framework": "vite",
+  "rootDirectory": "sistema-os",
   "rewrites": [
     {
       "source": "/(.*)",

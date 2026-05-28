@@ -1,5 +1,18 @@
 {
+  "version": 2,
+  "builds": [
+    {
+      "src": "sistema-os/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "sistema-os/dist"
+      }
+    }
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

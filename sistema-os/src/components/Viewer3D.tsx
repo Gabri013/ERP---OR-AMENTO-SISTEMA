@@ -38,9 +38,6 @@ import {
   RefreshCw,
   SunMedium,
   Grid3x3,
-  Smartphone,
-  Layers,
-  Ruler,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

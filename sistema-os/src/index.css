@@ -83,22 +83,22 @@
     --elevate-1: rgba(0, 0, 0, 0.03);
     --elevate-2: rgba(0, 0, 0, 0.08);
 
-    /* Enterprise Premium Theme - Light */
-    --background: 220 20% 97%;
+    /* Cozinca/Nomus-inspired Enterprise Theme - Light */
+    --background: 210 20% 98%; /* #F9FAFB */
     --foreground: 222 47% 10%;
 
     --border: 214 32% 90%;
     --input: 214 32% 90%;
-    --ring: 221 83% 53%; /* Enterprise Blue */
+    --ring: 210 100% 24%; /* #003D7A */
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 10%;
     --card-border: 214 32% 90%;
 
-    --sidebar: 222 47% 10%; /* Deep enterprise blue */
+    --sidebar: 209 64% 12%;
     --sidebar-foreground: 210 40% 97%;
     --sidebar-border: 217 33% 15%;
-    --sidebar-primary: 221 83% 53%; /* Enterprise Blue accent */
+    --sidebar-primary: 210 100% 24%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 15%;
     --sidebar-accent-foreground: 210 40% 97%;
@@ -108,7 +108,7 @@
     --popover-foreground: 222 47% 10%;
     --popover-border: 214 32% 90%;
 
-    --primary: 221 83% 53%; /* Enterprise Blue */
+    --primary: 210 100% 24%; /* #003D7A */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 214 32% 90%; /* Light slate */
@@ -117,20 +117,20 @@
     --muted: 210 40% 95%;
     --muted-foreground: 215 16% 45%;
 
-    --accent: 221 83% 53%; /* Enterprise Blue */
-    --accent-foreground: 0 0% 100%;
+    --accent: 220 100% 94%; /* #E0E9FF */
+    --accent-foreground: 210 100% 16%; /* #002B52 */
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --chart-1: 221 83% 53%; /* Blue */
+    --chart-1: 210 100% 24%; /* Blue */
     --chart-2: 142 71% 45%; /* Green */
     --chart-3: 25 95% 53%; /* Orange */
     --chart-4: 43 96% 56%; /* Yellow */
     --chart-5: 0 84% 60%; /* Red */
 
-    --app-font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-    --app-font-mono: "IBM Plex Mono", "JetBrains Mono", monospace;
+    --app-font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --app-font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
     --radius: 0.5rem;
 
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);

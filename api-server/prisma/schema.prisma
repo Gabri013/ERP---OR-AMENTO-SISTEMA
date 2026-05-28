@@ -39,9 +39,6 @@ model Usuario {
   setorId          Int?
   setor            Setor?              @relation(fields: [setorId], references: [id])
   status           String              @default("ativo")
-  twoFactorEnabled Boolean             @default(false)
-  twoFactorSecret  String?             @db.Text
-  backupCodes      String[]            @default([])
   telefoneWhatsapp String?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
@@ -56,6 +53,12 @@ model Usuario {
   auditLogs        AuditLog[]
   notificacoes     Notificacao[]
   refreshTokens    RefreshToken[]
+  apontamentos     ApontamentoProducao[]
+  revisoesEngenharia EngenhariaRevisao[]
+  estoqueMovimentos EstoqueMovimentacao[]
+  etiquetasImpressas EtiquetaIndustrial[]
+  inspecoesQualidade InspecaoQualidade[]
+  chamadosTecnicos AssistenciaTecnicaChamado[]
 
   @@index([tipo])
   @@index([setorId])
@@ -76,6 +79,9 @@ model Produto {
   updatedAt      DateTime        @updatedAt
   orcamentoItens OrcamentoItem[]
   vendaItens     VendaItem[]
+  estruturas     ProdutoEstrutura[]
+  roteiros       ProdutoRoteiro[]
+  revisoesEngenharia EngenhariaRevisao[]
 }
 
 model Setor {
@@ -85,6 +91,10 @@ model Setor {
   tipo         String
   usuarios     Usuario[]
   orcamentoSetores OrcamentoSetor[]
+  capacidades   CapacidadeSetor[]
+  roteiros      ProdutoRoteiro[]
+  planosProducao PlanoProducao[]
+  apontamentos  ApontamentoProducao[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   
@@ -200,6 +210,13 @@ model OrdemServico {
   observacoes           OSObservacao[]
   checklists            OSChecklist[]
   anexos                OSAnexo[]
+  planosProducao        PlanoProducao[]
+  apontamentos          ApontamentoProducao[]
+  etiquetas             EtiquetaIndustrial[]
+  inspecoesQualidade    InspecaoQualidade[]
+  naoConformidades      NaoConformidade[]
+  estoqueMovimentos     EstoqueMovimentacao[]
+  chamadosTecnicos      AssistenciaTecnicaChamado[]
   cliente               Cliente             @relation(fields: [clienteId], references: [id])
   venda                 Venda?              @relation(fields: [vendaId], references: [id])
 
@@ -277,6 +294,312 @@ model ContaPagar {
   status         StatusConta @default(PENDENTE)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+}
+
+model Fornecedor {
+  id          Int      @id @default(autoincrement())
+  razaoSocial String
+  nomeFantasia String?
+  cnpjCpf     String?
+  email       String?
+  telefone    String?
+  cidade      String?
+  estado      String?
+  status      String   @default("ativo")
+  homologado  Boolean  @default(false)
+  observacoes String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  materiais   Material[]
+  pedidosCompra CompraPedido[]
+
+  @@index([cnpjCpf])
+  @@index([status])
+}
+
+model Material {
+  id             Int      @id @default(autoincrement())
+  codigo         String   @unique
+  descricao      String
+  categoria      String
+  unidade        String
+  especificacao  String?
+  estoqueMinimo  Decimal  @default(0) @db.Decimal(12, 3)
+  estoqueAtual   Decimal  @default(0) @db.Decimal(12, 3)
+  estoqueReservado Decimal @default(0) @db.Decimal(12, 3)
+  localizacao    String?
+  lotePadrao     String?
+  custoMedio     Decimal  @default(0) @db.Decimal(12, 2)
+  status         String   @default("ativo")
+  fornecedorId   Int?
+  fornecedor     Fornecedor? @relation(fields: [fornecedorId], references: [id])
+  estruturas     ProdutoEstrutura[]
+  movimentos     EstoqueMovimentacao[]
+  compraItens    CompraPedidoItem[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([categoria])
+  @@index([status])
+  @@index([fornecedorId])
+}
+
+model EstoqueMovimentacao {
+  id          Int      @id @default(autoincrement())
+  materialId  Int
+  osId        Int?
+  usuarioId   Int?
+  tipo        TipoMovimentacaoEstoque
+  quantidade  Decimal  @db.Decimal(12, 3)
+  lote        String?
+  localizacao String?
+  documento   String?
+  observacao  String?
+  createdAt   DateTime @default(now())
+  material    Material @relation(fields: [materialId], references: [id])
+  os          OrdemServico? @relation(fields: [osId], references: [id])
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([materialId])
+  @@index([osId])
+  @@index([tipo])
+  @@index([createdAt])
+}
+
+model ProdutoEstrutura {
+  id          Int      @id @default(autoincrement())
+  produtoId   Int
+  materialId  Int
+  quantidade  Decimal  @db.Decimal(12, 3)
+  perdaPercentual Decimal @default(0) @db.Decimal(5, 2)
+  revisao      String   @default("A")
+  observacao   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  produto      Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  material     Material @relation(fields: [materialId], references: [id])
+
+  @@index([produtoId])
+  @@index([materialId])
+}
+
+model ProdutoRoteiro {
+  id              Int      @id @default(autoincrement())
+  produtoId       Int
+  setorId         Int
+  operacao        String
+  sequencia       Int
+  tempoPadraoMin  Int
+  setupMin        Int      @default(0)
+  recurso         String?
+  instrucoes      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  produto         Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  setor           Setor    @relation(fields: [setorId], references: [id])
+
+  @@unique([produtoId, sequencia])
+  @@index([produtoId])
+  @@index([setorId])
+}
+
+model EngenhariaRevisao {
+  id          Int      @id @default(autoincrement())
+  produtoId   Int
+  usuarioId   Int?
+  revisao     String
+  status      String   @default("rascunho")
+  descricao   String?
+  desenhoUrl  String?
+  solidworksUrl String?
+  pdfUrl      String?
+  aprovadoEm  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  produto     Produto  @relation(fields: [produtoId], references: [id])
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@unique([produtoId, revisao])
+  @@index([status])
+}
+
+model CapacidadeSetor {
+  id            Int      @id @default(autoincrement())
+  setorId        Int
+  data           DateTime
+  turno          String   @default("A")
+  capacidadeMin  Int
+  cargaPlanejadaMin Int @default(0)
+  status         String   @default("operando")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  setor          Setor    @relation(fields: [setorId], references: [id])
+
+  @@unique([setorId, data, turno])
+  @@index([data])
+  @@index([status])
+}
+
+model PlanoProducao {
+  id            Int      @id @default(autoincrement())
+  osId          Int
+  setorId       Int
+  sequencia     Int
+  dataPlanejada DateTime
+  inicioPrevisto DateTime?
+  fimPrevisto    DateTime?
+  prioridade     Int      @default(3)
+  status         String   @default("planejado")
+  cargaMin       Int      @default(0)
+  observacao     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  os             OrdemServico @relation(fields: [osId], references: [id], onDelete: Cascade)
+  setor          Setor @relation(fields: [setorId], references: [id])
+
+  @@unique([osId, setorId, sequencia])
+  @@index([dataPlanejada])
+  @@index([status])
+  @@index([setorId])
+}
+
+model ApontamentoProducao {
+  id          Int      @id @default(autoincrement())
+  osId        Int
+  setorId     Int
+  usuarioId   Int?
+  operacao    String
+  inicio      DateTime
+  fim         DateTime?
+  tempoMin    Int?
+  quantidade  Decimal  @default(1) @db.Decimal(12, 3)
+  retrabalho  Boolean  @default(false)
+  status      String   @default("em_andamento")
+  observacao  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  os          OrdemServico @relation(fields: [osId], references: [id], onDelete: Cascade)
+  setor       Setor @relation(fields: [setorId], references: [id])
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([osId])
+  @@index([setorId])
+  @@index([usuarioId])
+  @@index([status])
+}
+
+model InspecaoQualidade {
+  id          Int      @id @default(autoincrement())
+  osId        Int
+  usuarioId   Int?
+  etapa       String
+  resultado   String   @default("pendente")
+  checklist   Json?
+  observacao  String?
+  inspecionadoEm DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  os          OrdemServico @relation(fields: [osId], references: [id], onDelete: Cascade)
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+  naoConformidades NaoConformidade[]
+
+  @@index([osId])
+  @@index([resultado])
+}
+
+model NaoConformidade {
+  id          Int      @id @default(autoincrement())
+  osId        Int
+  inspecaoId  Int?
+  tipo        String
+  severidade  String   @default("media")
+  descricao   String
+  acaoCorretiva String?
+  status      String   @default("aberta")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  os          OrdemServico @relation(fields: [osId], references: [id], onDelete: Cascade)
+  inspecao    InspecaoQualidade? @relation(fields: [inspecaoId], references: [id])
+
+  @@index([osId])
+  @@index([status])
+  @@index([severidade])
+}
+
+model CompraPedido {
+  id           Int      @id @default(autoincrement())
+  numero       String   @unique
+  fornecedorId Int?
+  dataPedido   DateTime @default(now())
+  previsaoEntrega DateTime?
+  status       String   @default("aberto")
+  valorTotal   Decimal  @default(0) @db.Decimal(12, 2)
+  observacao   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  fornecedor   Fornecedor? @relation(fields: [fornecedorId], references: [id])
+  itens        CompraPedidoItem[]
+
+  @@index([status])
+  @@index([fornecedorId])
+}
+
+model CompraPedidoItem {
+  id          Int      @id @default(autoincrement())
+  pedidoId    Int
+  materialId  Int?
+  descricao   String
+  quantidade  Decimal @db.Decimal(12, 3)
+  valorUnitario Decimal @default(0) @db.Decimal(12, 2)
+  valorTotal  Decimal @default(0) @db.Decimal(12, 2)
+  createdAt   DateTime @default(now())
+  pedido      CompraPedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  material    Material? @relation(fields: [materialId], references: [id])
+
+  @@index([pedidoId])
+  @@index([materialId])
+}
+
+model EtiquetaIndustrial {
+  id          Int      @id @default(autoincrement())
+  osId        Int
+  usuarioId   Int?
+  codigo      String   @unique
+  tipo        String   @default("os")
+  setorAtual  String
+  qrPayload   String
+  barcode     String
+  impressora  String?
+  impressoEm  DateTime?
+  reimpressao Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  os          OrdemServico @relation(fields: [osId], references: [id], onDelete: Cascade)
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([osId])
+  @@index([setorAtual])
+}
+
+model AssistenciaTecnicaChamado {
+  id          Int      @id @default(autoincrement())
+  numero      String   @unique
+  osId        Int?
+  clienteId   Int?
+  usuarioId   Int?
+  assunto     String
+  descricao   String?
+  status      String   @default("aberto")
+  prioridade  String   @default("normal")
+  abertoEm    DateTime @default(now())
+  encerradoEm DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  os          OrdemServico? @relation(fields: [osId], references: [id])
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([osId])
+  @@index([status])
 }
 
 model Pagamento {
@@ -374,6 +697,16 @@ enum TipoUsuario {
   refrigeracao
   acabamento
   finalizacao
+}
+
+enum TipoMovimentacaoEstoque {
+  entrada
+  saida
+  reserva
+  consumo_os
+  inventario
+  ajuste
+  estorno
 }
 
 model AuditLog {

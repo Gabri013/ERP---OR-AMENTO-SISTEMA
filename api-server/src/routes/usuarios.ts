@@ -1,5 +1,6 @@
 ﻿import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { db } from "../lib/prisma";
 import {
   CreateUsuarioBody,
@@ -114,11 +115,38 @@ router.delete(
 
     try {
       await db.usuario.delete({ where: { id: Number(p.data.id) } });
-      res.sendStatus(204);
-    } catch {
+      res.status(204).send();
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        // P2003: Foreign key constraint failed
+        if (e.code === "P2003") {
+          res
+            .status(409)
+            .json(
+              response.error(
+                "Este usuário não pode ser excluído pois possui registros associados (orçamentos, vendas, etc).",
+                "CONFLICT",
+              ),
+            );
+          return;
+        }
+        // P2025: Record to delete does not exist.
+        if (e.code === "P2025") {
+          res
+            .status(404)
+            .json(response.error("Usuário não encontrado.", "NOT_FOUND"));
+          return;
+        }
+      }
+      // Erro genérico
       res
-        .status(404)
-        .json(response.error("Usuário não encontrado", "NOT_FOUND"));
+        .status(500)
+        .json(
+          response.error(
+            "Ocorreu um erro inesperado ao excluir o usuário.",
+            "INTERNAL_SERVER_ERROR",
+          ),
+        );
     }
   },
 );

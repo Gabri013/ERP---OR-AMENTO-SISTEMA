@@ -156,3 +156,4 @@ docker-compose.override.yml
 # Prisma generated (regenerate on install)
 api-server/node_modules/.prisma/
 nul
+.env*

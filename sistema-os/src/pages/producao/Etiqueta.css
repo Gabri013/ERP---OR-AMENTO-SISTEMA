@@ -1,0 +1,120 @@
+/* src/pages/producao/Etiqueta.css */
+
+.etiqueta {
+  width: 100mm;
+  height: 150mm;
+  border: 2px solid #FF8C00;
+  padding: 10mm;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.etiqueta-header {
+  text-align: center;
+  border-bottom: 3px solid #FF8C00;
+  padding-bottom: 8mm;
+  margin-bottom: 8mm;
+}
+
+.etiqueta-logo {
+  font-size: 20px;
+  font-weight: bold;
+  color: #FF8C00;
+  margin-bottom: 4mm;
+}
+
+.etiqueta-numero {
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  letter-spacing: 2px;
+}
+
+.etiqueta-info {
+  font-size: 11px;
+  line-height: 5mm;
+  margin-bottom: 8mm;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2mm 0;
+  border-bottom: 1px dotted #ddd;
+}
+
+.info-label {
+  font-weight: bold;
+  color: #FF8C00;
+  width: 40%;
+}
+
+.info-value {
+  color: #333;
+  text-align: right;
+  width: 55%;
+  word-break: break-word;
+}
+
+.etiqueta-codigos {
+  display: flex;
+  gap: 8mm;
+  align-items: center;
+  justify-content: center;
+  margin: 8mm 0;
+  flex-grow: 1;
+}
+
+.qrcode-container,
+.barcode-container {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.barcode-container svg {
+    width: 100%;
+    height: auto;
+}
+
+.etiqueta-footer {
+  text-align: center;
+  font-size: 9px;
+  color: #999;
+  border-top: 1px dotted #ddd;
+  padding-top: 2mm;
+}
+
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact; /* Chrome, Safari */
+    color-adjust: exact; /* Firefox */
+  }
+
+  .etiqueta {
+    page-break-after: always;
+    box-shadow: none;
+    border: 2px solid #FF8C00 !important;
+    margin: 0;
+    padding: 10mm;
+    width: 100mm;
+    height: 150mm;
+  }
+
+  .etiqueta-preview-container, .etiquetas-page, .industrial-layout, .sidebar, .header {
+      display: none !important;
+  }
+
+  #etiqueta-print {
+      display: block !important;
+  }
+}

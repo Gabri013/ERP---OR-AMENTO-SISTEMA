@@ -1,5 +1,10 @@
 export default {
   preset: 'ts-jest/presets/default-esm',
+  globals: {
+    'ts-jest': {
+      diagnostics: false
+    }
+  },
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {

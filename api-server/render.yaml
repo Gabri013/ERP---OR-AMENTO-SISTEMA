@@ -8,20 +8,20 @@ services:
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
-        value: postgresql://neondb_owner:npg_R8MfSTaCjQA7@ep-nameless-smoke-aqassije-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+        value: "REPLACE_WITH_NEON_POOLED_DATABASE_URL"
       - key: DIRECT_URL
-        value: postgresql://neondb_owner:npg_R8MfSTaCjQA7@ep-nameless-smoke-aqassije.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require
+        value: "REPLACE_WITH_NEON_DIRECT_URL"
       - key: JWT_SECRET
-        value: erp-cozinca-prod-jwt-2026-f8k2m9x7p4w1n6q3v0y5r8j1h4b7e0t3
+        value: "REPLACE_WITH_STRONG_SECRET"
       - key: JWT_EXPIRES_IN
-        value: 8h
+        value: "8h"
       - key: REFRESH_TOKEN_EXPIRES_IN
-        value: 7d
+        value: "7d"
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
+        value: "10000"
       - key: FRONTEND_URL
-        value: https://erp-orcamento-sistema.vercel.app
+        value: "https://erp-orcamento-sistema.vercel.app"
       - key: CORS_ORIGIN
-        value: https://erp-orcamento-sistema.vercel.app
+        value: "https://erp-orcamento-sistema.vercel.app"

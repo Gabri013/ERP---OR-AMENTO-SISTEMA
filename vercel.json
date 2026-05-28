@@ -5,7 +5,7 @@
       "src": "sistema-os/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "sistema-os/dist"
+        "distDir": "dist"
       }
     }
   ],

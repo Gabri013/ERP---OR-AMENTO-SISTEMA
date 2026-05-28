@@ -156,7 +156,7 @@ router.get(
     const [
       osEmAndamento,
       producaoDia,
-      retrabalho,
+      rework,
       materiaisCriticos,
       setores,
       apontamentos,

@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "cd sistema-os && npm run build",
+    "dev": "cd sistema-os && npm run dev",
+    "start": "cd sistema-os && npm run serve"
+  }
+}

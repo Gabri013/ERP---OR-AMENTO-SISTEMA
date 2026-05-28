@@ -1,7 +1,7 @@
 ﻿import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "../lib/prisma";
-import { LoginBody, LoginResponse } from "../schemas";
+import { LoginBody, TwoFactorDisableBody, TwoFactorEnableBody } from "../schemas";
 import {
   signRefreshToken,
   signUserToken,
@@ -11,6 +11,8 @@ import {
 import { response } from "../utils/response";
 import { validateBody } from "../middleware/validateZod";
 import { z } from "zod";
+import { generateBackupCodes, generateTwoFactorSecret, verifyBackupCode, verifyToken } from "../lib/2fa";
+import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
 
@@ -24,11 +26,15 @@ const refreshTokenModel = (db as any).refreshToken as {
 
 /**
  * POST /api/auth/login
- * Body: { email, senha }
- * Returns user profile + JWT token (replaces old session cookie)
+ * Body: { email, senha, totpToken?, backupCode? }
  */
 router.post("/auth/login", validateBody(LoginBody), async (req, res): Promise<void> => {
-  const { email, senha } = req.body;
+  const { email, senha, totpToken, backupCode } = req.body as {
+    email: string;
+    senha: string;
+    totpToken?: string;
+    backupCode?: string;
+  };
 
   const user = await db.usuario.findUnique({
     where: { email },
@@ -43,6 +49,27 @@ router.post("/auth/login", validateBody(LoginBody), async (req, res): Promise<vo
   if (!valid) {
     res.status(401).json({ error: "Credenciais inválidas" });
     return;
+  }
+
+  if (user.twoFactorEnabled) {
+    if (totpToken && verifyToken(user.twoFactorSecret ?? "", totpToken)) {
+      // accepted
+    } else if (backupCode) {
+      const verification = verifyBackupCode(user.backupCodes ?? [], backupCode);
+      if (!verification.valid) {
+        res.status(401).json({ error: "Token 2FA inválido" });
+        return;
+      }
+      const backupCodes = [...(user.backupCodes ?? [])];
+      backupCodes.splice(verification.index ?? -1, 1);
+      await db.usuario.update({
+        where: { id: user.id },
+        data: { backupCodes },
+      });
+    } else {
+      res.status(401).json({ error: "Token 2FA necessário" });
+      return;
+    }
   }
 
   const claims = {
@@ -60,7 +87,6 @@ router.post("/auth/login", validateBody(LoginBody), async (req, res): Promise<vo
     data: { token: refreshToken, usuarioId: user.id, expiresAt },
   });
 
-  // Also set httpOnly cookie for browser clients that prefer cookies
   res.cookie("token", token, {
     httpOnly: true,
     sameSite: "lax",
@@ -69,7 +95,6 @@ router.post("/auth/login", validateBody(LoginBody), async (req, res): Promise<vo
     path: "/",
   });
 
-  // Return both the profile (for existing clients) and the token
   const profile = {
     id: user.id,
     nome: user.nome,
@@ -81,6 +106,93 @@ router.post("/auth/login", validateBody(LoginBody), async (req, res): Promise<vo
 
   res.json(response.success(profile));
 });
+
+/**
+ * POST /api/auth/2fa/setup
+ * Returns a secret, QR code and backup codes for the authenticated user.
+ */
+router.post(
+  "/auth/2fa/setup",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const currentUser = (req as any).currentUser;
+    if (!currentUser?.email) {
+      res.status(401).json(response.error("Não autenticado", "UNAUTHENTICATED"));
+      return;
+    }
+
+    const setup = await generateTwoFactorSecret(currentUser.email);
+    res.json(response.success(setup));
+  },
+);
+
+router.post(
+  "/auth/2fa/verify",
+  requireAuth,
+  validateBody(TwoFactorEnableBody),
+  async (req, res): Promise<void> => {
+    const { token, secret } = req.body as { token: string; secret: string };
+    if (!verifyToken(secret, token)) {
+      res.status(400).json(response.error("Token 2FA inválido", "INVALID_2FA_TOKEN"));
+      return;
+    }
+
+    const currentUser = (req as any).currentUser;
+    if (!currentUser?.id) {
+      res.status(401).json(response.error("Não autenticado", "UNAUTHENTICATED"));
+      return;
+    }
+
+    const backupCodes = generateBackupCodes();
+    await db.usuario.update({
+      where: { id: currentUser.id },
+      data: {
+        twoFactorEnabled: true,
+        twoFactorSecret: secret,
+        backupCodes,
+      },
+    });
+
+    res.json(response.success({ enabled: true, backupCodes }));
+  },
+);
+
+router.post(
+  "/auth/2fa/disable",
+  requireAuth,
+  validateBody(TwoFactorDisableBody),
+  async (req, res): Promise<void> => {
+    const { senha } = req.body as { senha: string };
+    const currentUser = (req as any).currentUser;
+    if (!currentUser?.id) {
+      res.status(401).json(response.error("Não autenticado", "UNAUTHENTICATED"));
+      return;
+    }
+
+    const user = await db.usuario.findUnique({ where: { id: currentUser.id } });
+    if (!user || user.status !== "ativo") {
+      res.status(401).json(response.error("Credenciais inválidas", "INVALID_CREDENTIALS"));
+      return;
+    }
+
+    const valid = await bcrypt.compare(senha, user.senha);
+    if (!valid) {
+      res.status(401).json(response.error("Credenciais inválidas", "INVALID_CREDENTIALS"));
+      return;
+    }
+
+    await db.usuario.update({
+      where: { id: user.id },
+      data: {
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+        backupCodes: [],
+      },
+    });
+
+    res.json(response.success({ disabled: true }));
+  },
+);
 
 /**
  * POST /api/auth/logout
@@ -119,7 +231,6 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     return;
   }
 
-  // Load fresh user (in case status changed)
   const user = await db.usuario.findUnique({
     where: { id: claims.sub },
     select: { id: true, nome: true, email: true, tipo: true, status: true },

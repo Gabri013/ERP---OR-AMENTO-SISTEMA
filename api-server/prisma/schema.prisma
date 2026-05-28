@@ -39,6 +39,9 @@ model Usuario {
   setorId          Int?
   setor            Setor?              @relation(fields: [setorId], references: [id])
   status           String              @default("ativo")
+  twoFactorEnabled Boolean             @default(false)
+  twoFactorSecret  String?             @db.Text
+  backupCodes      String[]            @default([])
   telefoneWhatsapp String?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt

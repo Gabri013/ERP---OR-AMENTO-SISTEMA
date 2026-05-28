@@ -8,11 +8,22 @@ import { z } from "zod";
 export const LoginBody = z.object({
   email: z.string().email("Email inválido"),
   senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  totpToken: z.string().optional(),
+  backupCode: z.string().optional(),
 });
 
 export const LoginResponse = z.object({
   token: z.string(),
   user: z.any(),
+});
+
+export const TwoFactorEnableBody = z.object({
+  token: z.string().min(6, "Token 2FA inválido"),
+  secret: z.string().min(16, "Segredo 2FA inválido"),
+});
+
+export const TwoFactorDisableBody = z.object({
+  senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
 // ==================== CLIENTES ====================

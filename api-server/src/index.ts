@@ -11,6 +11,9 @@ if (!process.env.VERCEL) {
   dotenv.config();
 }
 
+// Start queue processors when a local server starts.
+import "./services/queue-processors";
+
 // Apply missing DB enum values that may not have been included in older migrations.
 // Uses DIRECT_URL (bypasses pgbouncer) so DDL always works.
 async function applyEnumPatches(): Promise<void> {

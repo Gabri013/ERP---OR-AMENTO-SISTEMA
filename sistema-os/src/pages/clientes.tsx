@@ -93,13 +93,13 @@ export default function ClientesPage() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 p-4 lg:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-xl font-bold">Clientes</h1>
           </div>
-          <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Novo Cliente</Button>
+          <Button onClick={openNew} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" /> Novo Cliente</Button>
         </div>
 
         <div className="relative max-w-sm">
@@ -107,42 +107,44 @@ export default function ClientesPage() {
           <Input className="pl-8" placeholder="Buscar clientes..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
 
-        <Card>
+        <Card className="rounded-[12px]">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Razão Social</TableHead>
-                  <TableHead className="hidden md:table-cell">CNPJ/CPF</TableHead>
-                  <TableHead className="hidden lg:table-cell">Cidade</TableHead>
-                  <TableHead className="hidden lg:table-cell">Telefone</TableHead>
-                  <TableHead className="w-24">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
-                ) : clientes.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>
-                ) : clientes.map(c => (
-                  <TableRow key={c.id}>
-                    <TableCell>
-                      <p className="font-medium">{c.razaoSocial}</p>
-                      {c.nomeFantasia && <p className="text-xs text-muted-foreground">{c.nomeFantasia}</p>}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">{c.cnpjCpf ?? "—"}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-muted-foreground">{c.cidade ?? "—"}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-muted-foreground">{c.telefone ?? "—"}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteMut.mutate(c.id)}><Trash2 className="h-4 w-4" /></Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Razão Social</TableHead>
+                    <TableHead className="hidden sm:table-cell">CNPJ/CPF</TableHead>
+                    <TableHead className="hidden md:table-cell">Cidade</TableHead>
+                    <TableHead className="hidden lg:table-cell">Telefone</TableHead>
+                    <TableHead className="w-24">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+                  ) : clientes.length === 0 ? (
+                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>
+                  ) : clientes.map(c => (
+                    <TableRow key={c.id}>
+                      <TableCell>
+                        <p className="font-medium">{c.razaoSocial}</p>
+                        {c.nomeFantasia && <p className="text-xs text-muted-foreground">{c.nomeFantasia}</p>}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-muted-foreground">{c.cnpjCpf ?? "—"}</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">{c.cidade ?? "—"}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-muted-foreground">{c.telefone ?? "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteMut.mutate(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 

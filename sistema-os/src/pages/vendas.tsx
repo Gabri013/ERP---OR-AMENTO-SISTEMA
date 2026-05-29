@@ -56,14 +56,14 @@ export default function VendasPage() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 p-4 lg:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-xl font-bold">Vendas</h1>
           </div>
           <Link href="/vendas/nova">
-            <a><Button><Plus className="h-4 w-4 mr-1" /> Nova Venda</Button></a>
+            <a><Button className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" /> Nova Venda</Button></a>
           </Link>
         </div>
 
@@ -75,62 +75,64 @@ export default function VendasPage() {
           ))}
         </div>
 
-        <Card>
+        <Card className="rounded-[12px]">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="hidden md:table-cell">Data</TableHead>
-                  <TableHead className="hidden md:table-cell">Pagamento</TableHead>
-                  <TableHead>Valor Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-28">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
-                ) : vendas.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma venda encontrada</TableCell></TableRow>
-                ) : vendas.map(v => (
-                  <TableRow key={v.id}>
-                    <TableCell className="font-mono font-medium">{v.numero}</TableCell>
-                    <TableCell>
-                      <p className="font-medium truncate max-w-[140px]">{v.cliente?.razaoSocial ?? "—"}</p>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">{formatDate(v.dataVenda)}</TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground text-xs">
-                      {v.formaPagamento ?? "—"} {(v.numParcelas ?? 0) > 1 ? `(${v.numParcelas}x)` : ""}
-                    </TableCell>
-                    <TableCell className="font-semibold">{formatCurrency(v.valorTotal)}</TableCell>
-                    <TableCell>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[v.status] ?? "bg-muted text-muted-foreground"}`}>
-                        {statusLabels[v.status] ?? v.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Link href={`/vendas/${v.id}`}>
-                          <a><Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button></a>
-                        </Link>
-                        {(!v.ordensServico || v.ordensServico.length === 0) && (
-                          <Button
-                            variant="ghost" size="icon"
-                            title="Gerar OS"
-                            disabled={gerarOsMut.isPending}
-                            onClick={() => gerarOsMut.mutate({ id: v.id })}
-                          >
-                            <ClipboardPlus className="h-4 w-4 text-orange-600" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Número</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead className="hidden sm:table-cell">Data</TableHead>
+                    <TableHead className="hidden md:table-cell">Pagamento</TableHead>
+                    <TableHead>Valor Total</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-28">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+                  ) : vendas.length === 0 ? (
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma venda encontrada</TableCell></TableRow>
+                  ) : vendas.map(v => (
+                    <TableRow key={v.id}>
+                      <TableCell className="font-mono font-medium">{v.numero}</TableCell>
+                      <TableCell>
+                        <p className="font-medium truncate max-w-[140px]">{v.cliente?.razaoSocial ?? "—"}</p>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-muted-foreground">{formatDate(v.dataVenda)}</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground text-xs">
+                        {v.formaPagamento ?? "—"} {(v.numParcelas ?? 0) > 1 ? `(${v.numParcelas}x)` : ""}
+                      </TableCell>
+                      <TableCell className="font-semibold">{formatCurrency(v.valorTotal)}</TableCell>
+                      <TableCell>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[v.status] ?? "bg-muted text-muted-foreground"}`}>
+                          {statusLabels[v.status] ?? v.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Link href={`/vendas/${v.id}`}>
+                            <a><Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button></a>
+                          </Link>
+                          {(!v.ordensServico || v.ordensServico.length === 0) && (
+                            <Button
+                              variant="ghost" size="icon"
+                              title="Gerar OS"
+                              disabled={gerarOsMut.isPending}
+                              onClick={() => gerarOsMut.mutate({ id: v.id })}
+                            >
+                              <ClipboardPlus className="h-4 w-4 text-orange-600" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

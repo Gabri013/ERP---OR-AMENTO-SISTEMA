@@ -165,8 +165,8 @@ export default function OSPage() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 p-4 lg:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-xl font-bold">Ordens de Serviço</h1>
@@ -246,107 +246,109 @@ export default function OSPage() {
           </p>
         )}
 
-        <Card>
+        <Card className="rounded-[12px]">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-8"></TableHead>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    Término
-                  </TableHead>
-                  <TableHead>Etapa Atual</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-24 text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      Carregando...
-                    </TableCell>
+                    <TableHead className="w-8"></TableHead>
+                    <TableHead>Número</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      Término
+                    </TableHead>
+                    <TableHead>Etapa Atual</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-24 text-right">Ações</TableHead>
                   </TableRow>
-                ) : osList.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      {isSectorUser
-                        ? `Nenhuma OS aguardando no setor de ${sectorLabel}`
-                        : "Nenhuma OS encontrada"}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  osList.map((os) => (
-                    <TableRow key={os.id}>
-                      <TableCell>
-                        <div
-                          className={`w-2.5 h-2.5 rounded-full ${getSectorColor(os)}`}
-                          title={`Etapa: ${os.etapaAtual ?? "—"} | Prioridade: ${os.prioridade}`}
-                        />
-                      </TableCell>
-                      <TableCell className="font-mono font-medium text-sm">
-                        {os.numero}
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium truncate max-w-[140px] text-sm">
-                          {os.cliente?.razaoSocial ?? "—"}
-                        </p>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
-                        {formatDate(os.dataTermino)}
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${etapaColors[os.etapaAtual] ?? "bg-muted text-muted-foreground"}`}
-                        >
-                          {etapaLabels[os.etapaAtual] ?? os.etapaAtual}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[os.status] ?? "bg-muted text-muted-foreground"}`}
-                        >
-                          {statusLabels[os.status] ?? os.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="icon" asChild>
-                            <Link href={`/os/${os.id}`}>
-                              <Eye className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                          {canAdvance &&
-                            NEXT_ETAPA[os.etapaAtual] &&
-                            os.status !== "concluida" &&
-                            os.status !== "cancelada" && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                title={`Avançar para ${etapaLabels[NEXT_ETAPA[os.etapaAtual]]}`}
-                                onClick={() =>
-                                  handleAvancar(os.id, os.etapaAtual)
-                                }
-                                disabled={avancarMutation.isPending}
-                              >
-                                <ArrowRight className="h-4 w-4 text-green-600" />
-                              </Button>
-                            )}
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        Carregando...
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : osList.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        {isSectorUser
+                          ? `Nenhuma OS aguardando no setor de ${sectorLabel}`
+                          : "Nenhuma OS encontrada"}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    osList.map((os) => (
+                      <TableRow key={os.id}>
+                        <TableCell>
+                          <div
+                            className={`w-2.5 h-2.5 rounded-full ${getSectorColor(os)}`}
+                            title={`Etapa: ${os.etapaAtual ?? "—"} | Prioridade: ${os.prioridade}`}
+                          />
+                        </TableCell>
+                        <TableCell className="font-mono font-medium text-sm">
+                          {os.numero}
+                        </TableCell>
+                        <TableCell>
+                          <p className="font-medium truncate max-w-[140px] text-sm">
+                            {os.cliente?.razaoSocial ?? "—"}
+                          </p>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
+                          {formatDate(os.dataTermino)}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${etapaColors[os.etapaAtual] ?? "bg-muted text-muted-foreground"}`}
+                          >
+                            {etapaLabels[os.etapaAtual] ?? os.etapaAtual}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[os.status] ?? "bg-muted text-muted-foreground"}`}
+                          >
+                            {statusLabels[os.status] ?? os.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" asChild>
+                              <Link href={`/os/${os.id}`}>
+                                <Eye className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                            {canAdvance &&
+                              NEXT_ETAPA[os.etapaAtual] &&
+                              os.status !== "concluida" &&
+                              os.status !== "cancelada" && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title={`Avançar para ${etapaLabels[NEXT_ETAPA[os.etapaAtual]]}`}
+                                  onClick={() =>
+                                    handleAvancar(os.id, os.etapaAtual)
+                                  }
+                                  disabled={avancarMutation.isPending}
+                                >
+                                  <ArrowRight className="h-4 w-4 text-green-600" />
+                                </Button>
+                              )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

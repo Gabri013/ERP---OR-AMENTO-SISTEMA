@@ -19,14 +19,14 @@ export default function FinanceiroPage() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="space-y-6 p-4 lg:p-6">
         <div className="flex items-center gap-2">
           <DollarSign className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-xl font-bold">Financeiro</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <Card className="rounded-[12px]">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <ArrowDownCircle className="h-4 w-4 text-green-600" />
@@ -36,7 +36,7 @@ export default function FinanceiroPage() {
               <p className="text-xs text-muted-foreground mt-1">{cr.length} parcela(s)</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-[12px]">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <ArrowUpCircle className="h-4 w-4 text-red-600" />
@@ -46,7 +46,7 @@ export default function FinanceiroPage() {
               <p className="text-xs text-muted-foreground mt-1">{cp.length} conta(s)</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-[12px]">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className={`h-4 w-4 ${saldo >= 0 ? "text-green-600" : "text-red-600"}`} />
@@ -57,8 +57,8 @@ export default function FinanceiroPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+          <Card className="rounded-[12px]">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">Contas a Receber</CardTitle>
@@ -83,7 +83,7 @@ export default function FinanceiroPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-[12px]">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">Contas a Pagar</CardTitle>

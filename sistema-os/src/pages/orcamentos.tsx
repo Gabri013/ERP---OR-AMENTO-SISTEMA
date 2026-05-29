@@ -61,14 +61,14 @@ export default function OrcamentosPage() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 p-4 lg:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-xl font-bold">Orçamentos</h1>
           </div>
           <Link href="/orcamentos/novo">
-            <a><Button><Plus className="h-4 w-4 mr-1" /> Novo Orçamento</Button></a>
+            <a><Button className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" /> Novo Orçamento</Button></a>
           </Link>
         </div>
 
@@ -85,62 +85,64 @@ export default function OrcamentosPage() {
           ))}
         </div>
 
-        <Card>
+        <Card className="rounded-[12px]">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="hidden md:table-cell">Data</TableHead>
-                  <TableHead className="hidden md:table-cell">Validade</TableHead>
-                  <TableHead>Valor Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-32">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
-                ) : orcamentos.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum orçamento encontrado</TableCell></TableRow>
-                ) : orcamentos.map(o => (
-                  <TableRow key={o.id}>
-                    <TableCell className="font-mono font-medium">{o.numero}</TableCell>
-                    <TableCell>
-                      <p className="font-medium truncate max-w-[160px]">{o.cliente?.razaoSocial ?? "—"}</p>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">{formatDate(o.dataOrcamento)}</TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">{o.validade ? formatDate(o.validade) : "—"}</TableCell>
-                    <TableCell className="font-semibold">{formatCurrency(o.valorTotal)}</TableCell>
-                    <TableCell>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[o.status] ?? "bg-muted text-muted-foreground"}`}>
-                        {statusLabels[o.status] ?? o.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Link href={`/orcamentos/${o.id}`}>
-                          <a><Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button></a>
-                        </Link>
-                        {o.status !== "convertido" && (
-                          <Button
-                            variant="ghost" size="icon"
-                            title="Converter em Venda"
-                            onClick={() => converterMut.mutate({ id: o.id })}
-                          >
-                            <ArrowRightCircle className="h-4 w-4 text-blue-600" />
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteMut.mutate(o.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Número</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead className="hidden sm:table-cell">Data</TableHead>
+                    <TableHead className="hidden md:table-cell">Validade</TableHead>
+                    <TableHead>Valor Total</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-32">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+                  ) : orcamentos.length === 0 ? (
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum orçamento encontrado</TableCell></TableRow>
+                  ) : orcamentos.map(o => (
+                    <TableRow key={o.id}>
+                      <TableCell className="font-mono font-medium">{o.numero}</TableCell>
+                      <TableCell>
+                        <p className="font-medium truncate max-w-[160px]">{o.cliente?.razaoSocial ?? "—"}</p>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-muted-foreground">{formatDate(o.dataOrcamento)}</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">{o.validade ? formatDate(o.validade) : "—"}</TableCell>
+                      <TableCell className="font-semibold">{formatCurrency(o.valorTotal)}</TableCell>
+                      <TableCell>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[o.status] ?? "bg-muted text-muted-foreground"}`}>
+                          {statusLabels[o.status] ?? o.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Link href={`/orcamentos/${o.id}`}>
+                            <a><Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button></a>
+                          </Link>
+                          {o.status !== "convertido" && (
+                            <Button
+                              variant="ghost" size="icon"
+                              title="Converter em Venda"
+                              onClick={() => converterMut.mutate({ id: o.id })}
+                            >
+                              <ArrowRightCircle className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteMut.mutate(o.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

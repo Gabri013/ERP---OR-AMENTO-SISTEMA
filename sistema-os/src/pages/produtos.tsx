@@ -149,13 +149,13 @@ export default function ProdutosPage() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 p-4 lg:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Package className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-xl font-bold">Produtos</h1>
           </div>
-          <Button onClick={openNew}>
+          <Button onClick={openNew} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-1" /> Novo Produto
           </Button>
         </div>
@@ -170,93 +170,95 @@ export default function ProdutosPage() {
           />
         </div>
 
-        <Card>
+        <Card className="rounded-[12px]">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead className="hidden md:table-cell">Valor</TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    Estoque
-                  </TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-24">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      Carregando...
-                    </TableCell>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead className="hidden sm:table-cell">Valor</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Estoque
+                    </TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-24">Ações</TableHead>
                   </TableRow>
-                ) : produtos.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      Nenhum produto encontrado
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  produtos.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="text-muted-foreground text-sm font-mono">
-                        {p.codigo ?? "—"}
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium">{p.nome}</p>
-                        {p.descricao && (
-                          <p className="text-xs text-muted-foreground truncate max-w-xs">
-                            {p.descricao}
-                          </p>
-                        )}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell font-medium">
-                        {formatCurrency(p.valor)}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground">
-                        {p.estoque}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            p.status === "ativo" ? "default" : "secondary"
-                          }
-                        >
-                          {p.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEdit(p)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => deleteMut.mutate(p.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        Carregando...
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : produtos.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        Nenhum produto encontrado
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    produtos.map((p) => (
+                      <TableRow key={p.id}>
+                        <TableCell className="text-muted-foreground text-sm font-mono">
+                          {p.codigo ?? "—"}
+                        </TableCell>
+                        <TableCell>
+                          <p className="font-medium">{p.nome}</p>
+                          {p.descricao && (
+                            <p className="text-xs text-muted-foreground truncate max-w-xs">
+                              {p.descricao}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell font-medium">
+                          {formatCurrency(p.valor)}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-muted-foreground">
+                          {p.estoque}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              p.status === "ativo" ? "default" : "secondary"
+                            }
+                          >
+                            {p.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEdit(p)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => deleteMut.mutate(p.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 

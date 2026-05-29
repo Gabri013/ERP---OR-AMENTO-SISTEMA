@@ -97,52 +97,54 @@ export default function UsuariosPage() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 p-4 lg:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <UserCog className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-xl font-bold">Usuários</h1>
           </div>
           {currentUser?.tipo === "master" && (
-            <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Novo Usuário</Button>
+            <Button onClick={openNew} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" /> Novo Usuário</Button>
           )}
         </div>
 
-        <Card>
+        <Card className="rounded-[12px]">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Perfil</TableHead>
-                  <TableHead>Status</TableHead>
-                  {currentUser?.tipo === "master" && <TableHead className="w-24">Ações</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
-                ) : usuarios.map(u => (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.nome}</TableCell>
-                    <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                    <TableCell><Badge variant="outline">{tipoLabel(u.tipo)}</Badge></TableCell>
-                    <TableCell><Badge variant={u.status === "ativo" ? "default" : "secondary"}>{u.status}</Badge></TableCell>
-                    {currentUser?.tipo === "master" && (
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(u)}><Pencil className="h-4 w-4" /></Button>
-                          {u.id !== currentUser?.id && (
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteMut.mutate(u.id)}><Trash2 className="h-4 w-4" /></Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    )}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>E-mail</TableHead>
+                    <TableHead>Perfil</TableHead>
+                    <TableHead>Status</TableHead>
+                    {currentUser?.tipo === "master" && <TableHead className="w-24">Ações</TableHead>}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+                  ) : usuarios.map(u => (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium">{u.nome}</TableCell>
+                      <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                      <TableCell><Badge variant="outline">{tipoLabel(u.tipo)}</Badge></TableCell>
+                      <TableCell><Badge variant={u.status === "ativo" ? "default" : "secondary"}>{u.status}</Badge></TableCell>
+                      {currentUser?.tipo === "master" && (
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(u)}><Pencil className="h-4 w-4" /></Button>
+                            {u.id !== currentUser?.id && (
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteMut.mutate(u.id)}><Trash2 className="h-4 w-4" /></Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 

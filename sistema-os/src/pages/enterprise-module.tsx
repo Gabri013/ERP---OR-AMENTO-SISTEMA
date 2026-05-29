@@ -56,8 +56,8 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
   return (
     <Layout>
       <div className="space-y-6 p-4 lg:p-6">
-        <section className="rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <section className="rounded-[12px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
               <div
                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[8px] border"
@@ -88,7 +88,7 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <KpiMetricCard title="Registros ativos" value={String(rows.length)} detail="Registros lidos do banco" icon={Activity} accent={module.accent} />
           <KpiMetricCard title="O.S. andamento" value={String(dashboard?.osInProgress ?? 0)} detail="Tabela OrdemServico" icon={Clock3} accent="#15803D" />
           <KpiMetricCard title="Pendencias" value={String(dashboard?.qualityPending ?? 0)} detail="Qualidade/inspecoes" icon={Gauge} accent="#EA580C" />
@@ -96,13 +96,13 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
         </section>
 
         {isError && (
-          <div className="rounded-[8px] border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+          <div className="rounded-[12px] border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
             Falha ao consultar este modulo no banco. Nenhum dado local foi exibido.
           </div>
         )}
 
         {moduleKey === "pcp" && (
-          <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-950">Planejamento semanal e capacidade produtiva</h3>
@@ -110,7 +110,7 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
               </div>
               <CalendarDays className="h-5 w-5 text-[#003D7A]" />
             </div>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
               {(dashboard?.sectors ?? []).map((sector: any) => (
                 <div key={sector.sector} className="rounded-[6px] border border-slate-200 p-3">
                   <div className="flex items-center justify-between">
@@ -129,7 +129,7 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
 
         {isFlow && (
           <section className="space-y-4">
-            <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-slate-950">Fluxo industrial sob encomenda</h3>
@@ -137,7 +137,7 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
                 </div>
                 <BarChart3 className="h-5 w-5 text-[#003D7A]" />
               </div>
-              <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-7">
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
                 {(dashboard?.flow ?? []).map((step: any) => {
                   return (
                     <div key={step.label} className="rounded-[6px] border border-slate-200 p-3">
@@ -155,9 +155,9 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
 
         {isLabels && <IndustrialLabelPreview orders={liveOrders ?? []} />}
 
-        <section className="grid gap-4 xl:grid-cols-[1fr_360px]">
+        <section className="grid gap-4 grid-cols-1 lg:grid-cols-[1fr_360px]">
           <IndustrialDataTable title={`${module.title} - tabela operacional enterprise`} rows={rows} />
-          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-950">Controles do modulo</h3>

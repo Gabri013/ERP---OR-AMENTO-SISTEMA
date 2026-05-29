@@ -58,7 +58,7 @@ export default function KanbanProducaoPage() {
     <Layout>
       <div className="flex flex-col h-screen overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-b shrink-0">
+        <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 border-b shrink-0">
           <div className="flex items-center gap-2">
             <Factory className="h-5 w-5 text-primary" />
             <h1 className="text-lg font-bold">Kanban de Produção</h1>
@@ -73,7 +73,7 @@ export default function KanbanProducaoPage() {
                 placeholder="Buscar OS ou cliente..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 h-8 w-56 text-sm"
+                className="pl-8 h-8 w-full sm:w-56 text-sm"
               />
             </div>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
@@ -83,7 +83,7 @@ export default function KanbanProducaoPage() {
         </div>
 
         {/* Kanban */}
-        <div className="flex-1 overflow-hidden px-6 py-4">
+        <div className="flex-1 overflow-hidden px-4 py-4 sm:px-6">
           <KanbanBoard
             columns={columns}
             isLoading={isLoading}

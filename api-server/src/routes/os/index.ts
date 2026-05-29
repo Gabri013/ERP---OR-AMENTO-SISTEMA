@@ -6,7 +6,6 @@ import { transitionsRouter } from "./transitions";
 import { observationsRouter } from "./observations";
 import { printRouter } from "./print";
 import { kanbanRouter } from "./kanban";
-import { pdfRouter } from "./pdf";
 
 const router: IRouter = Router();
 
@@ -17,6 +16,5 @@ router.use(transitionsRouter);
 router.use(observationsRouter);
 router.use(printRouter);
 router.use(kanbanRouter);
-router.use(pdfRouter);
 
 export default router;

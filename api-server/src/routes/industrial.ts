@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "../lib/prisma";
 import { requireAuth } from "../middleware/auth";
@@ -719,16 +720,22 @@ router.post(
       return;
     }
 
-    const userId = (req as any).currentUser?.id;
+    const userId = typeof (req as any).currentUser?.id === "number" ? (req as any).currentUser.id : undefined;
     const data = parsed.data;
 
     const result = await db.$transaction(async (tx) => {
       const movement = await tx.estoqueMovimentacao.create({
         data: {
-          ...data,
+          materialId: data.materialId,
+          osId: data.osId,
           usuarioId: userId,
+          tipo: data.tipo,
           quantidade: data.quantidade,
-        },
+          lote: data.lote,
+          localizacao: data.localizacao,
+          documento: data.documento,
+          observacao: data.observacao,
+        } satisfies Prisma.EstoqueMovimentacaoUncheckedCreateInput,
       });
 
       const material = await tx.material.findUnique({ where: { id: data.materialId } });

@@ -13,6 +13,8 @@ import checklistRouter from "./checklist";
 import anexosRouter from "./anexos";
 import exportRouter from "./export";
 import industrialRouter from "./industrial";
+import jobsRouter from "./jobs";
+import { pdfRouter } from "./os/pdf";
 
 const router: IRouter = Router();
 
@@ -23,6 +25,7 @@ router.use(usuariosRouter);
 router.use(orcamentosRouter);
 router.use(vendasRouter);
 router.use(osRouter);
+router.use(pdfRouter);
 router.use(financeiroRouter);
 router.use(dashboardRouter);
 router.use(notificacoesRouter);
@@ -30,5 +33,6 @@ router.use(checklistRouter);
 router.use(anexosRouter);
 router.use(exportRouter);
 router.use(industrialRouter);
+router.use(jobsRouter);
 
 export default router;

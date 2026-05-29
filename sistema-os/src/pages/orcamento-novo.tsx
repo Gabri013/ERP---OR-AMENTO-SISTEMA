@@ -45,7 +45,7 @@ export default function OrcamentoNovoPage() {
   });
   const [itens, setItens] = useState<ItemRow[]>([emptyItem()]);
 
-  const createMut = useMutation({
+  const createMut = useMutation<any, unknown, any>({
     mutationFn: (data: any) => createOrcamento(data),
     onSuccess: (data) => {
       toast({ title: "Orçamento criado!" });

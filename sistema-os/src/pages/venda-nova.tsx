@@ -42,7 +42,7 @@ export default function VendaNovaPage() {
   });
   const [itens, setItens] = useState<ItemRow[]>([emptyItem()]);
 
-  const createMut = useMutation({
+  const createMut = useMutation<any, unknown, any>({
     mutationFn: (data: any) => createVenda(data),
     onSuccess: (data) => {
       toast({ title: "Venda criada!" });

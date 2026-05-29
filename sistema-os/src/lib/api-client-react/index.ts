@@ -166,7 +166,7 @@ export function useLogout() {
   });
 }
 export function useGetMe() {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ["me"],
     queryFn: async () => {
       // If no token stored, don't even call the backend
@@ -193,7 +193,7 @@ export function useGetMe() {
 // ==================== CLIENTES ====================
 export function useListClientes(params?: { q?: string } | string) {
   const q = typeof params === "string" ? params : params?.q;
-  return useQuery({
+  return useQuery<any[]>({
     queryKey: ["clientes", q],
     queryFn: () =>
       apiFetch<any[]>(`/clientes${q ? `?q=${encodeURIComponent(q)}` : ""}`),
@@ -202,13 +202,13 @@ export function useListClientes(params?: { q?: string } | string) {
 export function createCliente(d: any) {
   return apiFetch("/clientes", { method: "POST", body: JSON.stringify(d) });
 }
-export function updateCliente(id: string, d: any) {
+export function updateCliente(id: string | number, d: any) {
   return apiFetch(`/clientes/${id}`, {
     method: "PATCH",
     body: JSON.stringify(d),
   });
 }
-export function deleteCliente(id: string) {
+export function deleteCliente(id: string | number) {
   return apiFetch(`/clientes/${id}`, { method: "DELETE" });
 }
 export function getListClientesQueryKey() {
@@ -218,7 +218,7 @@ export function getListClientesQueryKey() {
 // ==================== PRODUTOS ====================
 export function useListProdutos(params?: { q?: string } | string) {
   const q = typeof params === "string" ? params : params?.q;
-  return useQuery({
+  return useQuery<any[]>({
     queryKey: ["produtos", q],
     queryFn: () =>
       apiFetch<any[]>(`/produtos${q ? `?q=${encodeURIComponent(q)}` : ""}`),
@@ -227,13 +227,13 @@ export function useListProdutos(params?: { q?: string } | string) {
 export function createProduto(d: any) {
   return apiFetch("/produtos", { method: "POST", body: JSON.stringify(d) });
 }
-export function updateProduto(id: string, d: any) {
+export function updateProduto(id: string | number, d: any) {
   return apiFetch(`/produtos/${id}`, {
     method: "PATCH",
     body: JSON.stringify(d),
   });
 }
-export function deleteProduto(id: string) {
+export function deleteProduto(id: string | number) {
   return apiFetch(`/produtos/${id}`, { method: "DELETE" });
 }
 export function getListProdutosQueryKey() {
@@ -243,7 +243,7 @@ export function getListProdutosQueryKey() {
 // ==================== ORÇAMENTOS ====================
 export function useListOrcamentos(params?: { status?: string }) {
   const status = params?.status;
-  return useQuery({
+  return useQuery<any[]>({
     queryKey: ["orcamentos", status],
     queryFn: () =>
       apiFetch<any[]>(
@@ -251,26 +251,27 @@ export function useListOrcamentos(params?: { status?: string }) {
       ),
   });
 }
-export function useGetOrcamento(id: string) {
-  return useQuery({
+export function useGetOrcamento(id: string | number) {
+  return useQuery<any | null>({
     queryKey: ["orcamento", id],
     queryFn: () => apiFetch(`/orcamentos/${id}`).catch(() => null),
+    enabled: !!id,
   });
 }
 export function useConverterOrcamento(options?: { mutation?: any }) {
-  return useMutation({
-    mutationFn: (id: string | number) =>
-      apiFetch(`/orcamentos/${id}/converter`, { method: "POST" }),
+  return useMutation<any, unknown, { id: string | number }>({
+    mutationFn: (d) =>
+      apiFetch(`/orcamentos/${d.id}/converter`, { method: "POST" }),
     ...(options?.mutation ?? {}),
   });
 }
-export function updateOrcamento(id: string, d: any) {
+export function updateOrcamento(id: string | number, d: any) {
   return apiFetch(`/orcamentos/${id}`, {
     method: "PATCH",
     body: JSON.stringify(d),
   });
 }
-export function deleteOrcamento(id: string) {
+export function deleteOrcamento(id: string | number) {
   return apiFetch(`/orcamentos/${id}`, { method: "DELETE" });
 }
 export function createOrcamento(d: any) {
@@ -283,7 +284,7 @@ export function getListOrcamentosQueryKey() {
 // ==================== VENDAS ====================
 export function useListVendas(params?: { status?: string }) {
   const status = params?.status;
-  return useQuery({
+  return useQuery<any[]>({
     queryKey: ["vendas", status],
     queryFn: () =>
       apiFetch<any[]>(
@@ -292,15 +293,15 @@ export function useListVendas(params?: { status?: string }) {
   });
 }
 export function useGetVenda(id: string | number) {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ["venda", id],
     queryFn: () => apiFetch(`/vendas/${id}`),
     enabled: !!id,
   });
 }
 export function useGerarOsParaVenda(options?: { mutation?: any }) {
-  return useMutation({
-    mutationFn: (d: { id: string | number }) =>
+  return useMutation<any, unknown, { id: string | number }>({
+    mutationFn: (d) =>
       apiFetch(`/vendas/${d.id}/gerar-os`, { method: "POST" }),
     ...(options?.mutation ?? {}),
   });
@@ -320,13 +321,13 @@ export function useListOS(params?: { status?: string; etapa?: string }) {
   if (status) qs.set("status", status);
   if (etapa) qs.set("etapa", etapa);
   const qstr = qs.toString();
-  return useQuery({
+  return useQuery<any[]>({
     queryKey: ["os", status, etapa],
     queryFn: () => apiFetch<any[]>(`/os${qstr ? `?${qstr}` : ""}`),
   });
 }
 export function useGetOS(id: string | number) {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ["os", id],
     queryFn: () => apiFetch(`/os/${id}`),
     enabled: !!id,
@@ -352,7 +353,7 @@ export function getListOSQueryKey() {
   return ["os"];
 }
 export function useGetOSImprimir(id: string | number) {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ["os-imprimir", id],
     queryFn: () => apiFetch<any>(`/os/${id}/imprimir`),
     enabled: !!id,
@@ -361,7 +362,7 @@ export function useGetOSImprimir(id: string | number) {
 
 // ==================== USUARIOS ====================
 export function useListUsuarios() {
-  return useQuery({
+  return useQuery<any[]>({
     queryKey: ["usuarios"],
     queryFn: () => apiFetch<any[]>("/usuarios"),
   });
@@ -369,13 +370,13 @@ export function useListUsuarios() {
 export function createUsuario(d: any) {
   return apiFetch("/usuarios", { method: "POST", body: JSON.stringify(d) });
 }
-export function updateUsuario(id: string, d: any) {
+export function updateUsuario(id: string | number, d: any) {
   return apiFetch(`/usuarios/${id}`, {
     method: "PATCH",
     body: JSON.stringify(d),
   });
 }
-export function deleteUsuario(id: string) {
+export function deleteUsuario(id: string | number) {
   return apiFetch(`/usuarios/${id}`, { method: "DELETE" });
 }
 export function getListUsuariosQueryKey() {
@@ -383,10 +384,12 @@ export function getListUsuariosQueryKey() {
 }
 
 // ==================== CONTAS ====================
-export function useListContasPagar() {
-  return useQuery({
-    queryKey: ["contas-pagar"],
-    queryFn: () => apiFetch<any[]>("/financeiro/contas-pagar"),
+export function useListContasPagar(params?: { status?: string }) {
+  const status = params?.status;
+  const qstr = status ? `?status=${encodeURIComponent(status)}` : "";
+  return useQuery<any[]>({
+    queryKey: ["contas-pagar", status],
+    queryFn: () => apiFetch<any[]>(`/financeiro/contas-pagar${qstr}`),
   });
 }
 export function createContaPagar(d: any) {
@@ -395,7 +398,7 @@ export function createContaPagar(d: any) {
     body: JSON.stringify(d),
   });
 }
-export function pagarContaPagar(id: string, d: any) {
+export function pagarContaPagar(id: string | number, d?: any) {
   return apiFetch(`/financeiro/contas-pagar/${id}/pagar`, {
     method: "POST",
     body: JSON.stringify(d),
@@ -405,13 +408,15 @@ export function getListContasPagarQueryKey() {
   return ["contas-pagar"];
 }
 
-export function useListContasReceber() {
-  return useQuery({
-    queryKey: ["contas-receber"],
-    queryFn: () => apiFetch<any[]>("/financeiro/contas-receber"),
+export function useListContasReceber(params?: { status?: string }) {
+  const status = params?.status;
+  const qstr = status ? `?status=${encodeURIComponent(status)}` : "";
+  return useQuery<any[]>({
+    queryKey: ["contas-receber", status],
+    queryFn: () => apiFetch<any[]>(`/financeiro/contas-receber${qstr}`),
   });
 }
-export function pagarContaReceber(id: string, d: any) {
+export function pagarContaReceber(id: string | number, d: any) {
   return apiFetch(`/financeiro/contas-receber/${id}/pagar`, {
     method: "POST",
     body: JSON.stringify(d),
@@ -423,27 +428,27 @@ export function getListContasReceberQueryKey() {
 
 // ==================== DASHBOARD ====================
 export function useGetDashboardStats() {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ["dashboard"],
     queryFn: () => apiFetch<any>("/dashboard/stats"),
     retry: 1,
   });
 }
 export function useGetOsPorStatus() {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ["os-por-status"],
     queryFn: () => apiFetch<any[]>("/dashboard/os-por-status").catch(() => []),
   });
 }
 export function useGetVendasRecentes() {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ["vendas-recentes"],
     queryFn: () =>
       apiFetch<any[]>("/dashboard/vendas-recentes").catch(() => []),
   });
 }
 export function useGetOsAtrasadas() {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ["os-atrasadas"],
     queryFn: () => apiFetch<any[]>("/dashboard/os-atrasadas").catch(() => []),
   });
@@ -451,7 +456,7 @@ export function useGetOsAtrasadas() {
 
 // ==================== KANBAN ====================
 export function useGetKanbanProducao() {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ["kanban-producao"],
     queryFn: () => apiFetch<any>("/kanban/producao"),
     refetchInterval: 30000,
@@ -459,7 +464,7 @@ export function useGetKanbanProducao() {
 }
 
 export function useGetKanbanComercial() {
-  return useQuery({
+  return useQuery<any>({
     queryKey: ["kanban-comercial"],
     queryFn: () => apiFetch<any>("/kanban/comercial").catch(() => ({})),
     refetchInterval: 30000,

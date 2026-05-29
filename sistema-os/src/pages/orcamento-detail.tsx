@@ -39,7 +39,7 @@ export default function OrcamentoDetailPage() {
 
   const converterMut = useConverterOrcamento({
     mutation: {
-      onSuccess: (venda) => {
+      onSuccess: (venda: any) => {
         toast({ title: "Convertido em venda!" });
         invalidate();
         setLocation(`/vendas/${venda.id}`);

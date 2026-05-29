@@ -234,7 +234,7 @@ function Scene({
       <Environment preset="studio" />
 
       {/* Model wrapped in Bounds for auto-fit */}
-      <Bounds fit clip damping={6} margin={1.2}>
+      <Bounds fit clip margin={1.2}>
         <AutoFitOnLoad />
         <Suspense fallback={<Loader />}>
           {format === "stl" && (

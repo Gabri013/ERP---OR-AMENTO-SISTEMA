@@ -90,6 +90,14 @@ jest.mock('../lib/jwt', () => ({
 const mockPrismaClient: any = {
   $disconnect: jest.fn(),
   $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }] as any),
+  $transaction: jest.fn().mockImplementation(async (fn: any) => {
+    // Execute the transaction callback with the mock client as the transaction proxy
+    if (typeof fn === 'function') {
+      return fn(mockPrismaClient);
+    }
+    return Promise.resolve(null);
+  }),
+  $queryRawUnsafe: jest.fn().mockResolvedValue([{ '?column?': 1 }] as any),
   usuario: {
     findUnique: jest.fn().mockImplementation(({ where }: any) => {
       if (where.email === 'admin@cozinca.com') {
@@ -313,6 +321,7 @@ const mockPrismaClient: any = {
   orcamento: {
     findUnique: jest.fn().mockResolvedValue(null as any),
     findMany: jest.fn().mockResolvedValue([] as any),
+    count: jest.fn().mockResolvedValue(0),
     create: jest.fn().mockResolvedValue({ id: 1 } as any),
     update: jest.fn().mockResolvedValue({ id: 1 } as any),
     delete: jest.fn().mockResolvedValue({ id: 1 } as any),
@@ -320,6 +329,7 @@ const mockPrismaClient: any = {
   venda: {
     findUnique: jest.fn().mockResolvedValue(null as any),
     findMany: jest.fn().mockResolvedValue([] as any),
+    count: jest.fn().mockResolvedValue(0),
     create: jest.fn().mockResolvedValue({ id: 1 } as any),
     update: jest.fn().mockResolvedValue({ id: 1 } as any),
     delete: jest.fn().mockResolvedValue({ id: 1 } as any),
@@ -327,9 +337,34 @@ const mockPrismaClient: any = {
   ordemServico: {
     findUnique: jest.fn().mockResolvedValue(null as any),
     findMany: jest.fn().mockResolvedValue([] as any),
+    count: jest.fn().mockResolvedValue(0),
     create: jest.fn().mockResolvedValue({ id: 1 } as any),
     update: jest.fn().mockResolvedValue({ id: 1 } as any),
     delete: jest.fn().mockResolvedValue({ id: 1 } as any),
+  },
+  oSObservacao: {
+    findMany: jest.fn().mockResolvedValue([] as any),
+    create: jest.fn().mockImplementation((args: any) => Promise.resolve({ id: 1, ...(args?.data ?? {}) })),
+  },
+  oSHistoricoStatus: {
+    findMany: jest.fn().mockResolvedValue([] as any),
+    create: jest.fn().mockImplementation((args: any) => Promise.resolve({ id: 1, ...(args?.data ?? {}) })),
+  },
+  oSEtapaProducao: {
+    findMany: jest.fn().mockResolvedValue([] as any),
+    findFirst: jest.fn().mockResolvedValue(null as any),
+    create: jest.fn().mockResolvedValue({ id: 1 } as any),
+    update: jest.fn().mockResolvedValue({ id: 1 } as any),
+    updateMany: jest.fn().mockResolvedValue({} as any),
+  },
+  vendaItem: {
+    findMany: jest.fn().mockResolvedValue([] as any),
+    create: jest.fn().mockResolvedValue({ id: 1 } as any),
+  },
+  contaReceber: {
+    findMany: jest.fn().mockResolvedValue([] as any),
+    create: jest.fn().mockResolvedValue({ id: 1 } as any),
+    update: jest.fn().mockResolvedValue({ id: 1 } as any),
   },
   refreshToken: {
     create: jest.fn().mockResolvedValue({ id: 1, token: 'mock_refresh_token_1', usuarioId: 1, expiresAt: new Date() } as any),
@@ -347,9 +382,48 @@ const mockPrismaClient: any = {
   },
 };
 
+// Create a factory for generic model mocks
+function makeModelMock() {
+  return {
+    findUnique: jest.fn().mockResolvedValue(null as any),
+    findMany: jest.fn().mockResolvedValue([] as any),
+    findFirst: jest.fn().mockResolvedValue(null as any),
+    create: jest.fn().mockImplementation((args: any) => Promise.resolve({ id: 1, ...(args?.data ?? {}) })),
+    update: jest.fn().mockImplementation((args: any) => Promise.resolve({ ...(args?.data ?? {}) })),
+    delete: jest.fn().mockResolvedValue({} as any),
+    count: jest.fn().mockResolvedValue(0),
+    updateMany: jest.fn().mockResolvedValue({}),
+  };
+}
+
+// Proxy to auto-create model mocks on demand while preserving explicitly defined mocks
+const modelCache = new Map<string | symbol, any>();
+const prismaProxy = new Proxy(mockPrismaClient, {
+  get(target, prop) {
+    if (prop in target) return (target as any)[prop];
+    if (!modelCache.has(prop)) modelCache.set(prop, makeModelMock());
+    return modelCache.get(prop);
+  },
+  set(target, prop, value) {
+    (target as any)[prop] = value;
+    return true;
+  },
+});
+
+// Ensure transactions receive the proxied client so model mocks are available inside tx callbacks
+mockPrismaClient.$transaction = jest.fn().mockImplementation(async (fn: any) => {
+  if (typeof fn === 'function') return fn(prismaProxy);
+  return Promise.resolve(null);
+});
+
+// Adjust some explicit model behaviors to return created data (so routes get back fields like `numero`)
+mockPrismaClient.venda.create = jest.fn().mockImplementation((args: any) => Promise.resolve({ id: 1, ...(args?.data ?? {}) }));
+mockPrismaClient.orcamento.create = jest.fn().mockImplementation((args: any) => Promise.resolve({ id: 1, ...(args?.data ?? {}) }));
+mockPrismaClient.ordemServico.create = jest.fn().mockImplementation((args: any) => Promise.resolve({ id: 1, ...(args?.data ?? {}) }));
+
 jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => mockPrismaClient),
+  PrismaClient: jest.fn().mockImplementation(() => prismaProxy),
 }), { virtual: true });
 
-// Export the mock for use in tests
-export { mockPrismaClient };
+// Export the proxy as `mockPrismaClient` for tests to configure
+export { prismaProxy as mockPrismaClient };

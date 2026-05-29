@@ -11,8 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { RoleGuard } from "@/components/RoleGuard";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Pencil, Trash2, Users } from "lucide-react";
+import { Skeleton } from "@/components/Skeleton";
+import { Pagination } from "@/components/Pagination";
+import { validators, sanitizeInput, validateForm } from "@/lib/validation";
 import type { Cliente } from "@workspace/api-client-react";
 
 interface ClienteForm {
@@ -40,27 +45,70 @@ export default function ClientesPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Cliente | null>(null);
   const [form, setForm] = useState<ClienteForm>(empty);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const { data: clientes = [], isLoading } = useListClientes({ q: search || undefined });
+
+  const totalPages = Math.ceil(clientes.length / itemsPerPage);
+  const paginatedClientes = clientes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const invalidate = () => qc.invalidateQueries({ queryKey: getListClientesQueryKey() });
 
   const createMut = useMutation({
     mutationFn: (data: ClienteForm) => createCliente(data),
-    onSuccess: () => { toast({ title: "Cliente criado!" }); invalidate(); setOpen(false); },
-    onError: () => toast({ title: "Erro ao criar cliente", variant: "destructive" }),
+    onSuccess: () => { 
+      toast({ 
+        title: "Cliente criado com sucesso!", 
+        description: "O cliente foi adicionado ao sistema.",
+        variant: "default" 
+      }); 
+      invalidate(); 
+      setOpen(false); 
+    },
+    onError: () => toast({ 
+      title: "Erro ao criar cliente", 
+      description: "Tente novamente mais tarde.",
+      variant: "destructive" 
+    }),
   });
 
   const updateMut = useMutation({
     mutationFn: (data: { id: number; body: Partial<ClienteForm> }) => updateCliente(data.id, data.body),
-    onSuccess: () => { toast({ title: "Cliente atualizado!" }); invalidate(); setOpen(false); },
-    onError: () => toast({ title: "Erro ao atualizar", variant: "destructive" }),
+    onSuccess: () => { 
+      toast({ 
+        title: "Cliente atualizado com sucesso!", 
+        description: "As alterações foram salvas.",
+        variant: "default" 
+      }); 
+      invalidate(); 
+      setOpen(false); 
+    },
+    onError: () => toast({ 
+      title: "Erro ao atualizar", 
+      description: "Tente novamente mais tarde.",
+      variant: "destructive" 
+    }),
   });
 
   const deleteMut = useMutation({
     mutationFn: (id: number) => deleteCliente(id),
-    onSuccess: () => { toast({ title: "Cliente removido!" }); invalidate(); },
-    onError: () => toast({ title: "Erro ao remover", variant: "destructive" }),
+    onSuccess: () => { 
+      toast({ 
+        title: "Cliente removido com sucesso!", 
+        description: "O cliente foi excluído do sistema.",
+        variant: "default" 
+      }); 
+      invalidate(); 
+    },
+    onError: () => toast({ 
+      title: "Erro ao remover", 
+      description: "Tente novamente mais tarde.",
+      variant: "destructive" 
+    }),
   });
 
   const openNew = () => { setEditing(null); setForm(empty); setOpen(true); };
@@ -75,13 +123,48 @@ export default function ClientesPage() {
     setOpen(true);
   };
 
+  // Resetar página quando a busca mudar
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.razaoSocial.trim()) { toast({ title: "Razão social é obrigatória", variant: "destructive" }); return; }
+    
+    // Sanitizar inputs
+    const sanitizedForm = {
+      razaoSocial: sanitizeInput(form.razaoSocial),
+      nomeFantasia: sanitizeInput(form.nomeFantasia),
+      cnpjCpf: sanitizeInput(form.cnpjCpf),
+      endereco: sanitizeInput(form.endereco),
+      cidade: sanitizeInput(form.cidade),
+      estado: sanitizeInput(form.estado),
+      cep: sanitizeInput(form.cep),
+      telefone: sanitizeInput(form.telefone),
+      email: sanitizeInput(form.email),
+      observacoes: sanitizeInput(form.observacoes),
+    };
+
+    // Validar formulário
+    const validation = validateForm(sanitizedForm, {
+      razaoSocial: (v) => validators.obrigatorio(v, "Razão social"),
+      email: validators.email,
+      telefone: validators.telefone,
+      cnpjCpf: validators.cnpj,
+      cep: validators.cep,
+    });
+
+    if (!validation.valid) {
+      const firstError = Object.values(validation.errors)[0];
+      toast({ title: firstError || "Erro de validação", variant: "destructive" });
+      return;
+    }
+
     if (editing) {
-      updateMut.mutate({ id: editing.id, body: form });
+      updateMut.mutate({ id: editing.id, body: sanitizedForm });
     } else {
-      createMut.mutate(form);
+      createMut.mutate(sanitizedForm);
     }
   };
 
@@ -99,12 +182,14 @@ export default function ClientesPage() {
             <Users className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-xl font-bold">Clientes</h1>
           </div>
-          <Button onClick={openNew} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" /> Novo Cliente</Button>
+          <RoleGuard permissions={[{ resource: "clientes", action: "create" }]}>
+            <Button onClick={openNew} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" /> Novo Cliente</Button>
+          </RoleGuard>
         </div>
 
         <div className="relative max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-8" placeholder="Buscar clientes..." value={search} onChange={e => setSearch(e.target.value)} />
+          <Input className="pl-8" placeholder="Buscar clientes..." value={search} onChange={e => handleSearchChange(e.target.value)} />
         </div>
 
         <Card className="rounded-[12px]">
@@ -122,10 +207,22 @@ export default function ClientesPage() {
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="p-4">
+                      <div className="space-y-2">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <div key={i} className="flex gap-2">
+                            <Skeleton className="h-12 flex-1" />
+                            <Skeleton className="h-12 flex-1 hidden sm:block" />
+                            <Skeleton className="h-12 flex-1 hidden md:block" />
+                            <Skeleton className="h-12 flex-1 hidden lg:block" />
+                            <Skeleton className="h-12 w-24" />
+                          </div>
+                        ))}
+                      </div>
+                    </TableCell></TableRow>
                   ) : clientes.length === 0 ? (
                     <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>
-                  ) : clientes.map(c => (
+                  ) : paginatedClientes.map(c => (
                     <TableRow key={c.id}>
                       <TableCell>
                         <p className="font-medium">{c.razaoSocial}</p>
@@ -136,8 +233,26 @@ export default function ClientesPage() {
                       <TableCell className="hidden lg:table-cell text-muted-foreground">{c.telefone ?? "—"}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteMut.mutate(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                          <RoleGuard permissions={[{ resource: "clientes", action: "update" }]}>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Editar cliente</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </RoleGuard>
+                          <RoleGuard permissions={[{ resource: "clientes", action: "delete" }]}>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteMut.mutate(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Excluir cliente</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </RoleGuard>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -146,6 +261,13 @@ export default function ClientesPage() {
               </Table>
             </div>
           </CardContent>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={clientes.length}
+            itemsPerPage={itemsPerPage}
+          />
         </Card>
 
         <Dialog open={open} onOpenChange={setOpen}>

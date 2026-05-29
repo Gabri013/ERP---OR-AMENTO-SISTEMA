@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell,
   Building2,
@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { industrialModules } from "@/modules/industrial/modules";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "react-responsive";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -37,10 +38,27 @@ export function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
   const isDesktop = useMediaQuery({ minWidth: 1024 });
+
+  // Atalho de teclado para busca global (Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if (e.key === "Escape" && searchOpen) {
+        setSearchOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [searchOpen]);
 
   const groupedModules = useMemo(() => {
     return groupOrder
@@ -57,7 +75,7 @@ export function Layout({ children }: LayoutProps) {
       .sort((a, b) => b.href.length - a.href.length)[0] ?? industrialModules[0];
   const CurrentModuleIcon = currentModule.icon;
 
-  const Sidebar = ({ onNavigate }: { onNavigate?: () => void }) => (
+  const Sidebar = useCallback(({ onNavigate }: { onNavigate?: () => void }) => (
     <div className="flex h-full flex-col bg-[#0B1F33] text-white">
       <div className="border-b border-white/10 px-4 py-4">
         <div className="flex items-center gap-3">
@@ -145,7 +163,7 @@ export function Layout({ children }: LayoutProps) {
         </Button>
       </div>
     </div>
-  );
+  ), [location, user, logout, groupedModules]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F9FAFB] text-slate-950">
@@ -216,9 +234,12 @@ export function Layout({ children }: LayoutProps) {
                 <div className="relative w-full max-w-xl">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
-                    className="h-9 rounded-[6px] border-slate-200 bg-slate-50 pl-9 text-sm"
-                    placeholder="Buscar O.S., cliente, produto, lote, boleto ou desenho..."
+                    className="h-9 rounded-[6px] border-slate-200 bg-slate-50 pl-9 text-sm cursor-pointer"
+                    placeholder="Buscar O.S., cliente, produto, lote, boleto ou desenho... (Ctrl+K)"
+                    onClick={() => setSearchOpen(true)}
+                    readOnly
                   />
+                  <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded border bg-muted text-[10px] text-slate-500">Ctrl+K</kbd>
                 </div>
               </div>
             )}
@@ -230,32 +251,14 @@ export function Layout({ children }: LayoutProps) {
                   Tempo real
                 </div>
               )}
-              <Button variant="outline" size="icon" className="rounded-[6px] shrink-0">
-                <Bell className="h-4 w-4" />
-              </Button>
-              {!isMobile && (
-                <Button variant="outline" size="sm" className="rounded-[6px] shrink-0">
-                  <ShieldCheck className="h-4 w-4" />
-                  Auditoria
-                </Button>
-              )}
-              {!isMobile && (
-                <Button size="sm" className="rounded-[6px] bg-[#003D7A] hover:bg-[#002B52] shrink-0">
-                  <Building2 className="h-4 w-4" />
-                  Matriz
-                </Button>
-              )}
-              {isMobile && (
-                <Button variant="outline" size="icon" className="rounded-[6px] shrink-0">
-                  <Building2 className="h-4 w-4" />
-                </Button>
-              )}
             </div>
           </div>
         </header>
 
         <main className="min-h-0 flex-1 overflow-auto">{children}</main>
       </div>
+
+      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

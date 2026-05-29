@@ -31,18 +31,6 @@ export function IndustrialDataTable({
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input className="h-9 w-56 rounded-[6px] pl-8 text-xs" placeholder="Buscar registro..." />
           </div>
-          <Button variant="outline" size="sm" className="rounded-[6px]">
-            <SlidersHorizontal className="h-4 w-4" />
-            Filtros
-          </Button>
-          <Button variant="outline" size="sm" className="rounded-[6px]">
-            <Download className="h-4 w-4" />
-            Excel
-          </Button>
-          <Button variant="outline" size="sm" className="rounded-[6px]">
-            <FileDown className="h-4 w-4" />
-            PDF
-          </Button>
         </div>
       </div>
 
@@ -84,9 +72,7 @@ export function IndustrialDataTable({
                   );
                 })}
                 <td className="px-3 py-2 text-right">
-                  <Button variant="ghost" size="sm" className="h-7 rounded-[6px] text-xs text-[#003D7A]">
-                    Abrir
-                  </Button>
+                  <span className="text-xs text-slate-400">—</span>
                 </td>
               </tr>
             ))}
@@ -95,15 +81,7 @@ export function IndustrialDataTable({
       </div>
 
       <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
-        <span>Pagina 1 de 12 - {rows.length} registros visiveis</span>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="h-8 rounded-[6px] text-xs">
-            Anterior
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 rounded-[6px] text-xs">
-            Proxima
-          </Button>
-        </div>
+        <span>{rows.length} registros visiveis</span>
       </div>
     </div>
   );

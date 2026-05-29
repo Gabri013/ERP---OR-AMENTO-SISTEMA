@@ -75,16 +75,6 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
                 <p className="mt-1 max-w-3xl text-sm text-slate-500">{module.description}</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" className="rounded-[6px]">
-                <FileText className="h-4 w-4" />
-                Relatorio
-              </Button>
-              <Button className="rounded-[6px] bg-[#003D7A] hover:bg-[#002B52]">
-                <Plus className="h-4 w-4" />
-                {moduleActions[moduleKey] ?? "Novo registro"}
-              </Button>
-            </div>
           </div>
         </section>
 

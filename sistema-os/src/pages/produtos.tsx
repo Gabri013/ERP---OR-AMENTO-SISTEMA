@@ -31,6 +31,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Pencil, Trash2, Package } from "lucide-react";
+import { Skeleton } from "@/components/Skeleton";
 import type { Produto } from "@workspace/api-client-react";
 
 interface ProdutoForm {
@@ -188,14 +189,20 @@ export default function ProdutosPage() {
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={6}
-                        className="text-center py-8 text-muted-foreground"
-                      >
-                        Carregando...
-                      </TableCell>
-                    </TableRow>
+                    <TableRow><TableCell colSpan={6} className="p-4">
+                      <div className="space-y-2">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <div key={i} className="flex gap-2">
+                            <Skeleton className="h-12 flex-1" />
+                            <Skeleton className="h-12 flex-1" />
+                            <Skeleton className="h-12 flex-1 hidden sm:block" />
+                            <Skeleton className="h-12 flex-1 hidden md:block" />
+                            <Skeleton className="h-12 flex-1" />
+                            <Skeleton className="h-12 w-24" />
+                          </div>
+                        ))}
+                      </div>
+                    </TableCell></TableRow>
                   ) : produtos.length === 0 ? (
                     <TableRow>
                       <TableCell

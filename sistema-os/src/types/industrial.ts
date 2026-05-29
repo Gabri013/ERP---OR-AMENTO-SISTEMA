@@ -31,7 +31,10 @@ export type ModuleKey =
   | "assistencia-tecnica"
   | "configuracoes"
   | "usuarios-permissoes"
-  | "etiquetas";
+  | "etiquetas"
+  | "setores"
+  | "permissoes-usuario"
+  | "permissoes-setor";
 
 export interface IndustrialModule {
   key: ModuleKey;

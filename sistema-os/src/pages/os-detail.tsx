@@ -201,7 +201,7 @@ export default function OSDetailPage() {
                 const done = i < currentIdx;
                 const active = e === os.etapaAtual;
                 return (
-                  <div key={e} className="flex-1 min-w-[70px] text-center">
+                  <div key={e} className="flex-1 min-w-[50px] sm:min-w-[60px] md:min-w-[70px] text-center">
                     <div
                       className={`h-2 rounded-full mb-1 ${done ? "bg-green-500" : active ? "bg-primary" : "bg-muted"}`}
                     />

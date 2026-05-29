@@ -456,7 +456,7 @@ export function Viewer3D({
       <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-3 py-2.5 bg-gradient-to-b from-black/70 via-black/20 to-transparent pointer-events-none">
         <div className="flex items-center gap-2 pointer-events-auto">
           <Box className="h-4 w-4 text-blue-400 shrink-0" />
-          <span className="text-white text-sm font-medium truncate max-w-[260px] leading-tight">
+          <span className="text-white text-sm font-medium truncate max-w-[180px] sm:max-w-[220px] md:max-w-[260px] leading-tight">
             {nome ?? "Modelo 3D"}
           </span>
           <Badge

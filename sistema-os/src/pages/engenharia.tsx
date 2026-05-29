@@ -38,7 +38,7 @@ export default function EngenhariaPage() {
 
   return (
     <Layout>
-      <div className="space-y-6 p-4 lg:p-6">
+      <div className="space-y-6 p-4 lg:p-6 overflow-x-hidden">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
           <Wrench className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-bold">Fila de Engenharia</h1>

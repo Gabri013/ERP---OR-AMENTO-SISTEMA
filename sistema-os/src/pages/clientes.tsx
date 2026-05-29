@@ -93,7 +93,7 @@ export default function ClientesPage() {
 
   return (
     <Layout>
-      <div className="space-y-6 p-4 lg:p-6">
+      <div className="space-y-6 p-4 lg:p-6 overflow-x-hidden">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-muted-foreground" />

@@ -81,5 +81,8 @@
     "xlsx": "^0.18.5",
     "zod": "^3.24.3",
     "zustand": "^5.0.3"
+  },
+  "dependencies": {
+    "react-responsive": "^10.0.1"
   }
 }

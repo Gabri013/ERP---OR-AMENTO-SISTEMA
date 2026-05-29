@@ -61,8 +61,8 @@ export default function DashboardPage() {
 
   return (
     <Layout>
-      <div className="space-y-6 p-4 lg:p-6">
-        <section className="rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="space-y-6 p-4 lg:p-6 overflow-x-hidden">
+        <section className="rounded-[12px] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-bold uppercase text-[#003D7A]">Operacao industrial em tempo real</p>
@@ -72,15 +72,15 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-[6px] border border-slate-200 px-4 py-3">
+              <div className="rounded-[8px] border border-slate-200 px-4 py-3">
                 <p className="text-[11px] text-slate-500">Status</p>
                 <p className="font-black text-slate-950">{isLoading ? "Lendo" : isError ? "Erro" : "Online"}</p>
               </div>
-              <div className="rounded-[6px] border border-slate-200 px-4 py-3">
+              <div className="rounded-[8px] border border-slate-200 px-4 py-3">
                 <p className="text-[11px] text-slate-500">Setores</p>
                 <p className="font-black text-slate-950">{sectors.length}</p>
               </div>
-              <div className="rounded-[6px] border border-slate-200 px-4 py-3">
+              <div className="rounded-[8px] border border-slate-200 px-4 py-3">
                 <p className="text-[11px] text-slate-500">O.S.</p>
                 <p className="font-black text-emerald-600">{orders.length}</p>
               </div>
@@ -94,7 +94,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <KpiMetricCard title="O.S. em andamento" value={String(data?.osInProgress ?? 0)} detail="carteira industrial ativa" icon={Factory} />
           <KpiMetricCard title="Producao do dia" value={`${data?.productionToday ?? 0} apont.`} detail="apontamentos sincronizados" icon={PackageCheck} accent="#15803D" />
           <KpiMetricCard title="Gargalos" value={data?.bottlenecks?.[0]?.sector ?? "0"} detail="setor com maior carga" icon={AlertTriangle} accent="#EA580C" />
@@ -102,8 +102,8 @@ export default function DashboardPage() {
           <KpiMetricCard title="Faturamento" value={formatCurrency(data?.revenue ?? 0)} detail="vendas no banco" icon={BadgeDollarSign} accent="#15803D" />
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr_0.8fr]">
-          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 auto-rows-min">
+          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-950">Producao semanal</h3>
@@ -124,24 +124,7 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-4">
-              <h3 className="text-sm font-bold text-slate-950">Faturamento e custo</h3>
-              <p className="text-xs text-slate-500">Agrupado pelas vendas gravadas.</p>
-            </div>
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={cashflow}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Area type="monotone" dataKey="receita" stroke="#003D7A" fill="#E0E9FF" strokeWidth={2} />
-                <Area type="monotone" dataKey="custo" stroke="#94A3B8" fill="transparent" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-4">
               <h3 className="text-sm font-bold text-slate-950">SLA de entrega</h3>
               <p className="text-xs text-slate-500">Calculado pelas datas das O.S.</p>
@@ -168,10 +151,27 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
+
+          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4">
+              <h3 className="text-sm font-bold text-slate-950">Faturamento e custo</h3>
+              <p className="text-xs text-slate-500">Agrupado pelas vendas gravadas.</p>
+            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={cashflow}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Area type="monotone" dataKey="receita" stroke="#003D7A" fill="#E0E9FF" strokeWidth={2} />
+                <Area type="monotone" dataKey="custo" stroke="#94A3B8" fill="transparent" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[1fr_380px]">
-          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-950">Carga de setores fabris</h3>
@@ -179,9 +179,9 @@ export default function DashboardPage() {
               </div>
               <Gauge className="h-5 w-5 text-[#003D7A]" />
             </div>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {sectors.map((sector: any) => (
-                <motion.div key={sector.sector} whileHover={{ y: -2 }} className="rounded-[6px] border border-slate-200 p-3">
+                <motion.div key={sector.sector} whileHover={{ y: -2 }} className="rounded-[8px] border border-slate-200 p-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-bold text-slate-950">{sector.sector}</p>
                     <StatusPill tone={sector.status}>{sector.status}</StatusPill>
@@ -204,7 +204,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-950">Ranking operadores</h3>
@@ -215,7 +215,7 @@ export default function DashboardPage() {
             <div className="space-y-3">
               {operators.length === 0 && <p className="text-sm text-slate-500">Sem apontamentos no banco hoje.</p>}
               {operators.map((operator: any, index: number) => (
-                <div key={operator.name} className="flex items-center justify-between rounded-[6px] border border-slate-100 p-3">
+                <div key={operator.name} className="flex items-center justify-between rounded-[8px] border border-slate-100 p-3">
                   <div className="flex items-center gap-3">
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#E0E9FF] text-xs font-black text-[#003D7A]">
                       {index + 1}
@@ -232,7 +232,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-slate-950">Fluxo fabril completo</h3>
@@ -240,11 +240,11 @@ export default function DashboardPage() {
             </div>
             <RotateCcw className="h-5 w-5 text-[#003D7A]" />
           </div>
-          <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-7">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
             {(data?.flow ?? []).map((step: any, index: number) => {
               const Icon = flowIcons[index] ?? Factory;
               return (
-                <div key={step.label} className="relative rounded-[6px] border border-slate-200 p-3">
+                <div key={step.label} className="relative rounded-[8px] border border-slate-200 p-3">
                   <div className="flex items-center justify-between">
                     <Icon className="h-5 w-5 text-[#003D7A]" />
                     <span className="text-xs font-black text-slate-400">0{index + 1}</span>
@@ -259,14 +259,16 @@ export default function DashboardPage() {
 
         <ProductionKanban orders={orders} />
 
-        <section className="grid gap-4 xl:grid-cols-[1fr_420px]">
-          <IndustrialDataTable title="Ordens, requisicoes e alertas recentes" rows={recentRows} />
-          <div className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <IndustrialDataTable title="Ordens, requisicoes e alertas recentes" rows={recentRows} />
+          </div>
+          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
             <h3 className="text-sm font-bold text-slate-950">Rastreabilidade critica</h3>
             <p className="text-xs text-slate-500">O.S. lidas do banco com setor atual e status.</p>
             <div className="mt-4 space-y-3">
               {orders.slice(0, 4).map((order: any) => (
-                <div key={order.id} className="rounded-[6px] border border-slate-200 p-3">
+                <div key={order.id} className="rounded-[8px] border border-slate-200 p-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-black text-[#003D7A]">{order.number}</p>
                     <StatusPill tone={order.priority}>{order.priority}</StatusPill>

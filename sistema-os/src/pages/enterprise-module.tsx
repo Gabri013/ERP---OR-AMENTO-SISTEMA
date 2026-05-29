@@ -55,7 +55,7 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
 
   return (
     <Layout>
-      <div className="space-y-6 p-4 lg:p-6">
+      <div className="space-y-6 p-4 lg:p-6 overflow-x-hidden">
         <section className="rounded-[12px] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">

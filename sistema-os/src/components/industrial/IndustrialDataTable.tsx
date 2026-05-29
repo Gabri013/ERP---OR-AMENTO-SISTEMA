@@ -47,7 +47,7 @@ export function IndustrialDataTable({
       </div>
 
       <div className="max-h-[430px] overflow-auto">
-        <table className="w-full min-w-[860px] border-collapse text-left">
+        <table className="w-full min-w-[600px] sm:min-w-[700px] md:min-w-[800px] lg:min-w-[860px] border-collapse text-left">
           <thead className="sticky top-0 z-10 bg-[#003D7A] text-white">
             <tr>
               <th className="w-10 px-3 py-2">

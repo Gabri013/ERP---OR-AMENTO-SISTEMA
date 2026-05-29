@@ -48,7 +48,7 @@ export default function KanbanComercialPage() {
 
   return (
     <Layout>
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-col h-screen overflow-hidden overflow-x-hidden">
         <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 border-b shrink-0">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />

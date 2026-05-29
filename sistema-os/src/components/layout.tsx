@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { industrialModules } from "@/modules/industrial/modules";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "react-responsive";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,10 @@ export function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
+  const isDesktop = useMediaQuery({ minWidth: 1024 });
 
   const groupedModules = useMemo(() => {
     return groupOrder
@@ -144,12 +149,14 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F9FAFB] text-slate-950">
-      <aside className="hidden w-[280px] shrink-0 border-r border-slate-200 lg:flex lg:flex-col">
-        <Sidebar />
-      </aside>
+      {!isMobile && (
+        <aside className="w-[280px] shrink-0 border-r border-slate-200 flex flex-col">
+          <Sidebar />
+        </aside>
+      )}
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
+        <div className="fixed inset-0 z-50 flex md:hidden">
           <button
             aria-label="Fechar menu"
             className="fixed inset-0 bg-slate-950/55"
@@ -161,67 +168,88 @@ export function Layout({ children }: LayoutProps) {
         </div>
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <header className="shrink-0 border-b border-slate-200 bg-white">
-          <div className="flex h-16 items-center justify-between gap-3 px-4 lg:px-6">
+          <div className="flex h-16 flex-col gap-2 px-4 py-3 md:h-16 md:flex-row md:items-center md:justify-between md:gap-3 md:px-6 md:py-0">
             <div className="flex min-w-0 items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setMobileOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <div
-                className="hidden h-9 w-9 items-center justify-center rounded-[6px] border lg:flex"
-                style={{
-                  color: currentModule.accent,
-                  backgroundColor: `${currentModule.accent}12`,
-                  borderColor: `${currentModule.accent}24`,
-                }}
-              >
-                <CurrentModuleIcon className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setMobileOpen(true)}
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              )}
+              {!isMobile && (
+                <div
+                  className="h-9 w-9 shrink-0 items-center justify-center rounded-[6px] border flex"
+                  style={{
+                    color: currentModule.accent,
+                    backgroundColor: `${currentModule.accent}12`,
+                    borderColor: `${currentModule.accent}24`,
+                  }}
+                >
+                  <CurrentModuleIcon className="h-5 w-5" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h1 className="truncate text-base font-black text-slate-950 lg:text-lg">
+                  <h1 className="truncate text-base font-black text-slate-950 md:text-lg">
                     {currentModule.title}
                   </h1>
-                  <ChevronDown className="hidden h-4 w-4 text-slate-400 lg:block" />
+                  {!isMobile && (
+                    <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+                  )}
                 </div>
-                <p className="hidden truncate text-xs text-slate-500 md:block">
-                  {currentModule.description}
-                </p>
+                {!isMobile && (
+                  <p className="truncate text-xs text-slate-500">
+                    {currentModule.description}
+                  </p>
+                )}
               </div>
             </div>
 
-            <div className="hidden flex-1 justify-center px-6 xl:flex">
-              <div className="relative w-full max-w-xl">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  className="h-9 rounded-[6px] border-slate-200 bg-slate-50 pl-9 text-sm"
-                  placeholder="Buscar O.S., cliente, produto, lote, boleto ou desenho..."
-                />
+            {isDesktop && (
+              <div className="flex-1 justify-center px-4 xl:px-6">
+                <div className="relative w-full max-w-xl">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    className="h-9 rounded-[6px] border-slate-200 bg-slate-50 pl-9 text-sm"
+                    placeholder="Buscar O.S., cliente, produto, lote, boleto ou desenho..."
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="flex items-center gap-2">
-              <div className="hidden items-center gap-2 rounded-[6px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 md:flex">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                Tempo real
-              </div>
-              <Button variant="outline" size="icon" className="rounded-[6px]">
+            <div className="flex items-center gap-2 overflow-x-auto">
+              {!isMobile && (
+                <div className="shrink-0 items-center gap-2 rounded-[6px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 flex">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  Tempo real
+                </div>
+              )}
+              <Button variant="outline" size="icon" className="rounded-[6px] shrink-0">
                 <Bell className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" className="hidden rounded-[6px] md:inline-flex">
-                <ShieldCheck className="h-4 w-4" />
-                Auditoria
-              </Button>
-              <Button size="sm" className="rounded-[6px] bg-[#003D7A] hover:bg-[#002B52]">
-                <Building2 className="h-4 w-4" />
-                Matriz
-              </Button>
+              {!isMobile && (
+                <Button variant="outline" size="sm" className="rounded-[6px] shrink-0">
+                  <ShieldCheck className="h-4 w-4" />
+                  Auditoria
+                </Button>
+              )}
+              {!isMobile && (
+                <Button size="sm" className="rounded-[6px] bg-[#003D7A] hover:bg-[#002B52] shrink-0">
+                  <Building2 className="h-4 w-4" />
+                  Matriz
+                </Button>
+              )}
+              {isMobile && (
+                <Button variant="outline" size="icon" className="rounded-[6px] shrink-0">
+                  <Building2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </header>

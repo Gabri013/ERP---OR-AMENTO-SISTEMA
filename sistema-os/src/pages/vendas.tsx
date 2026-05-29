@@ -56,7 +56,7 @@ export default function VendasPage() {
 
   return (
     <Layout>
-      <div className="space-y-6 p-4 lg:p-6">
+      <div className="space-y-6 p-4 lg:p-6 overflow-x-hidden">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5 text-muted-foreground" />
@@ -99,7 +99,7 @@ export default function VendasPage() {
                     <TableRow key={v.id}>
                       <TableCell className="font-mono font-medium">{v.numero}</TableCell>
                       <TableCell>
-                        <p className="font-medium truncate max-w-[140px]">{v.cliente?.razaoSocial ?? "—"}</p>
+                        <p className="font-medium truncate max-w-[120px] sm:max-w-[140px] md:max-w-[160px]">{v.cliente?.razaoSocial ?? "—"}</p>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-muted-foreground">{formatDate(v.dataVenda)}</TableCell>
                       <TableCell className="hidden md:table-cell text-muted-foreground text-xs">

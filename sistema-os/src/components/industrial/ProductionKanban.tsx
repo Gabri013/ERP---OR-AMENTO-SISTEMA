@@ -29,7 +29,7 @@ type ProductionOrder = {
 export function ProductionKanban({ orders }: { orders: ProductionOrder[] }) {
   return (
     <div className="overflow-x-auto pb-2">
-      <div className="grid min-w-[1180px] grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 min-w-[300px]">
         {columns.map((column) => {
           const items = orders.filter((item) => item.currentSector === column.key || item.status === column.key);
           return (

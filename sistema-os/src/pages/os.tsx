@@ -165,7 +165,7 @@ export default function OSPage() {
 
   return (
     <Layout>
-      <div className="space-y-6 p-4 lg:p-6">
+      <div className="space-y-6 p-4 lg:p-6 overflow-x-hidden">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5 text-muted-foreground" />
@@ -297,7 +297,7 @@ export default function OSPage() {
                           {os.numero}
                         </TableCell>
                         <TableCell>
-                          <p className="font-medium truncate max-w-[140px] text-sm">
+                          <p className="font-medium truncate max-w-[120px] sm:max-w-[140px] md:max-w-[160px] text-sm">
                             {os.cliente?.razaoSocial ?? "—"}
                           </p>
                         </TableCell>

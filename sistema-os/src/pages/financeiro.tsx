@@ -19,7 +19,7 @@ export default function FinanceiroPage() {
 
   return (
     <Layout>
-      <div className="space-y-6 p-4 lg:p-6">
+      <div className="space-y-6 p-4 lg:p-6 overflow-x-hidden">
         <div className="flex items-center gap-2">
           <DollarSign className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-xl font-bold">Financeiro</h1>

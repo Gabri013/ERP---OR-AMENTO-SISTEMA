@@ -35,11 +35,13 @@
 
 ## 📝 Changelog
 
-### [27/05/2026] - v1.0.0 - Correções Completas e Testes 100%
+### [29/05/2026] - v1.0.0 - Correções Completas e Testes 100%
 
 #### 🧪 Testes Unitários
 - ✅ Todos os 45 testes unitários passando (100%)
 - ✅ Corrigidos erros de TypeScript em múltiplos arquivos
+- ✅ Corrigidos tipos do frontend e hooks de API React Query
+- ✅ Atualizado `README`, commit e push finalizados
 - ✅ Removido arquivo de exemplo com erros (`orcamentos-example.ts`)
 - ✅ Corrigidos imports em arquivos de teste
 - ✅ Instalado `@types/jest` para testes

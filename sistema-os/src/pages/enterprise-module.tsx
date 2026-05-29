@@ -145,35 +145,8 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
 
         {isLabels && <IndustrialLabelPreview orders={liveOrders ?? []} />}
 
-        <section className="grid gap-4 grid-cols-1 lg:grid-cols-[1fr_360px]">
+        <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
           <IndustrialDataTable title={`${module.title} - tabela operacional enterprise`} rows={rows} />
-          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-950">Controles do modulo</h3>
-                <p className="text-xs text-slate-500">Componentes reutilizaveis e prontos para API.</p>
-              </div>
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-            </div>
-            <div className="space-y-3 text-sm">
-              {[
-                "API separada por dominio",
-                "React Query para sincronizacao",
-                "React Hook Form + Zod nos formularios",
-                "Auditoria e permissoes por modulo",
-                "Exportacao Excel/PDF",
-                "Socket.io para atualizacao em tempo real",
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-2 rounded-[6px] border border-slate-100 p-3">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span className="text-slate-700">{item}</span>
-                </div>
-              ))}
-            </div>
-            <Button asChild variant="outline" className="mt-4 w-full rounded-[6px]">
-              <Link href="/">Voltar ao dashboard executivo</Link>
-            </Button>
-          </div>
         </section>
       </div>
     </Layout>

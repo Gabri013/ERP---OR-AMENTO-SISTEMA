@@ -5,14 +5,21 @@ import {
   Bell,
   Building2,
   ChevronDown,
+  ChevronRight,
+  Clock,
   Factory,
+  FileText,
   LogOut,
   Menu,
   Search,
+  Settings,
   ShieldCheck,
+  Timer,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { industrialModules } from "@/modules/industrial/modules";
 import { cn } from "@/lib/utils";
@@ -39,10 +46,23 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
   const isDesktop = useMediaQuery({ minWidth: 1024 });
+
+  const toggleGroup = (group: string) => {
+    setCollapsedGroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(group)) {
+        newSet.delete(group);
+      } else {
+        newSet.add(group);
+      }
+      return newSet;
+    });
+  };
 
   // Atalho de teclado para busca global (Ctrl+K)
   useEffect(() => {
@@ -88,17 +108,20 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </div>
         <div className="mt-4 grid grid-cols-3 gap-2 rounded-[8px] border border-white/10 bg-white/[0.04] p-2">
-          <div>
+          <div className="flex flex-col items-center gap-1">
+            <FileText className="h-4 w-4 text-emerald-400" />
             <p className="text-[10px] text-blue-100/60">O.S.</p>
-            <p className="text-sm font-bold">95</p>
+            <p className="text-sm font-bold text-emerald-400">95</p>
           </div>
-          <div>
+          <div className="flex flex-col items-center gap-1">
+            <Timer className="h-4 w-4 text-amber-400" />
             <p className="text-[10px] text-blue-100/60">SLA</p>
-            <p className="text-sm font-bold">91%</p>
+            <p className="text-sm font-bold text-amber-400">91%</p>
           </div>
-          <div>
+          <div className="flex flex-col items-center gap-1">
+            <Clock className="h-4 w-4 text-blue-400" />
             <p className="text-[10px] text-blue-100/60">Turno</p>
-            <p className="text-sm font-bold">A</p>
+            <p className="text-sm font-bold text-blue-400">A</p>
           </div>
         </div>
       </div>
@@ -106,34 +129,44 @@ export function Layout({ children }: LayoutProps) {
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
         {groupedModules.map((entry) => (
           <div key={entry.group}>
-            <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-normal text-blue-100/50">
+            <button
+              onClick={() => toggleGroup(entry.group)}
+              className="mb-2 flex w-full items-center gap-2 px-2 text-[10px] font-bold uppercase tracking-normal text-blue-100/50 hover:text-blue-100/80 transition-colors duration-200"
+            >
+              {collapsedGroups.has(entry.group) ? (
+                <ChevronRight className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
               {entry.group}
-            </p>
-            <div className="space-y-1">
-              {entry.items.map((item) => {
-                const Icon = item.icon;
-                const active =
-                  location === item.href ||
-                  (item.href !== "/" && location.startsWith(`${item.href}/`));
+            </button>
+            {!collapsedGroups.has(entry.group) && (
+              <div className="space-y-1">
+                {entry.items.map((item) => {
+                  const Icon = item.icon;
+                  const active =
+                    location === item.href ||
+                    (item.href !== "/" && location.startsWith(`${item.href}/`));
 
-                return (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    onClick={onNavigate}
-                    className={cn(
-                      "group flex items-center gap-3 rounded-[6px] px-3 py-2 text-sm font-semibold transition-colors",
-                      active
-                        ? "bg-[#003D7A] text-white shadow-sm"
-                        : "text-blue-50/75 hover:bg-white/10 hover:text-white",
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span className="min-w-0 truncate">{item.title}</span>
-                  </Link>
-                );
-              })}
-            </div>
+                  return (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      onClick={onNavigate}
+                      className={cn(
+                        "group flex items-center gap-3 rounded-[6px] px-3 py-2 text-sm font-semibold transition-all duration-200 ease-in-out",
+                        active
+                          ? "bg-[#003D7A] text-white shadow-sm scale-[1.02]"
+                          : "text-blue-50/75 hover:bg-white/10 hover:text-white hover:scale-[1.02]",
+                      )}
+                    >
+                      <Icon className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
+                      <span className="min-w-0 truncate">{item.title}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ))}
       </nav>
@@ -156,14 +189,14 @@ export function Layout({ children }: LayoutProps) {
           variant="ghost"
           size="sm"
           onClick={logout}
-          className="w-full justify-start rounded-[6px] text-blue-50/75 hover:bg-white/10 hover:text-white"
+          className="w-full justify-start rounded-[6px] text-blue-50/75 hover:bg-white/10 hover:text-white transition-all duration-200 ease-in-out"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
           Sair
         </Button>
       </div>
     </div>
-  ), [location, user, logout, groupedModules]);
+  ), [location, user, logout, groupedModules, collapsedGroups, toggleGroup]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F9FAFB] text-slate-950">
@@ -187,14 +220,14 @@ export function Layout({ children }: LayoutProps) {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="shrink-0 border-b border-slate-200 bg-white">
+        <header className="shrink-0 border-b border-slate-200 bg-white transition-all duration-300 ease-in-out">
           <div className="flex h-16 flex-col gap-2 px-4 py-3 md:h-16 md:flex-row md:items-center md:justify-between md:gap-3 md:px-6 md:py-0">
             <div className="flex min-w-0 items-center gap-3">
               {isMobile && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="shrink-0"
+                  className="shrink-0 transition-all duration-200 ease-in-out hover:scale-110"
                   onClick={() => setMobileOpen(true)}
                 >
                   <Menu className="h-5 w-5" />
@@ -234,7 +267,7 @@ export function Layout({ children }: LayoutProps) {
                 <div className="relative w-full max-w-xl">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
-                    className="h-9 rounded-[6px] border-slate-200 bg-slate-50 pl-9 text-sm cursor-pointer"
+                    className="h-9 rounded-[6px] border-slate-200 bg-slate-50 pl-9 text-sm cursor-pointer transition-all duration-200 ease-in-out hover:border-slate-300 hover:bg-white focus:border-[#003D7A] focus:ring-2 focus:ring-[#003D7A]/20"
                     placeholder="Buscar O.S., cliente, produto, lote, boleto ou desenho... (Ctrl+K)"
                     onClick={() => setSearchOpen(true)}
                     readOnly
@@ -246,10 +279,58 @@ export function Layout({ children }: LayoutProps) {
 
             <div className="flex items-center gap-2 overflow-x-auto">
               {!isMobile && (
-                <div className="shrink-0 items-center gap-2 rounded-[6px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 flex">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <div className="shrink-0 items-center gap-2 rounded-[6px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 flex transition-all duration-200 ease-in-out hover:bg-emerald-100 hover:shadow-sm">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   Tempo real
                 </div>
+              )}
+              {!isMobile && (
+                <Button variant="ghost" size="icon" className="relative transition-all duration-200 ease-in-out hover:scale-110">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    3
+                  </span>
+                </Button>
+              )}
+              {!isMobile && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="shrink-0 flex items-center gap-2 rounded-[6px] border border-slate-200 bg-white px-3 py-2 transition-all duration-200 ease-in-out hover:border-slate-300 hover:shadow-sm cursor-pointer">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#003D7A] text-xs font-bold text-white transition-transform duration-200 hover:scale-110">
+                        {(user?.nome ?? "U").charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-slate-900">{user?.nome ?? "Usuario"}</p>
+                        <p className="truncate text-[10px] text-slate-500">{user?.tipo ?? "operacao"}</p>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-slate-400" />
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="px-2 py-1.5">
+                      <p className="text-sm font-semibold">{user?.nome ?? "Usuario"}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email ?? "usuario@empresa.com"}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <User className="h-4 w-4 mr-2" />
+                      Perfil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Configurações
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <ShieldCheck className="h-4 w-4 mr-2" />
+                      Permissões
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </div>

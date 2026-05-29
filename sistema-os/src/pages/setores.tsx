@@ -10,69 +10,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Pencil, Trash2, Building2, Users, ShieldCheck } from "lucide-react";
-import { SETOR_VALUES, type SetorInfo, type Setor } from "@/types/permissions";
+import { useListSetores, createSetor, updateSetor, deleteSetor, getListSetoresQueryKey } from "@workspace/api-client-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/Skeleton";
 import { Pagination } from "@/components/Pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-// Dados mockados de setores (em produção, viriam da API)
-const mockSetores: SetorInfo[] = [
-  {
-    id: "1",
-    nome: "Administrativo",
-    descricao: "Geral financeiro, RH e TI",
-    responsavelId: "1",
-    usuarios: ["1", "2", "3"],
-    permissoes: ["financeiro_read", "rh_read", "configuracoes_read"],
-    ativo: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-  {
-    id: "2",
-    nome: "Comercial",
-    descricao: "Vendas, orçamentos e atendimento",
-    responsavelId: "4",
-    usuarios: ["4", "5", "6"],
-    permissoes: ["vendas_create", "vendas_read", "orcamentos_create", "orcamentos_read"],
-    ativo: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-  {
-    id: "3",
-    nome: "Produção",
-    descricao: "PCP, corte, dobra, solda e montagem",
-    responsavelId: "7",
-    usuarios: ["7", "8", "9"],
-    permissoes: ["os_read", "os_update", "producao_read", "producao_update"],
-    ativo: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-  {
-    id: "4",
-    nome: "Engenharia",
-    descricao: "Projetos e desenvolvimento",
-    responsavelId: "10",
-    usuarios: ["10", "11"],
-    permissoes: ["engenharia_create", "engenharia_read", "engenharia_update"],
-    ativo: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-  {
-    id: "5",
-    nome: "Qualidade",
-    descricao: "Controle de qualidade e inspeções",
-    responsavelId: "12",
-    usuarios: ["12"],
-    permissoes: ["qualidade_read", "qualidade_create"],
-    ativo: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-];
 
 interface SetorForm {
   nome: string;
@@ -88,15 +30,18 @@ const empty: SetorForm = {
 
 export default function SetoresPage() {
   const { toast } = useToast();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<SetorInfo | null>(null);
+  const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<SetorForm>(empty);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const filteredSetores = mockSetores.filter(
-    (s) =>
+  const { data: setores = [], isLoading } = useListSetores();
+
+  const filteredSetores = setores.filter(
+    (s: any) =>
       s.nome.toLowerCase().includes(search.toLowerCase()) ||
       s.descricao.toLowerCase().includes(search.toLowerCase())
   );
@@ -107,13 +52,42 @@ export default function SetoresPage() {
     currentPage * itemsPerPage
   );
 
+  const createMut = useMutation({
+    mutationFn: (data: any) => createSetor(data),
+    onSuccess: () => {
+      toast({ title: "Setor criado com sucesso!", description: "O setor foi adicionado ao sistema." });
+      qc.invalidateQueries({ queryKey: getListSetoresQueryKey() });
+      setOpen(false);
+    },
+    onError: () => toast({ title: "Erro ao criar setor", variant: "destructive" }),
+  });
+
+  const updateMut = useMutation({
+    mutationFn: (data: { id: number; body: any }) => updateSetor(data.id, data.body),
+    onSuccess: () => {
+      toast({ title: "Setor atualizado com sucesso!", description: "As alterações foram salvas." });
+      qc.invalidateQueries({ queryKey: getListSetoresQueryKey() });
+      setOpen(false);
+    },
+    onError: () => toast({ title: "Erro ao atualizar setor", variant: "destructive" }),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: number) => deleteSetor(id),
+    onSuccess: () => {
+      toast({ title: "Setor removido com sucesso!", description: "O setor foi excluído do sistema." });
+      qc.invalidateQueries({ queryKey: getListSetoresQueryKey() });
+    },
+    onError: () => toast({ title: "Erro ao remover setor", variant: "destructive" }),
+  });
+
   const openNew = () => {
     setEditing(null);
     setForm(empty);
     setOpen(true);
   };
 
-  const openEdit = (setor: SetorInfo) => {
+  const openEdit = (setor: any) => {
     setEditing(setor);
     setForm({
       nome: setor.nome,
@@ -129,16 +103,20 @@ export default function SetoresPage() {
       toast({ title: "Nome do setor é obrigatório", variant: "destructive" });
       return;
     }
+    const payload = {
+      nome: form.nome,
+      descricao: form.descricao,
+      responsavelId: form.responsavelId ? parseInt(String(form.responsavelId)) : undefined,
+    };
     if (editing) {
-      toast({ title: "Setor atualizado com sucesso!", description: "As alterações foram salvas." });
+      updateMut.mutate({ id: editing.id, body: payload });
     } else {
-      toast({ title: "Setor criado com sucesso!", description: "O setor foi adicionado ao sistema." });
+      createMut.mutate(payload);
     }
-    setOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    toast({ title: "Setor removido com sucesso!", description: "O setor foi excluído do sistema." });
+  const handleDelete = (id: number) => {
+    deleteMut.mutate(id);
   };
 
   const handleSearchChange = (value: string) => {
@@ -206,13 +184,13 @@ export default function SetoresPage() {
                         <TableCell className="hidden md:table-cell">
                           <div className="flex items-center gap-2">
                             <Users className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{setor.usuarios.length}</span>
+                            <span className="text-sm">{setor.usuarios?.length || 0}</span>
                           </div>
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           <div className="flex items-center gap-2">
                             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{setor.permissoes.length}</span>
+                            <span className="text-sm">{setor.permissoes?.length || 0}</span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -287,7 +265,7 @@ export default function SetoresPage() {
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit">{editing ? "Atualizar" : "Criar"}</Button>
+                <Button type="submit" disabled={createMut.isPending || updateMut.isPending}>{editing ? "Atualizar" : "Criar"}</Button>
               </DialogFooter>
             </form>
           </DialogContent>

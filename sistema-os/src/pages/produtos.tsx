@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Pencil, Trash2, Package } from "lucide-react";
 import { Skeleton } from "@/components/Skeleton";
 import type { Produto } from "@workspace/api-client-react";
+import { RoleGuard } from "@/components/RoleGuard";
 
 interface ProdutoForm {
   codigo: string;
@@ -156,9 +157,11 @@ export default function ProdutosPage() {
             <Package className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-xl font-bold">Produtos</h1>
           </div>
-          <Button onClick={openNew} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-1" /> Novo Produto
-          </Button>
+          <RoleGuard permissions={[{ resource: "produtos", action: "create" }]}>
+            <Button onClick={openNew} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-1" /> Novo Produto
+            </Button>
+          </RoleGuard>
         </div>
 
         <div className="relative max-w-sm">
@@ -243,21 +246,25 @@ export default function ProdutosPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEdit(p)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => deleteMut.mutate(p.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <RoleGuard permissions={[{ resource: "produtos", action: "update" }]}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEdit(p)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </RoleGuard>
+                            <RoleGuard permissions={[{ resource: "produtos", action: "delete" }]}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => deleteMut.mutate(p.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </RoleGuard>
                           </div>
                         </TableCell>
                       </TableRow>

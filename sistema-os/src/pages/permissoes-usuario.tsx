@@ -14,42 +14,25 @@ import { RESOURCE_PERMISSIONS, PERMISSION_DESCRIPTIONS, type Permission, type Re
 import { Skeleton } from "@/components/Skeleton";
 import { Pagination } from "@/components/Pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-// Dados mockados de usuários (em produção, viriam da API)
-const mockUsuarios = [
-  { id: "1", nome: "João Silva", email: "joao@empresa.com", tipo: "master" },
-  { id: "2", nome: "Maria Santos", email: "maria@empresa.com", tipo: "gerente" },
-  { id: "3", nome: "Pedro Costa", email: "pedro@empresa.com", tipo: "vendedor" },
-  { id: "4", nome: "Ana Oliveira", email: "ana@empresa.com", tipo: "producao" },
-  { id: "5", nome: "Carlos Ferreira", email: "carlos@empresa.com", tipo: "financeiro" },
-  { id: "6", nome: "Lucia Mendes", email: "lucia@empresa.com", tipo: "engenharia" },
-];
-
-// Permissões mockadas por usuário
-const mockUserPermissions: Record<string, string[]> = {
-  "1": Object.entries(RESOURCE_PERMISSIONS).flatMap(([resource, actions]) =>
-    actions.map((action) => `${resource}_${action}`)
-  ),
-  "2": Object.entries(RESOURCE_PERMISSIONS)
-    .filter(([_, actions]) => !actions.includes("admin"))
-    .flatMap(([resource, actions]) => actions.map((action) => `${resource}_${action}`)),
-  "3": ["orcamentos_create", "orcamentos_read", "orcamentos_update", "vendas_create", "vendas_read", "clientes_read"],
-  "4": ["os_read", "os_update", "producao_read", "producao_update", "estoque_read"],
-  "5": ["financeiro_read", "financeiro_export", "contas_receber_read", "contas_pagar_read"],
-  "6": ["engenharia_read", "engenharia_create", "engenharia_update", "os_read"],
-};
+import { useListUsuarios } from "@workspace/api-client-react";
+import { useListPermissoesUsuario, updatePermissoesUsuario } from "@workspace/api-client-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function PermissoesUsuarioPage() {
   const { toast } = useToast();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<typeof mockUsuarios[0] | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const filteredUsuarios = mockUsuarios.filter(
-    (u) =>
+  const { data: usuarios = [], isLoading } = useListUsuarios();
+  const { data: userPermissions = [] } = useListPermissoesUsuario(selectedUser?.id || "");
+
+  const filteredUsuarios = usuarios.filter(
+    (u: any) =>
       u.nome.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase())
   );
@@ -60,23 +43,29 @@ export default function PermissoesUsuarioPage() {
     currentPage * itemsPerPage
   );
 
-  const openPermissionsDialog = (usuario: typeof mockUsuarios[0]) => {
+  const updateMut = useMutation({
+    mutationFn: (data: { usuarioId: string; permissoes: string[] }) =>
+      updatePermissoesUsuario(data.usuarioId, data.permissoes),
+    onSuccess: () => {
+      toast({
+        title: "Permissões atualizadas com sucesso!",
+        description: `As permissões do usuário ${selectedUser?.nome} foram salvas.`,
+      });
+      qc.invalidateQueries({ queryKey: ["permissoes-usuario", selectedUser?.id] });
+      setOpen(false);
+    },
+    onError: () => toast({ title: "Erro ao atualizar permissões", variant: "destructive" }),
+  });
+
+  const openPermissionsDialog = (usuario: any) => {
     setSelectedUser(usuario);
-    setSelectedPermissions(new Set(mockUserPermissions[usuario.id] || []));
+    setSelectedPermissions(new Set(userPermissions || []));
     setOpen(true);
   };
 
   const handleSavePermissions = () => {
     if (!selectedUser) return;
-    
-    // Em produção, chamaria a API para salvar as permissões
-    mockUserPermissions[selectedUser.id] = Array.from(selectedPermissions);
-    
-    toast({
-      title: "Permissões atualizadas com sucesso!",
-      description: `As permissões do usuário ${selectedUser.nome} foram salvas.`,
-    });
-    setOpen(false);
+    updateMut.mutate({ usuarioId: selectedUser.id, permissoes: Array.from(selectedPermissions) });
   };
 
   const handleTogglePermission = (permissionId: string) => {
@@ -112,7 +101,10 @@ export default function PermissoesUsuarioPage() {
   };
 
   const getPermissionCount = (userId: string) => {
-    return mockUserPermissions[userId]?.length || 0;
+    if (selectedUser?.id === userId) {
+      return userPermissions.length || 0;
+    }
+    return 0;
   };
 
   return (
@@ -294,7 +286,7 @@ export default function PermissoesUsuarioPage() {
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSavePermissions}>
+              <Button onClick={handleSavePermissions} disabled={updateMut.isPending}>
                 <Save className="h-4 w-4 mr-1" />
                 Salvar Permissões
               </Button>

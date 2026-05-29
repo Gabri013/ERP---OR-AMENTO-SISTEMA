@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Eye, AlertTriangle, Wrench } from "lucide-react";
+import { Eye, AlertTriangle, Wrench, Plus, Pencil, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 
 const etapaLabels: Record<string, string> = {
@@ -39,16 +39,22 @@ export default function EngenhariaPage() {
   return (
     <Layout>
       <div className="space-y-6 p-4 lg:p-6 overflow-x-hidden">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-          <Wrench className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold">Fila de Engenharia</h1>
-          <Badge variant="secondary">{fila.length} OS</Badge>
-          {atrasadas.length > 0 && (
-            <Badge variant="destructive" className="flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3" />
-              {atrasadas.length} atrasadas
-            </Badge>
-          )}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+            <Wrench className="h-5 w-5 text-primary" />
+            <h1 className="text-xl font-bold">Fila de Engenharia</h1>
+            <Badge variant="secondary">{fila.length} OS</Badge>
+            {atrasadas.length > 0 && (
+              <Badge variant="destructive" className="flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                {atrasadas.length} atrasadas
+              </Badge>
+            )}
+          </div>
+          <Button className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Projeto
+          </Button>
         </div>
 
         {/* Summary cards */}
@@ -102,11 +108,25 @@ export default function EngenhariaPage() {
                         <span className={`text-xs ${isAtrasada ? "text-red-500 font-medium" : "text-muted-foreground"}`}>
                           {formatDate(os.dataTermino)}
                         </span>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                          <Link href={`/os/${os.id}`}>
-                            <Eye className="h-3.5 w-3.5" />
-                          </Link>
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                            <Link href={`/os/${os.id}`}>
+                              <Eye className="h-3.5 w-3.5" />
+                            </Link>
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50">
+                            <XCircle className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   );

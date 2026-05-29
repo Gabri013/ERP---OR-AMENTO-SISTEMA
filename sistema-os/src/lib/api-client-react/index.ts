@@ -404,6 +404,17 @@ export function pagarContaPagar(id: string | number, d?: any) {
     body: JSON.stringify(d),
   });
 }
+export function updateContaPagar(id: string | number, d: any) {
+  return apiFetch(`/financeiro/contas-pagar/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(d),
+  });
+}
+export function deleteContaPagar(id: string | number) {
+  return apiFetch(`/financeiro/contas-pagar/${id}`, {
+    method: "DELETE",
+  });
+}
 export function getListContasPagarQueryKey() {
   return ["contas-pagar"];
 }
@@ -422,8 +433,81 @@ export function pagarContaReceber(id: string | number, d: any) {
     body: JSON.stringify(d),
   });
 }
+export function createContaReceber(d: any) {
+  return apiFetch("/financeiro/contas-receber", {
+    method: "POST",
+    body: JSON.stringify(d),
+  });
+}
+export function updateContaReceber(id: string | number, d: any) {
+  return apiFetch(`/financeiro/contas-receber/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(d),
+  });
+}
+export function deleteContaReceber(id: string | number) {
+  return apiFetch(`/financeiro/contas-receber/${id}`, {
+    method: "DELETE",
+  });
+}
 export function getListContasReceberQueryKey() {
   return ["contas-receber"];
+}
+
+// ==================== SETORES ====================
+export function useListSetores() {
+  return useQuery<any[]>({
+    queryKey: ["setores"],
+    queryFn: () => apiFetch<any[]>("/sistema/setores"),
+  });
+}
+export function createSetor(d: any) {
+  return apiFetch("/sistema/setores", {
+    method: "POST",
+    body: JSON.stringify(d),
+  });
+}
+export function updateSetor(id: string | number, d: any) {
+  return apiFetch(`/sistema/setores/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(d),
+  });
+}
+export function deleteSetor(id: string | number) {
+  return apiFetch(`/sistema/setores/${id}`, {
+    method: "DELETE",
+  });
+}
+export function getListSetoresQueryKey() {
+  return ["setores"];
+}
+
+// ==================== PERMISSÕES ====================
+export function useListPermissoesUsuario(usuarioId: string) {
+  return useQuery<string[]>({
+    queryKey: ["permissoes-usuario", usuarioId],
+    queryFn: () => apiFetch<string[]>(`/sistema/permissoes-usuario/${usuarioId}`),
+    enabled: !!usuarioId,
+  });
+}
+export function updatePermissoesUsuario(usuarioId: string, permissoes: string[]) {
+  return apiFetch(`/sistema/permissoes-usuario/${usuarioId}`, {
+    method: "PUT",
+    body: JSON.stringify({ permissoes }),
+  });
+}
+export function useListPermissoesSetor(setor: string) {
+  return useQuery<string[]>({
+    queryKey: ["permissoes-setor", setor],
+    queryFn: () => apiFetch<string[]>(`/sistema/permissoes-setor/${setor}`),
+    enabled: !!setor,
+  });
+}
+export function updatePermissoesSetor(setor: string, permissoes: string[]) {
+  return apiFetch(`/sistema/permissoes-setor/${setor}`, {
+    method: "PUT",
+    body: JSON.stringify({ permissoes }),
+  });
 }
 
 // ==================== DASHBOARD ====================

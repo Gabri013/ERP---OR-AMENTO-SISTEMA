@@ -12,49 +12,8 @@ import { ShieldCheck, Building2, Save, X, Users } from "lucide-react";
 import { RESOURCE_PERMISSIONS, PERMISSION_DESCRIPTIONS, type Permission, type Resource, type PermissionAction, SETOR_VALUES } from "@/types/permissions";
 import { Pagination } from "@/components/Pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-// Dados mockados de setores com permissões
-const mockSetorPermissions: Record<string, string[]> = {
-  administrativo: [
-    "financeiro_read", "financeiro_export", "rh_read", "rh_create", "configuracoes_read", "configuracoes_update",
-  ],
-  comercial: [
-    "orcamentos_create", "orcamentos_read", "orcamentos_update", "vendas_create", "vendas_read", "vendas_update", "clientes_read",
-  ],
-  financeiro: [
-    "financeiro_read", "financeiro_export", "financeiro_approve", "contas_receber_read", "contas_receber_create", "contas_pagar_read", "contas_pagar_create",
-  ],
-  producao: [
-    "os_read", "os_update", "producao_read", "producao_update", "pcp_read", "pcp_update", "estoque_read", "estoque_update",
-  ],
-  engenharia: [
-    "engenharia_read", "engenharia_create", "engenharia_update", "os_read",
-  ],
-  pcp: [
-    "producao_read", "producao_update", "pcp_read", "pcp_update", "estoque_read",
-  ],
-  qualidade: [
-    "qualidade_read", "qualidade_create", "qualidade_update",
-  ],
-  rh: [
-    "rh_read", "rh_create", "rh_update", "usuarios_read",
-  ],
-  compras: [
-    "compras_read", "compras_create", "compras_update", "compras_approve", "estoque_read",
-  ],
-  logistica: [
-    "estoque_read", "estoque_update",
-  ],
-  assistencia_tecnica: [
-    "assistencia_tecnica_read", "assistencia_tecnica_create", "assistencia_tecnica_update",
-  ],
-  ti: [
-    "configuracoes_read", "configuracoes_update", "configuracoes_admin", "usuarios_read", "usuarios_create",
-  ],
-  estoque: [
-    "estoque_read", "estoque_create", "estoque_update", "produtos_read",
-  ],
-};
+import { useListPermissoesSetor, updatePermissoesSetor } from "@workspace/api-client-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const setorInfo: Record<string, { nome: string; descricao: string; usuarios: number }> = {
   administrativo: { nome: "Administrativo", descricao: "Geral financeiro, RH e TI", usuarios: 8 },
@@ -74,6 +33,7 @@ const setorInfo: Record<string, { nome: string; descricao: string; usuarios: num
 
 export default function PermissoesSetorPage() {
   const { toast } = useToast();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedSetor, setSelectedSetor] = useState<string | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
@@ -81,29 +41,37 @@ export default function PermissoesSetorPage() {
   const itemsPerPage = 10;
 
   const setoresList = SETOR_VALUES;
+  const { data: setorPermissions = [] } = useListPermissoesSetor(selectedSetor || "");
+
   const totalPages = Math.ceil(setoresList.length / itemsPerPage);
   const paginatedSetores = setoresList.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
+  const updateMut = useMutation({
+    mutationFn: (data: { setor: string; permissoes: string[] }) =>
+      updatePermissoesSetor(data.setor, data.permissoes),
+    onSuccess: () => {
+      toast({
+        title: "Permissões atualizadas com sucesso!",
+        description: `As permissões do setor ${setorInfo[selectedSetor || ""]?.nome} foram salvas.`,
+      });
+      qc.invalidateQueries({ queryKey: ["permissoes-setor", selectedSetor] });
+      setOpen(false);
+    },
+    onError: () => toast({ title: "Erro ao atualizar permissões", variant: "destructive" }),
+  });
+
   const openPermissionsDialog = (setor: string) => {
     setSelectedSetor(setor);
-    setSelectedPermissions(new Set(mockSetorPermissions[setor] || []));
+    setSelectedPermissions(new Set(setorPermissions || []));
     setOpen(true);
   };
 
   const handleSavePermissions = () => {
     if (!selectedSetor) return;
-    
-    // Em produção, chamaria a API para salvar as permissões
-    mockSetorPermissions[selectedSetor] = Array.from(selectedPermissions);
-    
-    toast({
-      title: "Permissões atualizadas com sucesso!",
-      description: `As permissões do setor ${setorInfo[selectedSetor]?.nome} foram salvas.`,
-    });
-    setOpen(false);
+    updateMut.mutate({ setor: selectedSetor, permissoes: Array.from(selectedPermissions) });
   };
 
   const handleTogglePermission = (permissionId: string) => {
@@ -134,7 +102,10 @@ export default function PermissoesSetorPage() {
   };
 
   const getPermissionCount = (setor: string) => {
-    return mockSetorPermissions[setor]?.length || 0;
+    if (selectedSetor === setor) {
+      return setorPermissions.length || 0;
+    }
+    return 0;
   };
 
   return (
@@ -296,7 +267,7 @@ export default function PermissoesSetorPage() {
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSavePermissions}>
+              <Button onClick={handleSavePermissions} disabled={updateMut.isPending}>
                 <Save className="h-4 w-4 mr-1" />
                 Salvar Permissões
               </Button>

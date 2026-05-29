@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout";
-import { useListContasPagar, createContaPagar, pagarContaPagar, getListContasPagarQueryKey } from "@workspace/api-client-react";
+import { useListContasPagar, createContaPagar, pagarContaPagar, updateContaPagar, deleteContaPagar, getListContasPagarQueryKey } from "@workspace/api-client-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowUpCircle, Plus, CheckCircle } from "lucide-react";
+import { ArrowUpCircle, Plus, CheckCircle, Pencil, Trash2 } from "lucide-react";
 
 function formatCurrency(v: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -23,6 +23,7 @@ export default function ContasPagarPage() {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("");
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ descricao: "", fornecedor: "", valor: "", dataVencimento: "" });
 
   const { data: contas = [], isLoading } = useListContasPagar({ status: statusFilter || undefined });
@@ -46,12 +47,53 @@ export default function ContasPagarPage() {
     onError: () => toast({ title: "Erro ao registrar pagamento", variant: "destructive" }),
   });
 
+  const updateMut = useMutation({
+    mutationFn: (data: { id: number; body: any }) => updateContaPagar(data.id, data.body),
+    onSuccess: () => {
+      toast({ title: "Conta atualizada!" });
+      qc.invalidateQueries({ queryKey: getListContasPagarQueryKey() });
+      setOpen(false);
+    },
+    onError: () => toast({ title: "Erro ao atualizar", variant: "destructive" }),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: number) => deleteContaPagar(id),
+    onSuccess: () => {
+      toast({ title: "Conta removida!" });
+      qc.invalidateQueries({ queryKey: getListContasPagarQueryKey() });
+    },
+    onError: () => toast({ title: "Erro ao remover", variant: "destructive" }),
+  });
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.descricao || !form.valor || !form.dataVencimento) {
       toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" }); return;
     }
-    createMut.mutate({ descricao: form.descricao, fornecedor: form.fornecedor || undefined, valor: parseFloat(form.valor), dataVencimento: form.dataVencimento });
+    const payload = { descricao: form.descricao, fornecedor: form.fornecedor || undefined, valor: parseFloat(form.valor), dataVencimento: form.dataVencimento };
+    if (editing) {
+      updateMut.mutate({ id: editing.id, body: payload });
+    } else {
+      createMut.mutate(payload);
+    }
+  };
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({ descricao: "", fornecedor: "", valor: "", dataVencimento: "" });
+    setOpen(true);
+  };
+
+  const openEdit = (c: any) => {
+    setEditing(c);
+    setForm({
+      descricao: c.descricao,
+      fornecedor: c.fornecedor || "",
+      valor: String(c.valor),
+      dataVencimento: c.dataVencimento,
+    });
+    setOpen(true);
   };
 
   const f = (key: keyof typeof form) => ({
@@ -67,7 +109,7 @@ export default function ContasPagarPage() {
             <ArrowUpCircle className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-xl font-bold">Contas a Pagar</h1>
           </div>
-          <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-1" /> Nova Conta</Button>
+          <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Nova Conta</Button>
         </div>
 
         <div className="flex gap-2 flex-wrap">
@@ -88,7 +130,7 @@ export default function ContasPagarPage() {
                   <TableHead className="hidden md:table-cell">Vencimento</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-16">Ações</TableHead>
+                  <TableHead className="w-32">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -112,11 +154,19 @@ export default function ContasPagarPage() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        {c.status === "PENDENTE" && (
-                          <Button variant="ghost" size="icon" onClick={() => pagarMut.mutate(c.id)}>
-                            <CheckCircle className="h-4 w-4 text-green-600" />
+                        <div className="flex gap-1">
+                          {c.status === "PENDENTE" && (
+                            <Button variant="ghost" size="icon" onClick={() => pagarMut.mutate(c.id)}>
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
+                            <Pencil className="h-4 w-4" />
                           </Button>
-                        )}
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteMut.mutate(c.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -128,7 +178,7 @@ export default function ContasPagarPage() {
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="max-w-sm">
-            <DialogHeader><DialogTitle>Nova Conta a Pagar</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editing ? "Editar Conta a Pagar" : "Nova Conta a Pagar"}</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div><Label>Descrição *</Label><Input {...f("descricao")} /></div>
               <div><Label>Fornecedor</Label><Input {...f("fornecedor")} /></div>
@@ -136,7 +186,7 @@ export default function ContasPagarPage() {
               <div><Label>Data de Vencimento *</Label><Input {...f("dataVencimento")} type="date" /></div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={createMut.isPending}>Criar</Button>
+                <Button type="submit" disabled={createMut.isPending || updateMut.isPending}>{editing ? "Salvar" : "Criar"}</Button>
               </DialogFooter>
             </form>
           </DialogContent>

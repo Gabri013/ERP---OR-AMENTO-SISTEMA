@@ -24,12 +24,12 @@ export function KpiMetricCard({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+      className="rounded-[8px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)]"
     >
       <div className="flex items-start justify-between gap-3 sm:gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase text-slate-500">{title}</p>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-slate-950">{value}</p>
+          <p className="text-xs font-semibold uppercase text-white/60">{title}</p>
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-white">{value}</p>
         </div>
         <div
           className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-[6px] border"
@@ -42,8 +42,8 @@ export function KpiMetricCard({
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
       </div>
-      <div className="mt-3 sm:mt-4 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
-        <span className="truncate text-[11px] sm:text-xs text-slate-500">{detail}</span>
+      <div className="mt-3 sm:mt-4 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
+        <span className="truncate text-[11px] sm:text-xs text-white/70">{detail}</span>
         {trend !== undefined && (
           <span
             className={cn(

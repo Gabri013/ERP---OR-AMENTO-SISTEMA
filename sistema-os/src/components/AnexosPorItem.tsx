@@ -89,7 +89,7 @@ const TIPO_CONFIG: Record<
     color: "text-green-400",
     ext: [".png", ".jpg", ".jpeg", ".webp"],
   },
-  outro: { label: "Outro", icon: File, color: "text-gray-400", ext: [] },
+  outro: { label: "Outro", icon: File, color: "text-slate-300", ext: [] },
 };
 
 const ACCEPT_ALL =

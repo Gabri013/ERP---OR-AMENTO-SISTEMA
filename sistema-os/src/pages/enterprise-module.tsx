@@ -56,9 +56,8 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
   return (
     <Layout>
       <div className="space-y-6 p-4 lg:p-6 overflow-x-hidden">
-        <section className="rounded-[12px] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-[12px] border border-white/10 bg-white/5 p-5 shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start lg:items-center lg:justify-between">
-            <div className="flex items-start gap-4">
               <div
                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[8px] border"
                 style={{
@@ -70,9 +69,9 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
                 <Icon className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase text-[#003D7A]">{module.group}</p>
-                <h2 className="mt-1 text-2xl font-black text-slate-950">{module.title}</h2>
-                <p className="mt-1 max-w-3xl text-sm text-slate-500">{module.description}</p>
+                <p className="text-xs font-bold uppercase text-[#F7931A]">{module.group}</p>
+                <h2 className="mt-1 text-2xl font-black text-white">{module.title}</h2>
+                <p className="mt-1 max-w-3xl text-sm text-white/70">{module.description}</p>
               </div>
             </div>
           </div>
@@ -86,31 +85,31 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
         </section>
 
         {isError && (
-          <div className="rounded-[12px] border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+          <div className="rounded-[12px] border border-red-500/20 bg-red-500/10 p-4 text-sm font-medium text-red-200">
             Falha ao consultar este modulo no banco. Nenhum dado local foi exibido.
           </div>
         )}
 
         {moduleKey === "pcp" && (
-          <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="rounded-[12px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-slate-950">Planejamento semanal e capacidade produtiva</h3>
-                <p className="text-xs text-slate-500">Carga maquina, sequenciamento, gargalos, prioridades e calendario fabril.</p>
+                <h3 className="text-sm font-bold text-white">Planejamento semanal e capacidade produtiva</h3>
+                <p className="text-xs text-white/70">Carga maquina, sequenciamento, gargalos, prioridades e calendario fabril.</p>
               </div>
-              <CalendarDays className="h-5 w-5 text-[#003D7A]" />
+              <CalendarDays className="h-5 w-5 text-[#E0E9FF]" />
             </div>
             <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
               {(dashboard?.sectors ?? []).map((sector: any) => (
-                <div key={sector.sector} className="rounded-[6px] border border-slate-200 p-3">
+                <div key={sector.sector} className="rounded-[6px] border border-white/10 p-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold">{sector.sector}</p>
+                    <p className="text-sm font-bold text-white">{sector.sector}</p>
                     <StatusPill tone={sector.status}>{sector.status}</StatusPill>
                   </div>
-                  <div className="mt-3 h-2 rounded-full bg-slate-100">
+                  <div className="mt-3 h-2 rounded-full bg-white/10">
                     <div className="h-2 rounded-full bg-[#003D7A]" style={{ width: `${Math.min(sector.capacity, 100)}%` }} />
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">{sector.plannedMinutes}m planejados - {sector.capacity}% carga</p>
+                  <p className="mt-2 text-xs text-white/70">{sector.plannedMinutes}m planejados - {sector.capacity}% carga</p>
                 </div>
               ))}
             </div>
@@ -119,21 +118,21 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
 
         {isFlow && (
           <section className="space-y-4">
-            <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-[12px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-950">Fluxo industrial sob encomenda</h3>
-                  <p className="text-xs text-slate-500">Cada O.S. possui etapas, tempos, setores, status, QR Code e rastreabilidade.</p>
+                  <h3 className="text-sm font-bold text-white">Fluxo industrial sob encomenda</h3>
+                  <p className="text-xs text-white/70">Cada O.S. possui etapas, tempos, setores, status, QR Code e rastreabilidade.</p>
                 </div>
-                <BarChart3 className="h-5 w-5 text-[#003D7A]" />
+                <BarChart3 className="h-5 w-5 text-[#E0E9FF]" />
               </div>
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
                 {(dashboard?.flow ?? []).map((step: any) => {
                   return (
-                    <div key={step.label} className="rounded-[6px] border border-slate-200 p-3">
-                      <BarChart3 className="h-5 w-5 text-[#003D7A]" />
-                      <p className="mt-3 text-sm font-bold text-slate-950">{step.label}</p>
-                      <p className="text-xs text-slate-500">{step.count} ativos</p>
+                    <div key={step.label} className="rounded-[6px] border border-white/10 p-3">
+                      <BarChart3 className="h-5 w-5 text-[#E0E9FF]" />
+                      <p className="mt-3 text-sm font-bold text-white">{step.label}</p>
+                      <p className="text-xs text-white/70">{step.count} ativos</p>
                     </div>
                   );
                 })}
@@ -145,7 +144,7 @@ export function EnterpriseModulePage({ moduleKey }: { moduleKey: ModuleKey }) {
 
         {isLabels && <IndustrialLabelPreview orders={liveOrders ?? []} />}
 
-        <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="rounded-[12px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
           <IndustrialDataTable title={`${module.title} - tabela operacional enterprise`} rows={rows} />
         </section>
       </div>

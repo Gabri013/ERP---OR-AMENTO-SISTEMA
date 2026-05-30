@@ -59,7 +59,7 @@ function getSectorColor(item: KanbanCardData): string {
   if (etapa === "engenharia" || etapa === "programacao") return "bg-indigo-500";
   if (etapa === "concluida" || etapa === "entregue") return "bg-emerald-500";
   if (etapa === "embalagem" || etapa === "expedicao") return "bg-teal-500";
-  return prioridadeDot[item.prioridade ?? ""] ?? "bg-gray-400";
+  return prioridadeDot[item.prioridade ?? ""] ?? "bg-slate-500";
 }
 
 const etapaLabels: Record<string, string> = {

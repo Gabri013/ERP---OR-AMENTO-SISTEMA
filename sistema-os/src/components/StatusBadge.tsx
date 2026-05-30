@@ -19,7 +19,7 @@ const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
   convertido:    { label: "Convertido",    classes: "bg-teal-500/15 text-teal-500 border-teal-500/20" },
   PENDENTE:      { label: "Pendente",      classes: "bg-yellow-500/15 text-yellow-500 border-yellow-500/20" },
   PAGO:          { label: "Pago",          classes: "bg-green-500/15 text-green-500 border-green-500/20" },
-  autorizacao:   { label: "Autorização",   classes: "bg-gray-400/15 text-gray-400 border-gray-400/20" },
+  autorizacao:   { label: "Autorização",   classes: "bg-white/10 text-white/80 border-white/15" },
   corte:         { label: "Corte",         classes: "bg-orange-400/15 text-orange-400 border-orange-400/20" },
   dobra:         { label: "Dobra",         classes: "bg-amber-400/15 text-amber-400 border-amber-400/20" },
   solda:         { label: "Solda",         classes: "bg-red-400/15 text-red-400 border-red-400/20" },
@@ -37,7 +37,7 @@ interface Props {
 export function StatusBadge({ status, className }: Props) {
   const config = STATUS_CONFIG[status] ?? {
     label: status,
-    classes: "bg-gray-500/15 text-gray-400 border-gray-500/20",
+    classes: "bg-white/10 text-white/80 border-white/15",
   };
 
   return (

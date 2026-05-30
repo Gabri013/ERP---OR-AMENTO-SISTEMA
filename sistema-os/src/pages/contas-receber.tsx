@@ -171,7 +171,7 @@ export default function ContasReceberPage() {
                 ) : contas.map(c => {
                   const vencida = c.status === "PENDENTE" && isVencida(c.dataVencimento);
                   return (
-                    <TableRow key={c.id} className={vencida ? "bg-red-50" : ""}>
+                    <TableRow key={c.id} className={vencida ? "bg-red-500/10" : ""}>
                       <TableCell>
                         <p className="font-medium">{c.cliente?.razaoSocial ?? "—"}</p>
                         <p className="text-xs text-muted-foreground">{c.formaPagamento}</p>
@@ -185,7 +185,7 @@ export default function ContasReceberPage() {
                       </TableCell>
                       <TableCell className="font-semibold">{formatCurrency(c.valorLiquido)}</TableCell>
                       <TableCell>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.status === "PAGO" ? "bg-green-100 text-green-800" : c.status === "PENDENTE" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-700"}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.status === "PAGO" ? "bg-emerald-500/15 text-emerald-200" : c.status === "PENDENTE" ? "bg-amber-500/15 text-amber-200" : "bg-white/10 text-white/70"}`}>
                           {c.status}
                         </span>
                       </TableCell>

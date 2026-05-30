@@ -53,7 +53,7 @@ export function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
+    <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 text-xs text-white/60">
       <div className="flex items-center gap-2">
         <span>
           Mostrando {startIndex} - {endIndex} de {totalItems} registros

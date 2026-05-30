@@ -13,11 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Eye, Trash2, ArrowRightCircle, FileText } from "lucide-react";
 
 const statusColors: Record<string, string> = {
-  pendente: "bg-yellow-100 text-yellow-800",
-  aprovado: "bg-green-100 text-green-800",
-  rejeitado: "bg-red-100 text-red-800",
-  convertido: "bg-blue-100 text-blue-800",
-  expirado: "bg-gray-100 text-gray-800",
+  pendente: "bg-yellow-500/15 text-yellow-200",
+  aprovado: "bg-green-500/15 text-green-200",
+  rejeitado: "bg-red-500/15 text-red-200",
+  convertido: "bg-blue-500/15 text-blue-200",
+  expirado: "bg-white/10 text-white/70",
 };
 
 const statusLabels: Record<string, string> = {

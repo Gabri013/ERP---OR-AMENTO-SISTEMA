@@ -62,34 +62,34 @@ export default function DashboardPage() {
   return (
     <Layout>
       <div className="space-y-6 p-4 lg:p-6 overflow-x-hidden">
-        <section className="rounded-[12px] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-[12px] border border-white/10 bg-white/5 p-5 shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase text-[#003D7A]">Operacao industrial em tempo real</p>
-              <h2 className="mt-1 text-2xl font-black text-slate-950">ERP Cozinca Industrial Enterprise</h2>
-              <p className="mt-1 max-w-3xl text-sm text-slate-500">
+              <p className="text-xs font-bold uppercase text-[#F7931A]">Operacao industrial em tempo real</p>
+              <h2 className="mt-1 text-2xl font-black text-white">ERP Cozinca Industrial Enterprise</h2>
+              <p className="mt-1 max-w-3xl text-sm text-white/70">
                 Todos os indicadores abaixo são lidos do PostgreSQL via API industrial.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-[8px] border border-slate-200 px-4 py-3">
-                <p className="text-[11px] text-slate-500">Status</p>
-                <p className="font-black text-slate-950">{isLoading ? "Lendo" : isError ? "Erro" : "Online"}</p>
+              <div className="rounded-[8px] border border-white/10 bg-white/5 px-4 py-3">
+                <p className="text-[11px] text-white/70">Status</p>
+                <p className="font-black text-white">{isLoading ? "Lendo" : isError ? "Erro" : "Online"}</p>
               </div>
-              <div className="rounded-[8px] border border-slate-200 px-4 py-3">
-                <p className="text-[11px] text-slate-500">Setores</p>
-                <p className="font-black text-slate-950">{sectors.length}</p>
+              <div className="rounded-[8px] border border-white/10 bg-white/5 px-4 py-3">
+                <p className="text-[11px] text-white/70">Setores</p>
+                <p className="font-black text-white">{sectors.length}</p>
               </div>
-              <div className="rounded-[8px] border border-slate-200 px-4 py-3">
-                <p className="text-[11px] text-slate-500">O.S.</p>
-                <p className="font-black text-emerald-600">{orders.length}</p>
+              <div className="rounded-[8px] border border-white/10 bg-white/5 px-4 py-3">
+                <p className="text-[11px] text-white/70">O.S.</p>
+                <p className="font-black text-emerald-400">{orders.length}</p>
               </div>
             </div>
           </div>
         </section>
 
         {isError && (
-          <div className="rounded-[8px] border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+          <div className="rounded-[8px] border border-red-500/20 bg-red-500/10 p-4 text-sm font-medium text-red-200">
             Nao foi possivel consultar a API industrial. Nenhum dado local foi usado.
           </div>
         )}
@@ -103,11 +103,11 @@ export default function DashboardPage() {
         </section>
 
         <section className="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 auto-rows-min">
-          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
+          <div className="rounded-[12px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)] lg:col-span-2">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-slate-950">Producao semanal</h3>
-                <p className="text-xs text-slate-500">Apontamentos reais dos ultimos 7 dias.</p>
+                <h3 className="text-sm font-bold text-white">Producao semanal</h3>
+                <p className="text-xs text-white/70">Apontamentos reais dos ultimos 7 dias.</p>
               </div>
               <StatusPill tone="ok">Banco de dados</StatusPill>
             </div>
@@ -124,10 +124,10 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-[12px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
             <div className="mb-4">
-              <h3 className="text-sm font-bold text-slate-950">SLA de entrega</h3>
-              <p className="text-xs text-slate-500">Calculado pelas datas das O.S.</p>
+              <h3 className="text-sm font-bold text-white">SLA de entrega</h3>
+              <p className="text-xs text-white/70">Calculado pelas datas das O.S.</p>
             </div>
             <ResponsiveContainer width="100%" height={210}>
               <PieChart>
@@ -142,20 +142,20 @@ export default function DashboardPage() {
             <div className="space-y-2">
               {slaData.map((item) => (
                 <div key={item.name} className="flex items-center justify-between text-xs">
-                  <span className="inline-flex items-center gap-2 text-slate-600">
+                  <span className="inline-flex items-center gap-2 text-white/60">
                     <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                     {item.name}
                   </span>
-                  <span className="font-bold text-slate-950">{item.value}</span>
+                  <span className="font-bold text-white">{item.value}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-[12px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
             <div className="mb-4">
-              <h3 className="text-sm font-bold text-slate-950">Faturamento e custo</h3>
-              <p className="text-xs text-slate-500">Agrupado pelas vendas gravadas.</p>
+              <h3 className="text-sm font-bold text-white">Faturamento e custo</h3>
+              <p className="text-xs text-white/70">Agrupado pelas vendas gravadas.</p>
             </div>
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={cashflow}>
@@ -171,22 +171,22 @@ export default function DashboardPage() {
         </section>
 
         <section className="grid gap-4 grid-cols-1 lg:grid-cols-3">
-          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
+          <div className="rounded-[12px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)] lg:col-span-2">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-slate-950">Carga de setores fabris</h3>
-                <p className="text-xs text-slate-500">Capacidade e carga gravadas em `CapacidadeSetor`.</p>
+                <h3 className="text-sm font-bold text-white">Carga de setores fabris</h3>
+                <p className="text-xs text-white/70">Capacidade e carga gravadas em `CapacidadeSetor`.</p>
               </div>
-              <Gauge className="h-5 w-5 text-[#003D7A]" />
+              <Gauge className="h-5 w-5 text-[#E0E9FF]" />
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {sectors.map((sector: any) => (
-                <motion.div key={sector.sector} whileHover={{ y: -2 }} className="rounded-[8px] border border-slate-200 p-3">
+                <motion.div key={sector.sector} whileHover={{ y: -2 }} className="rounded-[8px] border border-white/10 p-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-slate-950">{sector.sector}</p>
+                    <p className="text-sm font-bold text-white">{sector.sector}</p>
                     <StatusPill tone={sector.status}>{sector.status}</StatusPill>
                   </div>
-                  <div className="mt-3 h-2 rounded-full bg-slate-100">
+                  <div className="mt-3 h-2 rounded-full bg-white/10">
                     <div
                       className="h-2 rounded-full"
                       style={{
@@ -196,61 +196,61 @@ export default function DashboardPage() {
                     />
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                    <span className="text-slate-500">Carga: <b className="text-slate-900">{sector.plannedMinutes}m</b></span>
-                    <span className="text-slate-500">Cap.: <b className="text-slate-900">{sector.availableMinutes}m</b></span>
+                    <span className="text-white/70">Carga: <b className="text-white">{sector.plannedMinutes}m</b></span>
+                    <span className="text-white/70">Cap.: <b className="text-white">{sector.availableMinutes}m</b></span>
                   </div>
                 </motion.div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-[12px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-slate-950">Ranking operadores</h3>
-                <p className="text-xs text-slate-500">Apontamentos reais do dia.</p>
+                <h3 className="text-sm font-bold text-white">Ranking operadores</h3>
+                <p className="text-xs text-white/70">Apontamentos reais do dia.</p>
               </div>
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
+              <TrendingUp className="h-5 w-5 text-emerald-400" />
             </div>
             <div className="space-y-3">
-              {operators.length === 0 && <p className="text-sm text-slate-500">Sem apontamentos no banco hoje.</p>}
+              {operators.length === 0 && <p className="text-sm text-white/70">Sem apontamentos no banco hoje.</p>}
               {operators.map((operator: any, index: number) => (
-                <div key={operator.name} className="flex items-center justify-between rounded-[8px] border border-slate-100 p-3">
+                <div key={operator.name} className="flex items-center justify-between rounded-[8px] border border-white/10 p-3">
                   <div className="flex items-center gap-3">
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#E0E9FF] text-xs font-black text-[#003D7A]">
                       {index + 1}
                     </span>
                     <div>
-                      <p className="text-sm font-bold text-slate-950">{operator.name}</p>
-                      <p className="text-xs text-slate-500">{operator.sector} - {operator.appointments} apont.</p>
+                      <p className="text-sm font-bold text-white">{operator.name}</p>
+                      <p className="text-xs text-white/70">{operator.sector} - {operator.appointments} apont.</p>
                     </div>
                   </div>
-                  <p className="text-sm font-black text-emerald-600">{operator.minutes}m</p>
+                  <p className="text-sm font-black text-emerald-400">{operator.minutes}m</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="rounded-[12px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-slate-950">Fluxo fabril completo</h3>
-              <p className="text-xs text-slate-500">Contagens vindas das tabelas de orçamento, venda, O.S., PCP e etiquetas.</p>
+              <h3 className="text-sm font-bold text-white">Fluxo fabril completo</h3>
+              <p className="text-xs text-white/70">Contagens vindas das tabelas de orçamento, venda, O.S., PCP e etiquetas.</p>
             </div>
-            <RotateCcw className="h-5 w-5 text-[#003D7A]" />
+            <RotateCcw className="h-5 w-5 text-[#E0E9FF]" />
           </div>
           <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
             {(data?.flow ?? []).map((step: any, index: number) => {
               const Icon = flowIcons[index] ?? Factory;
               return (
-                <div key={step.label} className="relative rounded-[8px] border border-slate-200 p-3">
+                <div key={step.label} className="relative rounded-[8px] border border-white/10 p-3">
                   <div className="flex items-center justify-between">
-                    <Icon className="h-5 w-5 text-[#003D7A]" />
-                    <span className="text-xs font-black text-slate-400">0{index + 1}</span>
+                    <Icon className="h-5 w-5 text-[#E0E9FF]" />
+                    <span className="text-xs font-black text-white/60">0{index + 1}</span>
                   </div>
-                  <p className="mt-3 text-sm font-bold text-slate-950">{step.label}</p>
-                  <p className="mt-1 text-xs text-slate-500">{step.count} registros ativos</p>
+                  <p className="mt-3 text-sm font-bold text-white">{step.label}</p>
+                  <p className="mt-1 text-xs text-white/70">{step.count} registros ativos</p>
                 </div>
               );
             })}
@@ -263,21 +263,21 @@ export default function DashboardPage() {
           <div className="lg:col-span-2">
             <IndustrialDataTable title="Ordens, requisicoes e alertas recentes" rows={recentRows} />
           </div>
-          <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-950">Rastreabilidade critica</h3>
-            <p className="text-xs text-slate-500">O.S. lidas do banco com setor atual e status.</p>
+          <div className="rounded-[12px] border border-white/10 bg-white/5 p-4 shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
+            <h3 className="text-sm font-bold text-white">Rastreabilidade critica</h3>
+            <p className="text-xs text-white/70">O.S. lidas do banco com setor atual e status.</p>
             <div className="mt-4 space-y-3">
               {orders.slice(0, 4).map((order: any) => (
-                <div key={order.id} className="rounded-[8px] border border-slate-200 p-3">
+                <div key={order.id} className="rounded-[8px] border border-white/10 p-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-black text-[#003D7A]">{order.number}</p>
+                    <p className="text-sm font-black text-[#E0E9FF]">{order.number}</p>
                     <StatusPill tone={order.priority}>{order.priority}</StatusPill>
                   </div>
-                  <p className="mt-1 text-xs font-semibold text-slate-900">{order.product}</p>
+                  <p className="mt-1 text-xs font-semibold text-white">{order.product}</p>
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                    <span className="text-slate-500">Setor: <b className="text-slate-900">{order.currentSector}</b></span>
-                    <span className="text-slate-500">Status: <b className="text-slate-900">{order.status}</b></span>
-                    <span className="text-slate-500">Prog.: <b className="text-slate-900">{order.progress}%</b></span>
+                    <span className="text-white/70">Setor: <b className="text-white">{order.currentSector}</b></span>
+                    <span className="text-white/70">Status: <b className="text-white">{order.status}</b></span>
+                    <span className="text-white/70">Prog.: <b className="text-white">{order.progress}%</b></span>
                   </div>
                 </div>
               ))}

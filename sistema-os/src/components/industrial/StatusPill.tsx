@@ -2,17 +2,17 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const toneMap: Record<string, string> = {
-  critica: "border-red-200 bg-red-50 text-red-700",
-  critico: "border-red-200 bg-red-50 text-red-700",
-  gargalo: "border-orange-200 bg-orange-50 text-orange-700",
-  alta: "border-orange-200 bg-orange-50 text-orange-700",
-  pendente: "border-amber-200 bg-amber-50 text-amber-700",
-  baixo: "border-amber-200 bg-amber-50 text-amber-700",
-  normal: "border-blue-200 bg-blue-50 text-blue-700",
-  ok: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  operando: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  concluido: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  parado: "border-slate-300 bg-slate-100 text-slate-700",
+  critica: "border-red-500/20 bg-red-500/10 text-red-200",
+  critico: "border-red-500/20 bg-red-500/10 text-red-200",
+  gargalo: "border-orange-500/20 bg-orange-500/10 text-orange-200",
+  alta: "border-orange-500/20 bg-orange-500/10 text-orange-200",
+  pendente: "border-amber-400/30 bg-amber-400/10 text-amber-200",
+  baixo: "border-amber-400/30 bg-amber-400/10 text-amber-200",
+  normal: "border-blue-500/20 bg-blue-500/10 text-blue-200",
+  ok: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
+  operando: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
+  concluido: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
+  parado: "border-white/10 bg-white/5 text-white/70",
 };
 
 export function StatusPill({
@@ -31,7 +31,7 @@ export function StatusPill({
       variant="outline"
       className={cn(
         "h-6 rounded-[4px] border px-2 text-[11px] font-semibold uppercase tracking-normal",
-        toneMap[key] ?? "border-slate-200 bg-slate-50 text-slate-700",
+        toneMap[key] ?? "border-white/10 bg-white/5 text-white/70",
         className,
       )}
     >

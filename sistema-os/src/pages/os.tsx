@@ -64,24 +64,24 @@ const etapaLabels: Record<string, string> = {
 };
 
 const etapaColors: Record<string, string> = {
-  autorizacao: "bg-gray-100 text-gray-700",
-  corte: "bg-blue-100 text-blue-700",
-  dobra: "bg-violet-100 text-violet-700",
-  solda: "bg-orange-100 text-orange-700",
-  refrigeracao: "bg-cyan-100 text-cyan-700",
-  acabamento: "bg-teal-100 text-teal-700",
-  finalizacao: "bg-green-100 text-green-700",
-  montagem: "bg-indigo-100 text-indigo-700",
-  concluida: "bg-emerald-100 text-emerald-700",
+  autorizacao: "bg-white/10 text-white/80",
+  corte: "bg-blue-500/15 text-blue-200",
+  dobra: "bg-violet-500/15 text-violet-200",
+  solda: "bg-orange-500/15 text-orange-200",
+  refrigeracao: "bg-cyan-500/15 text-cyan-200",
+  acabamento: "bg-teal-500/15 text-teal-200",
+  finalizacao: "bg-green-500/15 text-green-200",
+  montagem: "bg-indigo-500/15 text-indigo-200",
+  concluida: "bg-emerald-500/15 text-emerald-200",
 };
 
 const statusColors: Record<string, string> = {
-  pendente: "bg-yellow-100 text-yellow-800",
-  em_projeto: "bg-blue-100 text-blue-800",
-  em_revisao: "bg-purple-100 text-purple-800",
-  em_producao: "bg-orange-100 text-orange-800",
-  concluida: "bg-green-100 text-green-800",
-  cancelada: "bg-red-100 text-red-800",
+  pendente: "bg-yellow-500/15 text-yellow-200",
+  em_projeto: "bg-blue-500/15 text-blue-200",
+  em_revisao: "bg-purple-500/15 text-purple-200",
+  em_producao: "bg-orange-500/15 text-orange-200",
+  concluida: "bg-green-500/15 text-green-200",
+  cancelada: "bg-red-500/15 text-red-200",
 };
 const statusLabels: Record<string, string> = {
   pendente: "Pendente",

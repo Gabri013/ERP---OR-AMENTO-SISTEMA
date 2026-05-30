@@ -46,10 +46,10 @@ const queryClient = new QueryClient({
 // Componente de loading para Suspense
 function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
+    <div className="min-h-screen flex items-center justify-center bg-[#030304] text-white">
       <div className="text-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#003D7A] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-        <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#F7931A] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+        <p className="mt-4 text-sm text-white/70">Carregando...</p>
       </div>
     </div>
   );
